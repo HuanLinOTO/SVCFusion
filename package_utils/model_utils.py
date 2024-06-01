@@ -1,0 +1,157 @@
+from datetime import datetime
+import json
+import os
+import shutil
+import subprocess
+import gradio as gr
+import yaml
+
+from package_utils.const_vars import (
+    SUPPORT_MODEL_TYPE,
+    TYPE_INDEX_TO_CONFIG_NAME,
+    WORK_DIR_PATH,
+)
+from package_utils.file import make_dirs
+from package_utils.exec import exec, start_with_cmd
+
+
+def reload_models(search_dir):
+    global models, search_paths
+    models = search_models(search_paths[search_dir])
+    search_paths = [
+        WORK_DIR_PATH,
+        *[
+            "archieve/" + p
+            for p in os.listdir("archieve")
+            if os.path.isdir(os.path.join("archieve", p))
+        ],
+        *[
+            "models/" + p
+            for p in os.listdir("models")
+            if os.path.isdir(os.path.join("models", p))
+        ],
+    ]
+    return (
+        gr.update(choices=models, value=models[-1]),
+        gr.update(
+            choices=[
+                "工作目录",
+                *[
+                    p.replace("models/", "models 文件夹 - ").replace(
+                        "archieve/", "已归档训练 - "
+                    )
+                    for p in search_paths
+                    if not p.startswith("exp")
+                ],
+            ],
+        ),
+    )
+
+
+def search_models(search_dir) -> list:
+    models = []
+    # for root, dirs, files in os.walk(search_dir):
+    #     for file in files:
+    #         if file.endswith(".pt"):
+    #             models.append(file)
+    for file in os.listdir(search_dir):
+        if (
+            file.endswith(".pt")
+            and os.path.isfile(os.path.join(search_dir, file))
+            and file != "model_0.pt"
+        ):
+            models.append(file)
+    if len(models) == 0:
+        models = ["无模型"]
+    return models
+
+
+def train(model_type):
+    # 如果是 windows
+    type_index = SUPPORT_MODEL_TYPE.index(model_type)
+    config_name = TYPE_INDEX_TO_CONFIG_NAME[type_index]
+
+    # 往 configs/config_name.yaml 的 model_type 写入 model_type
+    with open(f"configs/{config_name}", "r") as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+        config["model_type_index"] = type_index
+    with open(f"configs/{config_name}", "w") as f:
+        yaml.dump(config, f)
+
+    if type_index == 0:
+        cmd = ".conda\\python -m ddspsvc.train_reflow -c configs/reflow.yaml"
+    elif type_index == 1:
+        cmd = ".conda\\python -m ReFlowVaeSVC.train -c configs/reflow-vae-wavenet.yaml"
+    elif type_index == 2:
+        cmd = ".conda\\python -m SoVITS.train -c configs/sovits.json -m 44k"
+    elif type_index == 3:
+        cmd = ".conda\\python -m SoVITS.train_diff -c configs/sovits_diff.yaml -m 44k"
+    start_with_cmd(cmd)
+
+
+def archieve():
+    make_dirs("archieve/", False)
+    path = f"./archieve/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}/"
+    # make_dirs(path, False)
+    shutil.move(WORK_DIR_PATH, path)
+    make_dirs(WORK_DIR_PATH, False)
+    if os.name == "nt":
+        exec("explorer " + path.replace("/", "\\"))
+
+
+def tensorboard():
+    if os.name == "nt":
+        # cmd = ".conda\\Scripts\\tensorboard --logdir=exp/"
+        # subprocess.Popen(["cmd", "/c", "start", "cmd", "/k", cmd])
+        from tensorboard import program
+
+        log_dir = "./exp"
+
+        # 启动TensorBoard服务器
+        tb = program.TensorBoard()
+        tb.configure(argv=[None, "--logdir", log_dir])
+        url = tb.launch()
+        return url
+    else:
+        cmd = "tensorboard --logdir=exp/"
+        subprocess.Popen([cmd], shell=True)
+
+
+def detect_current_model_by_path(model_path):
+    # 读取 model_path/config.yaml 中的 model_type
+
+    if os.path.exists(model_path + "/config.json"):
+        with open(model_path + "/config.json", "r") as f:
+            config = json.load(f)
+        if config.get("model_type_index") is None:
+            gr.Info("模型类型未知，请手动选择")
+            model_type = -1
+        else:
+            model_type = config["model_type_index"]
+        return model_type
+    elif os.path.exists(model_path + "/config.yaml"):
+        # DDSP / ReflowVAE
+        with open(model_path + "/config.yaml", "r") as f:
+            config = yaml.safe_load(f)
+        if config.get("model_type_index") is None:
+            gr.Info("模型类型未知，请手动选择")
+            model_type = -1
+        else:
+            model_type = config["model_type_index"]
+        return model_type
+    else:
+        gr.Info("模型类型未知，请手动选择")
+        return -1
+
+
+def detect_current_model_by_dataset():
+    # 读取 data/model_type 并返回内容
+    try:
+        with open("data/model_type", "r") as f:
+            model_type = f.read()
+        return int(model_type)
+    except Exception as _e:
+        # 写入 data/model_type "ddsp6"
+        with open("data/model_type", "w") as f:
+            f.write("0")
+        return 0

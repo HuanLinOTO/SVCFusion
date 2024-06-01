@@ -1,0 +1,15 @@
+device: cuda
+spks:
+- wkr_raw
+train:
+  amp_dtype: fp32
+  batch_size: 48
+  cache_all_data: true
+  cache_device: cpu
+  epochs: 100000
+  gamma: 0.5
+  interval_force_save: 10000
+  interval_log: 1
+  interval_val: 2000
+  lr: 0.0002
+  num_workers: 2

@@ -1,0 +1,129 @@
+import os
+from loguru import logger
+import yaml
+
+from package_utils.const_vars import SUPPORT_MODEL_TYPE, TYPE_INDEX_TO_CONFIG_NAME
+from package_utils.file import make_dirs
+from package_utils.exec import exec
+
+from ddspsvc.draw import main as draw_main
+
+
+class DrawArgs:
+    val = "data/val/audio"
+    sample_rate = 1
+    train = "data/train/audio"
+    extensions = ["wav", "flac"]
+
+
+class PreprocessArgs:
+    config = "configs/ddsp_reflow.yaml"
+    device = "cuda"
+
+
+def resample(src, dst):
+    exec(
+        f".conda\\python fap/__main__.py resample {src} {dst} --mono",
+    )
+
+
+def slice_audio(src, dst, max_duration):
+    exec(
+        f".conda\\python fap/__main__.py slice-audio-v2 {src} {dst} --max-duration {max_duration} --flat-layout --merge-short --clean"
+    )
+
+
+def auto_preprocess(
+    f0="fcpe",
+    encoder="euler",
+    device="cuda",
+    use_slice_audio=True,
+    max_duration=15,
+    model_type_index=0,
+):
+    make_dirs("tmp/resampled", True)
+
+    config_name = TYPE_INDEX_TO_CONFIG_NAME[model_type_index]
+
+    # 复制 config/ddsp_reflow.yaml.template -> ddsp_reflow.yaml
+    # shutil.copy("configs/ddsp_reflow.yaml.template", "configs/ddsp_reflow.yaml")
+
+    spks = []
+    for f in os.listdir("dataset_raw"):
+        if os.path.isdir(os.path.join("dataset_raw", f)):
+            spks.append(f)
+        # 扫描角色目录，如果发现 .WAV 文件 改成 .wav
+        for root, dirs, files in os.walk(f"dataset_raw/{f}"):
+            for file in files:
+                if file.endswith(".WAV"):
+                    logger.info(f"Renamed {file} to {file.replace('.WAV', '.wav')}")
+                    os.rename(
+                        os.path.join(root, file),
+                        os.path.join(root, file.replace(".WAV", ".wav")),
+                    )
+
+    # 修改 config[data][f0_extractor] 为 f0
+    with open("configs/" + config_name, "r") as f:
+        config = yaml.safe_load(f)
+        config["data"]["f0_extractor"] = f0
+        config["data"]["encoder"] = encoder
+        config["model"]["n_spk"] = len(spks)
+        config["spks"] = spks
+
+    with open("configs/" + config_name, "w") as f:
+        yaml.dump(config, f, default_flow_style=False)
+
+    with open("configs/ddsp_reflow.yaml", "r") as f:
+        config = yaml.safe_load(f)
+        config["spks"] = spks
+
+    with open("configs/ddsp_reflow.yaml", "w") as f:
+        yaml.dump(config, f, default_flow_style=False)
+
+    make_dirs("data/train/", True)
+    make_dirs("data/train/audio", True)
+    make_dirs("data/val/", True)
+    make_dirs("data/val/audio", True)
+
+    logger.info("Resample started")
+    resample(
+        "dataset_raw/", "tmp/resampled/" if use_slice_audio else "data/train/audio/"
+    )
+    logger.info("Resample finished")
+
+    if use_slice_audio:
+        slice_audio("tmp/resampled/", "data/train/audio/", max_duration)
+
+    # 将 data/train/audio/ 下面的文件夹按照出现顺序命名
+    for i, spk in enumerate(spks):
+        os.rename(f"data/train/audio/{spk}", f"data/train/audio/{i + 1}")
+
+    logger.info("Drawing datasets")
+    draw_main(DrawArgs())
+    logger.info("Draw finished")
+
+    logger.info("Preprocess started")
+
+    type_index = model_type_index
+
+    if type_index == 0:
+        exec(
+            f".conda\\python -m ddspsvc.preprocess -c configs/{config_name} -d {device}"
+        )
+    elif type_index == 1:
+        exec(
+            f".conda\\python -m ReFlowVaeSVC.preprocess -c configs/{config_name} -d {device}"
+        )
+    elif type_index == 2:
+        exec(
+            f".conda\\python -m SoVITS.preprocess_new -c configs/sovits.json -d {device}"
+        )
+    elif type_index == 3:
+        exec(
+            f".conda\\python -m SoVITS.preprocess_new -c configs/sovits_diff.yaml -d {device} --use_diff"
+        )
+    logger.info("Preprocess finished")
+
+    # 写入 data/model_type
+    with open("data/model_type", "w") as f:
+        f.write(SUPPORT_MODEL_TYPE[type_index])

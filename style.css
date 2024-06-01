@@ -1,0 +1,9 @@
+button.stop {
+    background-color: var(--color-red-500);
+    color: white;
+    /* color: var(--neutral-900); */
+}
+
+textarea {
+    box-shadow: 1px 1px 3px 0px #e0e0e0 !important;
+}
