@@ -109,7 +109,7 @@ async def main(args, device, f0p, use_diff, debug):
         num_files = num_train_lines + num_val_lines
         taskid = progress.add_task("Preprocessing", total=num_files)
         for filelist in filelists:
-            command = f"{PYPATH} -m SoVITS.preprocess_chunk --filelist {filelist}"
+            command = f"{PYPATH} -m SoVITS.preprocess_chunk --f0_predictor {f0p} --filelist {filelist}"
             if use_diff:
                 command += " --use_diff"
             tasks.append(

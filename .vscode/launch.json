@@ -22,7 +22,7 @@
             "name": "启动 Webui",
             "type": "debugpy",
             "request": "launch",
-            "program": "NewSFWebui.py",
+            "program": "webui.py",
             "console": "integratedTerminal",
             "justMyCode": false
         }

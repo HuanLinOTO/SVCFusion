@@ -212,13 +212,13 @@ class ModelChooser:
                 value="未加载模型",
                 interactive=True,
             )
-
-        self.extra_form = Form(
-            triger_comp=self.model_type_dropdown,
-            models=extra_form,
-            show_submit=False,
-            vertical=True,
-        )
+        if len(extra_form) > 0:
+            self.extra_form = Form(
+                triger_comp=self.model_type_dropdown,
+                models=extra_form,
+                show_submit=False,
+                vertical=True,
+            )
 
         self.seach_path_dropdown.change(
             self.on_refresh,
@@ -243,7 +243,11 @@ class ModelChooser:
                 self.seach_path_dropdown,
                 self.device_chooser.device_dropdown,
                 *self.model_dropdowns,
-                *self.extra_form.param_comp_list,
+                *(
+                    self.extra_form.param_comp_list
+                    if hasattr(self, "extra_form")
+                    else []
+                ),
             ],
             outputs=[self.spk_dropdown],
         )

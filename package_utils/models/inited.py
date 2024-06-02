@@ -25,3 +25,10 @@ for model in model_list:
         "form": model.preprocess_form,
         "callback": model.preprocess,
     }
+
+train_form = {}
+for model in model_list:
+    train_form[model.model_name] = {
+        "form": model.train_form,
+        "callback": model.train,
+    }

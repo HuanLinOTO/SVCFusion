@@ -1,17 +1,18 @@
 import os
+from shutil import rmtree
 from loguru import logger
 import yaml
 
 from package_utils.const_vars import SUPPORT_MODEL_TYPE, TYPE_INDEX_TO_CONFIG_NAME
 from package_utils.file import make_dirs
 from package_utils.exec import exec
-
+import gradio as gr
 from ddspsvc.draw import main as draw_main
 
 
 class DrawArgs:
     val = "data/val/audio"
-    sample_rate = 1
+    sample_rate = 44100
     train = "data/train/audio"
     extensions = ["wav", "flac"]
 
@@ -31,6 +32,25 @@ def slice_audio(src, dst, max_duration):
     exec(
         f".conda\\python fap/__main__.py slice-audio-v2 {src} {dst} --max-duration {max_duration} --flat-layout --merge-short --clean"
     )
+
+
+def auto_normalize_dataset(
+    output_dir: str, rename_by_index: bool, progress: gr.Progress
+):
+    make_dirs(output_dir, True)
+    resample(
+        "dataset_raw/",
+        "tmp/resampled/",
+    )
+    slice_audio(
+        "tmp/resampled/",
+        output_dir,
+        max_duration=15.0,
+    )
+    rmtree("tmp/resampled")
+    if rename_by_index:
+        for i, spk in enumerate(os.listdir(output_dir)):
+            os.rename(f"{output_dir}/{spk}", f"{output_dir}/{i + 1}")
 
 
 def auto_preprocess(

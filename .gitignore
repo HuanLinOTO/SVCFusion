@@ -35,3 +35,7 @@ workdir
 .conda
 buildtools.py
 dist*
+
+*.enigma64
+
+filelists/*

@@ -1,6 +1,7 @@
 data:
   block_size: 512
-  duration: 1
+  cnhubertsoft_gate: 10
+  duration: 2
   encoder: contentvec768l12
   encoder_ckpt: pretrain/contentvec/checkpoint_best_legacy_500.pt
   encoder_hop_size: 320
@@ -8,10 +9,9 @@ data:
   encoder_sample_rate: 16000
   extensions:
   - wav
-  - flac
   f0_extractor: fcpe
-  f0_max: 1200
-  f0_min: 40
+  f0_max: 800
+  f0_min: 65
   sampling_rate: 44100
   train_path: data/train
   valid_path: data/val
@@ -20,18 +20,17 @@ env:
   expdir: exp/workdir
   gpu_id: 0
 infer:
-  infer_step: 50
+  infer_step: 20
   method: euler
 model:
-  back_bone: wavenet
-  n_chans: 768
-  n_hidden: 256
-  n_layers: 30
+  n_chans: 512
+  n_layers: 6
   n_spk: 1
-  type: RectifiedFlow_VAE
-  use_attention: true
-  use_pitch_aug: false
-model_type_index: 1
+  t_start: 0.7
+  type: RectifiedFlow
+  use_pitch_aug: true
+  win_length: 2048
+model_type_index: 0
 spks:
 - wkr_raw
 train:
@@ -40,12 +39,13 @@ train:
   cache_all_data: true
   cache_device: cpu
   cache_fp16: true
-  decay_step: 150000
+  decay_step: 50000
   epochs: 100000
   gamma: 0.5
   interval_force_save: 10000
   interval_log: 1
-  interval_val: 1000
+  interval_val: 2000
+  lambda_ddsp: 1
   lr: 0.0002
   num_workers: 2
   save_opt: false

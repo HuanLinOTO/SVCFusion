@@ -1,15 +1,21 @@
 import gc
 import hashlib
 import os
+from shutil import rmtree
+from sys import executable
 import librosa
 import numpy as np
 import torch
+import yaml
 
 from package_utils.config import YAMLReader
+from package_utils.dataset_utils import DrawArgs, auto_normalize_dataset
 from .common import common_infer_form, diff_based_infer_form, common_preprocess_form
 from ReFlowVaeSVC.main import cross_fade, upsample, split
 from ReFlowVaeSVC.reflow.vocoder import load_model_vocoder
 from ReFlowVaeSVC.reflow.extractors import F0_Extractor, Volume_Extractor, Units_Encoder
+from ddspsvc.draw import main as draw_main
+from package_utils.exec import exec
 
 import gradio as gr
 import soundfile as sf
@@ -20,7 +26,17 @@ class ReflowVAESVCModel:
 
     infer_form = {}
 
-    train_form = {}
+    train_form = {
+        "batch_size": {
+            "type": "slider",
+            "default": 2,
+            "label": "训练批次大小",
+            "info": "越大越好，越大越占显存，注意不能超过训练集条数",
+            "max": 9999,
+            "min": 1,
+            "step": 1,
+        },
+    }
 
     preprocess_form = {}
 
@@ -94,8 +110,44 @@ class ReflowVAESVCModel:
     def train(self, params):
         print(params)
 
-    def preprocess(self, params):
-        pass
+    def preprocess(self, params, progress: gr.Progress = None):
+        with open("data/model_type", "w") as f:
+            f.write("1")
+        # 将 dataset_raw 下面的 文件夹 变成一个数组
+        spks = []
+        for f in os.listdir("dataset_raw"):
+            if os.path.isdir(os.path.join("dataset_raw", f)):
+                spks.append(f)
+            # 扫描角色目录，如果发现 .WAV 文件 改成 .wav
+            for root, dirs, files in os.walk(f"dataset_raw/{f}"):
+                for file in files:
+                    if file.endswith(".WAV"):
+                        print(f"Renamed {file} to {file.replace('.WAV', '.wav')}")
+                        os.rename(
+                            os.path.join(root, file),
+                            os.path.join(root, file.replace(".WAV", ".wav")),
+                        )
+
+        auto_normalize_dataset("data/train/audio", True, progress)
+
+        for i in progress.tqdm(range(1), desc="划分验证集"):
+            rmtree("data/val")
+            draw_main(DrawArgs())
+
+        with YAMLReader("configs/reflow.yaml") as config:
+            config["data"]["f0_extractor"] = params["f0"]
+            config["data"]["encoder"] = params["encoder"]
+            config["model"]["n_spk"] = len(spks)
+            config["spks"] = spks
+
+        with open("configs/reflow.yaml", "w") as f:
+            yaml.dump(config, f, default_flow_style=False)
+
+        for i in progress.tqdm(range(1), desc="预处理(进度去终端看)"):
+            exec(
+                f"{executable} -m ReFlowVaeSVC.preprocess -c configs/reflow.yaml -d {params['device']}"
+            )
+        return gr.update(value="完成")
 
     def infer(
         self,

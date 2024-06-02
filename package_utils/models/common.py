@@ -99,12 +99,12 @@ common_preprocess_form = {
     "device": {
         "type": "device_chooser",
     },
-    "force_cut": {
-        "type": "checkbox",
-        "info": "是否使用强制切片 (看不懂默认就对了)",
-        "default": True,
-        "label": "强制切片",
-    },
+    # "force_cut": {
+    #     "type": "checkbox",
+    #     "info": "是否使用强制切片 (看不懂默认就对了)",
+    #     "default": True,
+    #     "label": "强制切片",
+    # },
 }
 
 diff_based_preprocess_form = {

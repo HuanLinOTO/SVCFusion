@@ -1,6 +1,6 @@
 import gc
-from hashlib import md5
 import os
+from sys import executable
 import time
 
 import torch
@@ -8,6 +8,8 @@ import torchaudio
 from SoVITS.inference import infer_tool
 from SoVITS.inference.infer_tool import Svc
 from package_utils.config import JSONReader
+from package_utils.dataset_utils import auto_normalize_dataset
+from package_utils.exec import exec
 from package_utils.ui.FormTypes import FormDictInModelClass
 from .common import common_infer_form, common_preprocess_form
 import gradio as gr
@@ -79,7 +81,17 @@ class SoVITSModel:
         },
     }
 
-    train_form = {}
+    train_form = {
+        "batch_size": {
+            "type": "slider",
+            "default": 2,
+            "label": "训练批次大小",
+            "info": "越大越好，越大越占显存，注意不能超过训练集条数",
+            "max": 9999,
+            "min": 1,
+            "step": 1,
+        },
+    }
 
     _preprocess_form = {
         "use_diff": {
@@ -172,7 +184,15 @@ class SoVITSModel:
 
     def preprocess(self, params, progress=gr.Progress()):
         # aa
-        print(params)
+        with open("data/model_type", "w") as f:
+            f.write("2")
+        auto_normalize_dataset("data/44k", False, progress)
+        exec(
+            f"{executable} -m SoVITS.preprocess_flist_config --source_dir ./data/44k --speech_encoder {params['encoder'].replace('contentvec','vec')}"
+        )
+        exec(
+            f"{executable} -m SoVITS.preprocess_new --f0_predictor {params['f0']} --num_processes 4 {'--use_diff' if params['use_diff'] else ''}"
+        )
 
     def infer(self, params, progress=gr.Progress()):
         wf, sr = torchaudio.load(params["audio"])

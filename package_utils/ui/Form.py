@@ -18,7 +18,7 @@ class Form:
             # result.append(gr.update(visible=True))
         return result
 
-    def get_fn(self, model_name, AudioOutput=False):
+    def get_fn(self, model_name):
         cb = self.models[model_name]["callback"]
         form = self.models[model_name]["form"]
 
@@ -35,9 +35,8 @@ class Form:
             for key in self.extra_inputs_keys:
                 result[key] = args[i]
                 i += 1
-            res = cb(result, progress=gr.Progress())
-            if AudioOutput:
-                return gr.update(value=res)
+            return cb(result, progress=gr.Progress())
+
             # print(cb, result)
 
         return fn
@@ -78,9 +77,11 @@ class Form:
                 )
             elif item["type"] == "device_chooser":
                 return DeviceChooser().device_dropdown
+            else:
+                raise Exception("未知类型", item)
         except Exception as e:
             print(item)
-            print(e)
+            raise e
 
     def __init__(
         self,
@@ -88,7 +89,8 @@ class Form:
         models: FormDict | Callable[..., FormDict],
         extra_inputs: Dict[str, gr.component] = {},
         vertical=False,
-        AudioOutput=False,
+        use_audio_opt=False,
+        use_textbox_opt=False,
         show_submit=True,
     ) -> None:
         self.models = models
@@ -124,6 +126,8 @@ class Form:
                     i += 1
                     item = form[key]
                     comp = self.parse_item(item)
+                    # if comp is None:
+                    #     print("comp is None", item)
                     items.append(comp)
 
                     self.param_comp_list.append(comp)
@@ -152,14 +156,19 @@ class Form:
                     self.extra_inputs_keys.append(key)
                     inputs.append(extra_inputs[key])
                 # print("group", model_name, group._id)
-                if AudioOutput:
+                if use_audio_opt:
                     audio_output = gr.Audio(
                         type="filepath",
                         label="输出结果",
                     )
+                outputs = []
+                if use_audio_opt:
+                    outputs.append(audio_output)
+                if use_textbox_opt:
+                    outputs.append(gr.Textbox(label="输出结果"))
                 submit.click(
-                    self.get_fn(model_name, AudioOutput),
+                    self.get_fn(model_name),
                     inputs=inputs,
-                    outputs=[audio_output] if AudioOutput else [],
+                    outputs=outputs,
                 )
         triger_comp.change(self.change_model, inputs=[triger_comp], outputs=groups)
