@@ -16,6 +16,9 @@ class Form:
         for i in range(len(self.model_name_list)):
             result.append(gr.update(visible=i == index))
             # result.append(gr.update(visible=True))
+        print("result change_model", result)
+        if len(result) == 1:
+            return result[0]
         return result
 
     def get_fn(self, model_name):
@@ -26,15 +29,17 @@ class Form:
             result = {}
             i = 0
             for key in form:
-                result[key] = (
-                    args[i]
-                    if form[key]["type"] != "device_chooser"
-                    else DeviceChooser.get_device_str_from_index(args[i])
-                )
+                # dropdown_liked_checkbox
+                if form[key]["type"] == "device_chooser":
+                    result[key] = DeviceChooser.get_device_str_from_index(args[i])
+                elif form[key]["type"] == "dropdown_liked_checkbox":
+                    result[key] = args[i] == "是"
+                else:
+                    result[key] = args[i]
                 i += 1
+
             for key in self.extra_inputs_keys:
                 result[key] = args[i]
-                i += 1
             return cb(result, progress=gr.Progress())
 
             # print(cb, result)
@@ -42,46 +47,59 @@ class Form:
         return fn
 
     def parse_item(self, item: FormComponent):
-        try:
-            if item["type"] == "slider":
-                return gr.Slider(
-                    label=item["label"],
-                    info=item["info"],
-                    minimum=item["min"],
-                    maximum=item["max"],
-                    value=item["default"],
-                    step=item["step"],
-                    interactive=True,
-                )
-            elif item["type"] == "dropdown":
-                return gr.Dropdown(
-                    label=item["label"],
-                    info=item["info"],
-                    choices=item["choices"],
-                    value=item["default"],
-                    interactive=True,
-                )
-            elif item["type"] == "checkbox":
-                return gr.Checkbox(
-                    label=item["label"],
-                    info=item["info"],
-                    value=item["default"],
-                    interactive=True,
-                )
-            elif item["type"] == "audio":
-                return gr.Audio(
-                    label=item["label"],
-                    type="filepath",
-                    interactive=True,
-                    editable=True,
-                )
-            elif item["type"] == "device_chooser":
-                return DeviceChooser().device_dropdown
+        if item["type"] == "slider":
+            return gr.Slider(
+                label=item["label"],
+                info=item["info"],
+                minimum=item["min"],
+                maximum=item["max"],
+                value=item["default"],
+                step=item["step"],
+                interactive=True,
+            )
+        elif item["type"] == "dropdown":
+            return gr.Dropdown(
+                label=item["label"],
+                info=item["info"],
+                choices=item["choices"],
+                value=item["default"],
+                interactive=True,
+            )
+        elif item["type"] == "dropdown_liked_checkbox":
+            if isinstance(item["default"], Callable):
+
+                def value_proxy():
+                    return "是" if item["default"]() else "否"
             else:
-                raise Exception("未知类型", item)
-        except Exception as e:
-            print(item)
-            raise e
+
+                def value_proxy():
+                    return "是" if item["default"] else "否"
+
+            return gr.Dropdown(
+                label=item["label"],
+                info=item["info"],
+                choices=["是", "否"],
+                value=value_proxy,
+                interactive=True,
+            )
+        elif item["type"] == "checkbox":
+            return gr.Checkbox(
+                label=item["label"],
+                info=item["info"],
+                value=item["default"],
+                interactive=True,
+            )
+        elif item["type"] == "audio":
+            return gr.Audio(
+                label=item["label"],
+                type="filepath",
+                interactive=True,
+                editable=True,
+            )
+        elif item["type"] == "device_chooser":
+            return DeviceChooser().device_dropdown
+        else:
+            raise Exception("未知类型", item)
 
     def __init__(
         self,

@@ -50,7 +50,7 @@ diff_based_infer_form = {
         "type": "slider",
         "max": 100,
         "min": 1,
-        "default": 20,
+        "default": 50,
         "step": 1,
         "label": "推理步数",
         "info": "推理步长，默认就行",

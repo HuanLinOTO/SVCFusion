@@ -12,6 +12,7 @@ from package_utils.const_vars import (
     WORK_DIR_PATH,
 )
 from package_utils.file import make_dirs
+from package_utils.models.inited import train_models_dict, model_name_list
 from package_utils.exec import exec, start_with_cmd
 
 
@@ -66,27 +67,11 @@ def search_models(search_dir) -> list:
     return models
 
 
-def train(model_type):
-    # 如果是 windows
-    type_index = SUPPORT_MODEL_TYPE.index(model_type)
-    config_name = TYPE_INDEX_TO_CONFIG_NAME[type_index]
-
-    # 往 configs/config_name.yaml 的 model_type 写入 model_type
-    with open(f"configs/{config_name}", "r") as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
-        config["model_type_index"] = type_index
-    with open(f"configs/{config_name}", "w") as f:
-        yaml.dump(config, f)
-
-    if type_index == 0:
-        cmd = ".conda\\python -m ddspsvc.train_reflow -c configs/reflow.yaml"
-    elif type_index == 1:
-        cmd = ".conda\\python -m ReFlowVaeSVC.train -c configs/reflow-vae-wavenet.yaml"
-    elif type_index == 2:
-        cmd = ".conda\\python -m SoVITS.train -c configs/sovits.json -m 44k"
-    elif type_index == 3:
-        cmd = ".conda\\python -m SoVITS.train_diff -c configs/sovits_diff.yaml -m 44k"
-    start_with_cmd(cmd)
+def on_change_train_model():
+    model_name = model_name_list[detect_current_model_by_dataset()]
+    return gr.update(
+        choices=train_models_dict[model_name], value=train_models_dict[model_name][0]
+    )
 
 
 def archieve():

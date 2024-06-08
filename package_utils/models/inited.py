@@ -27,8 +27,21 @@ for model in model_list:
     }
 
 train_form = {}
+
+train_models_dict = {}
+
 for model in model_list:
-    train_form[model.model_name] = {
-        "form": model.train_form,
-        "callback": model.train,
-    }
+    for sub_model in model.model_types:
+        if model.train_form.get(sub_model) is None:
+            continue
+        display_name = model.model_name + " - " + model.model_types[sub_model]
+
+        if train_models_dict.get(model.model_name) is None:
+            train_models_dict[model.model_name] = []
+        train_models_dict[model.model_name].append(display_name)
+
+        train_form[display_name] = {
+            "form": model.train_form[sub_model],
+            "callback": model.train,
+        }
+print(train_models_dict)

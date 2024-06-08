@@ -78,7 +78,7 @@ class ModelChooser:
                     )
                     if result.get(model_type) is None:
                         result[model_type] = []
-                    result[model_type].append("/diffusion/" + p)
+                    result[model_type].append("diffusion/" + p)
 
         return result
 
@@ -148,6 +148,7 @@ class ModelChooser:
                 value=model_name_list[model_type_index],
                 interactive=model_type_index == -1,
             ),
+            gr.update(visible=model_type_index != -1),
         )
 
     def __init__(self) -> None:
@@ -220,24 +221,25 @@ class ModelChooser:
                 vertical=True,
             )
 
+        self.load_model_btn = gr.Button(
+            "加载模型",
+            variant="primary",
+            interactive=True,
+        )
+
         self.seach_path_dropdown.change(
             self.on_refresh,
             [self.seach_path_dropdown],
-            [*self.model_dropdowns, self.model_type_dropdown],
+            [*self.model_dropdowns, self.model_type_dropdown, self.load_model_btn],
         )
 
         self.refresh_btn.click(
             self.on_refresh,
             [self.seach_path_dropdown],
-            [*self.model_dropdowns, self.model_type_dropdown],
+            [*self.model_dropdowns, self.model_type_dropdown, self.load_model_btn],
         )
 
-        self.load_model = gr.Button(
-            "加载模型",
-            variant="primary",
-            interactive=True,
-        )
-        self.load_model.click(
+        self.load_model_btn.click(
             self.on_load_model_click,
             inputs=[
                 self.seach_path_dropdown,

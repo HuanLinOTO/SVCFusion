@@ -7,11 +7,11 @@ import torch
 import torchaudio
 from SoVITS.inference import infer_tool
 from SoVITS.inference.infer_tool import Svc
-from package_utils.config import JSONReader
+from package_utils.config import JSONReader, YAMLReader
 from package_utils.dataset_utils import auto_normalize_dataset
 from package_utils.exec import exec
 from package_utils.ui.FormTypes import FormDictInModelClass
-from .common import common_infer_form, common_preprocess_form
+from .common import common_infer_form, common_preprocess_form, diff_based_infer_form
 import gradio as gr
 
 
@@ -20,6 +20,14 @@ import soundfile as sf
 
 class SoVITSModel:
     model_name = "So-VITS-SVC"
+
+    def get_config_main(*args):
+        with JSONReader("configs/sovits.json") as config:
+            return config
+
+    def get_config_diff(*args):
+        with YAMLReader("configs/sovits_diff.yaml") as config:
+            return config
 
     _infer_form: FormDictInModelClass = {
         "cluster_infer_ratio": {
@@ -81,17 +89,7 @@ class SoVITSModel:
         },
     }
 
-    train_form = {
-        "batch_size": {
-            "type": "slider",
-            "default": 2,
-            "label": "训练批次大小",
-            "info": "越大越好，越大越占显存，注意不能超过训练集条数",
-            "max": 9999,
-            "min": 1,
-            "step": 1,
-        },
-    }
+    train_form = {}
 
     _preprocess_form = {
         "use_diff": {
@@ -229,9 +227,9 @@ class SoVITSModel:
             "loudness_envelope_adjustment": 1,
         }
         infer_tool.format_wav(params["audio"])
-        # self.svc_model.audio16k_resample_transform = torchaudio.transforms.Resample(
-        #     self.svc_model.target_sample, 16000
-        # ).to(self.svc_model.dev)
+        self.svc_model.audio16k_resample_transform = torchaudio.transforms.Resample(
+            self.svc_model.target_sample, 16000
+        ).to(self.svc_model.dev)
         audio = self.svc_model.slice_inference(**kwarg)
         gc.collect()
         torch.cuda.empty_cache()
@@ -249,5 +247,189 @@ class SoVITSModel:
         self.preprocess_form = {}
         self.preprocess_form.update(self._preprocess_form)
         self.preprocess_form.update(common_preprocess_form)
+
+        self.train_form.update(
+            {
+                "main": {
+                    "log_interval": {
+                        "type": "slider",
+                        "default": lambda: self.get_config_main()["train"][
+                            "log_interval"
+                        ],
+                        "label": "日志间隔",
+                        "info": "每 N 步输出一次日志",
+                        "max": 10000,
+                        "min": 1,
+                        "step": 1,
+                    },
+                    "eval_interval": {
+                        "type": "slider",
+                        "default": lambda: self.get_config_main()["train"][
+                            "eval_interval"
+                        ],
+                        "label": "验证间隔",
+                        "info": "每 N 步保存一次并验证",
+                        "max": 10000,
+                        "min": 1,
+                        "step": 1,
+                    },
+                    "all_in_mem": {
+                        "type": "dropdown_liked_checkbox",
+                        "default": lambda: self.get_config_main()["train"][
+                            "all_in_mem"
+                        ],
+                        "label": "缓存全数据集",
+                        "info": "将所有数据集加载到内存中训练，会加快训练速度，但是需要足够的内存",
+                    },
+                    "keep_ckpts": {
+                        "type": "slider",
+                        "default": lambda: self.get_config_main()["train"][
+                            "keep_ckpts"
+                        ],
+                        "label": "保留检查点",
+                        "info": "保留最近 N 个检查点",
+                        "max": 100,
+                        "min": 1,
+                        "step": 1,
+                    },
+                    "batch_size": {
+                        "type": "slider",
+                        "default": lambda: self.get_config_main()["train"][
+                            "batch_size"
+                        ],
+                        "label": "训练批次大小",
+                        "info": "越大越好，越大越占显存",
+                        "max": 1000,
+                        "min": 1,
+                        "step": 1,
+                    },
+                    "learning_rate": {
+                        "type": "slider",
+                        "default": lambda: self.get_config_main()["train"][
+                            "learning_rate"
+                        ],
+                        "label": "学习率",
+                        "info": "学习率",
+                        "max": 1,
+                        "min": 0,
+                        "step": 0.00001,
+                    },
+                },
+                "diff": {
+                    "batch_size": {
+                        "type": "slider",
+                        "default": lambda: self.get_config_diff()["train"][
+                            "batch_size"
+                        ],
+                        "label": "训练批次大小",
+                        "info": "越大越好，越大越占显存，注意不能超过训练集条数",
+                        "max": 9999,
+                        "min": 1,
+                        "step": 1,
+                    },
+                    "num_workers": {
+                        "type": "slider",
+                        "default": lambda: self.get_config_diff()["train"][
+                            "num_workers"
+                        ],
+                        "label": "训练进程数",
+                        "info": "如果你显卡挺好，可以设为 0",
+                        "max": 9999,
+                        "min": 0,
+                        "step": 1,
+                    },
+                    "amp_dtype": {
+                        "type": "dropdown",
+                        "default": lambda: self.get_config_diff()["train"]["amp_dtype"],
+                        "label": "训练精度",
+                        "info": "选择 fp16、bf16 可以获得更快的速度，但是炸炉概率 up up",
+                        "choices": ["fp16", "bf16", "fp32"],
+                    },
+                    "lr": {
+                        "type": "slider",
+                        "default": lambda: self.get_config_diff()["train"]["lr"],
+                        "step": 0.00001,
+                        "min": 0.00001,
+                        "max": 0.1,
+                        "label": "学习率",
+                        "info": "不建议动",
+                    },
+                    "interval_val": {
+                        "type": "slider",
+                        "default": lambda: self.get_config_diff()["train"][
+                            "interval_val"
+                        ],
+                        "label": "验证间隔",
+                        "info": "每 N 步验证一次，同时保存",
+                        "max": 10000,
+                        "min": 1,
+                        "step": 1,
+                    },
+                    "interval_log": {
+                        "type": "slider",
+                        "default": lambda: self.get_config_diff()["train"][
+                            "interval_log"
+                        ],
+                        "label": "日志间隔",
+                        "info": "每 N 步输出一次日志",
+                        "max": 10000,
+                        "min": 1,
+                        "step": 1,
+                    },
+                    "train_interval_force_save": {
+                        "type": "slider",
+                        "label": "强制保存模型间隔",
+                        "info": "每 N 步保存一次模型",
+                        "min": 0,
+                        "max": 100000,
+                        "default": lambda: self.get_config_diff()["train"][
+                            "interval_force_save"
+                        ],
+                        "step": 1000,
+                    },
+                    "train_gamma": {
+                        "type": "slider",
+                        "label": "lr 衰减力度",
+                        "info": "不建议动",
+                        "min": 0,
+                        "max": 1,
+                        "default": 0.5,
+                        "step": 0.1,
+                    },
+                    "train_cache_device": {
+                        "type": "dropdown",
+                        "label": "缓存设备",
+                        "info": "选择 cuda 可以获得更快的速度，但是需要更大显存的显卡 (SoVITS 主模型无效)",
+                        "choices": ["cuda", "cpu"],
+                        "default": lambda: self.get_config_diff()["train"][
+                            "cache_device"
+                        ],
+                    },
+                    "train_cache_all": {
+                        "type": "dropdown_liked_checkbox",
+                        "label": "缓存所有数据",
+                        "info": "可以获得更快的速度，但是需要大内存/显存的设备",
+                        "default": lambda: self.get_config_diff()["train"][
+                            "cache_all_data"
+                        ],
+                    },
+                    "train_epoch": {
+                        "type": "slider",
+                        "label": "最大训练轮数",
+                        "info": "达到设定值时将会停止训练",
+                        "min": 50000,
+                        "max": 1000000,
+                        "default": lambda: self.get_config_diff()["train"]["epochs"],
+                        "step": 1,
+                    },
+                    "use_pretrain": {
+                        "type": "dropdown_liked_checkbox",
+                        "label": "使用预训练模型",
+                        "info": "勾选可以大幅减少训练时间，如果你不懂，不要动",
+                        "default": True,
+                    },
+                },
+            },
+        )
 
         self.svc_model = None

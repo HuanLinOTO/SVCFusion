@@ -98,7 +98,7 @@ class DDSPModel:
             self.spks = config.get("spks", ["默认说话人"])
         return self.spks
 
-    def train(self, params):
+    def train(self, params, progress: gr.Progress):
         print(params)
 
     def preprocess(self, params, progress: gr.Progress):
@@ -364,103 +364,108 @@ class DDSPModel:
 
         self.train_form.update(
             {
-                "batch_size": {
-                    "type": "slider",
-                    "default": lambda: self.get_config()["train"]["batch_size"],
-                    "label": "训练批次大小",
-                    "info": "越大越好，越大越占显存，注意不能超过训练集条数",
-                    "max": 9999,
-                    "min": 1,
-                    "step": 1,
-                },
-                "num_workers": {
-                    "type": "slider",
-                    "default": lambda: self.get_config()["train"]["num_workers"],
-                    "label": "训练进程数",
-                    "info": "如果你显卡挺好，可以设为 0",
-                    "max": 9999,
-                    "min": 0,
-                    "step": 1,
-                },
-                "amp_dtype": {
-                    "type": "dropdown",
-                    "default": lambda: self.get_config()["train"]["amp_dtype"],
-                    "label": "训练精度",
-                    "info": "选择 fp16、bf16 可以获得更快的速度，但是炸炉概率 up up",
-                    "choices": ["fp16", "bf16", "fp32"],
-                },
-                "lr": {
-                    "type": "slider",
-                    "default": lambda: self.get_config()["train"]["lr"],
-                    "step": 0.00001,
-                    "min": 0.00001,
-                    "max": 0.1,
-                    "label": "学习率",
-                    "info": "不建议动",
-                },
-                "interval_val": {
-                    "type": "slider",
-                    "default": lambda: self.get_config()["train"]["interval_val"],
-                    "label": "验证间隔",
-                    "info": "每 N 步验证一次，同时保存",
-                    "max": 10000,
-                    "min": 1,
-                    "step": 1,
-                },
-                "interval_log": {
-                    "type": "slider",
-                    "default": lambda: self.get_config()["train"]["interval_log"],
-                    "label": "日志间隔",
-                    "info": "每 N 步输出一次日志",
-                    "max": 10000,
-                    "min": 1,
-                    "step": 1,
-                },
-                "train_interval_force_save": {
-                    "type": "slider",
-                    "label": "强制保存模型间隔",
-                    "info": "每 N 步保存一次模型",
-                    "min": 0,
-                    "max": 100000,
-                    "default": lambda: self.get_config()["train"][
-                        "interval_force_save"
-                    ],
-                    "step": 1000,
-                },
-                "train_gamma": {
-                    "type": "slider",
-                    "label": "lr 衰减力度",
-                    "info": "不建议动",
-                    "min": 0,
-                    "max": 1,
-                    "default": 0.5,
-                    "step": 0.1,
-                },
-                "train_cache_device": {
-                    "type": "dropdown",
-                    "label": "缓存设备",
-                    "info": "选择 cuda 可以获得更快的速度，但是需要更大显存的显卡 (SoVITS 主模型无效)",
-                    "choices": ["cuda", "cpu"],
-                    "default": lambda: self.get_config()["train"]["cache_device"],
-                },
-                "train_cache_all": {
-                    "type": "dropdown",
-                    "label": "缓存所有数据",
-                    "info": "可以获得更快的速度，但是需要大内存/显存的设备",
-                    "choices": ["是", "否"],
-                    "default": lambda: "是"
-                    if self.get_config()["train"]["cache_all_data"]
-                    else "否",
-                },
-                "train_epoch": {
-                    "type": "slider",
-                    "label": "最大训练轮数",
-                    "info": "达到设定值时将会停止训练",
-                    "min": 50000,
-                    "max": 1000000,
-                    "default": lambda: self.get_config()["train"]["epochs"],
-                    "step": 1,
-                },
+                "cascade": {
+                    "batch_size": {
+                        "type": "slider",
+                        "default": lambda: self.get_config()["train"]["batch_size"],
+                        "label": "训练批次大小",
+                        "info": "越大越好，越大越占显存，注意不能超过训练集条数",
+                        "max": 9999,
+                        "min": 1,
+                        "step": 1,
+                    },
+                    "num_workers": {
+                        "type": "slider",
+                        "default": lambda: self.get_config()["train"]["num_workers"],
+                        "label": "训练进程数",
+                        "info": "如果你显卡挺好，可以设为 0",
+                        "max": 9999,
+                        "min": 0,
+                        "step": 1,
+                    },
+                    "amp_dtype": {
+                        "type": "dropdown",
+                        "default": lambda: self.get_config()["train"]["amp_dtype"],
+                        "label": "训练精度",
+                        "info": "选择 fp16、bf16 可以获得更快的速度，但是炸炉概率 up up",
+                        "choices": ["fp16", "bf16", "fp32"],
+                    },
+                    "lr": {
+                        "type": "slider",
+                        "default": lambda: self.get_config()["train"]["lr"],
+                        "step": 0.00001,
+                        "min": 0.00001,
+                        "max": 0.1,
+                        "label": "学习率",
+                        "info": "不建议动",
+                    },
+                    "interval_val": {
+                        "type": "slider",
+                        "default": lambda: self.get_config()["train"]["interval_val"],
+                        "label": "验证间隔",
+                        "info": "每 N 步验证一次，同时保存",
+                        "max": 10000,
+                        "min": 1,
+                        "step": 1,
+                    },
+                    "interval_log": {
+                        "type": "slider",
+                        "default": lambda: self.get_config()["train"]["interval_log"],
+                        "label": "日志间隔",
+                        "info": "每 N 步输出一次日志",
+                        "max": 10000,
+                        "min": 1,
+                        "step": 1,
+                    },
+                    "train_interval_force_save": {
+                        "type": "slider",
+                        "label": "强制保存模型间隔",
+                        "info": "每 N 步保存一次模型",
+                        "min": 0,
+                        "max": 100000,
+                        "default": lambda: self.get_config()["train"][
+                            "interval_force_save"
+                        ],
+                        "step": 1000,
+                    },
+                    "train_gamma": {
+                        "type": "slider",
+                        "label": "lr 衰减力度",
+                        "info": "不建议动",
+                        "min": 0,
+                        "max": 1,
+                        "default": 0.5,
+                        "step": 0.1,
+                    },
+                    "train_cache_device": {
+                        "type": "dropdown",
+                        "label": "缓存设备",
+                        "info": "选择 cuda 可以获得更快的速度，但是需要更大显存的显卡 (SoVITS 主模型无效)",
+                        "choices": ["cuda", "cpu"],
+                        "default": lambda: self.get_config()["train"]["cache_device"],
+                    },
+                    "train_cache_all": {
+                        "type": "dropdown_liked_checkbox",
+                        "label": "缓存所有数据",
+                        "info": "可以获得更快的速度，但是需要大内存/显存的设备",
+                        "default": lambda: self.get_config()["train"]["cache_all_data"],
+                    },
+                    "train_epoch": {
+                        "type": "slider",
+                        "label": "最大训练轮数",
+                        "info": "达到设定值时将会停止训练",
+                        "min": 50000,
+                        "max": 1000000,
+                        "default": lambda: self.get_config()["train"]["epochs"],
+                        "step": 1,
+                    },
+                    "use_pretrain": {
+                        "type": "dropdown_liked_checkbox",
+                        "label": "使用预训练模型",
+                        "info": "勾选可以大幅减少训练时间，如果你不懂，不要动",
+                        "default": True,
+                    },
+                }
             }
         )
 
