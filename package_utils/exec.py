@@ -3,6 +3,8 @@ import subprocess
 
 from loguru import logger
 
+executable = ".conda\\python.exe"
+
 
 def exec_it(command):
     accumulated_output = ""

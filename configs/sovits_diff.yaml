@@ -7,14 +7,14 @@ data:
   encoder_out_channels: 768
   encoder_sample_rate: 16000
   extensions:
-    - wav
+  - wav
   sampling_rate: 44100
   training_files: filelists/train.txt
   unit_interpolate_mode: nearest
   validation_files: filelists/val.txt
 device: cuda
 env:
-  expdir: logs/44k/diffusion
+  expdir: exp/workdir/diffusion
   gpu_id: 0
 infer:
   method: dpm-solver++
@@ -29,7 +29,7 @@ model:
   type: Diffusion
   use_pitch_aug: true
 spk:
-  sliced: 0
+  wkr_raw: 0
 train:
   amp_dtype: fp32
   batch_size: 48
@@ -49,4 +49,3 @@ train:
 vocoder:
   ckpt: pretrain/nsf_hifigan/model
   type: nsf-hifigan
-model_type_index: 0

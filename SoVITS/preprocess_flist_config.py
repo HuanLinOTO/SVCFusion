@@ -158,5 +158,7 @@ if __name__ == "__main__":
         logger.info("Writing to exp/workdir/config.json")
         with open("exp/workdir/config.json", "w", encoding="utf-8") as f:
             json.dump(config_template, f, indent=2)
-        logger.info("Writing to configs/diffusion.yaml")
-        du.save_config("configs/diffusion.yaml", d_config_template)
+        logger.info("Writing to exp/workdir/diffusion/config.yaml")
+        if not os.path.exists("exp/workdir/diffusion"):
+            os.makedirs("exp/workdir/diffusion")
+        du.save_config("exp/workdir/diffusion/config.yaml", d_config_template)

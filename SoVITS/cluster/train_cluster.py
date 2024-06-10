@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 import torch
 import tqdm
-from kmeans import KMeansGPU
+from .kmeans import KMeansGPU
 from sklearn.cluster import KMeans, MiniBatchKMeans
 
 logging.basicConfig(level=logging.INFO)
@@ -78,7 +78,10 @@ if __name__ == "__main__":
         help="path of training data directory",
     )
     parser.add_argument(
-        "--output", type=Path, default="logs/44k", help="path of model output directory"
+        "--output",
+        type=Path,
+        default="exp/workdir",
+        help="path of model output directory",
     )
     parser.add_argument("--gpu", action="store_true", default=False, help="to use GPU")
 

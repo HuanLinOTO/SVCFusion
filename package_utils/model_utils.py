@@ -7,13 +7,10 @@ import gradio as gr
 import yaml
 
 from package_utils.const_vars import (
-    SUPPORT_MODEL_TYPE,
-    TYPE_INDEX_TO_CONFIG_NAME,
     WORK_DIR_PATH,
 )
 from package_utils.file import make_dirs
-from package_utils.models.inited import train_models_dict, model_name_list
-from package_utils.exec import exec, start_with_cmd
+from package_utils.exec import exec
 
 
 def reload_models(search_dir):
@@ -67,13 +64,6 @@ def search_models(search_dir) -> list:
     return models
 
 
-def on_change_train_model():
-    model_name = model_name_list[detect_current_model_by_dataset()]
-    return gr.update(
-        choices=train_models_dict[model_name], value=train_models_dict[model_name][0]
-    )
-
-
 def archieve():
     make_dirs("archieve/", False)
     path = f"./archieve/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}/"
@@ -82,6 +72,12 @@ def archieve():
     make_dirs(WORK_DIR_PATH, False)
     if os.name == "nt":
         exec("explorer " + path.replace("/", "\\"))
+
+
+def load_pretrained(model_name, vocoder_name):
+    pretrained_path = os.path.join("pretrained", model_name, vocoder_name)
+    for file in os.listdir(pretrained_path):
+        shutil.copy(os.path.join(pretrained_path, file), WORK_DIR_PATH)
 
 
 def tensorboard():

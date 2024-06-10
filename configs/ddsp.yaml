@@ -8,7 +8,7 @@ data:
   encoder_out_channels: 768
   encoder_sample_rate: 16000
   extensions:
-  - wav
+    - wav
   f0_extractor: fcpe
   f0_max: 800
   f0_min: 65
@@ -32,10 +32,10 @@ model:
   win_length: 2048
 model_type_index: 0
 spks:
-- wkr_raw
+  - wkr_raw
 train:
   amp_dtype: fp32
-  batch_size: 48
+  batch_size: 60
   cache_all_data: true
   cache_device: cpu
   cache_fp16: true

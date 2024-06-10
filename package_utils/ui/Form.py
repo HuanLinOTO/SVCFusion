@@ -40,6 +40,7 @@ class Form:
 
             for key in self.extra_inputs_keys:
                 result[key] = args[i]
+            result["_model_name"] = model_name
             return cb(result, progress=gr.Progress())
 
             # print(cb, result)

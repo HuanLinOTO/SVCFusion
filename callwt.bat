@@ -15,4 +15,4 @@ echo %~dp0 > workdir
 
 %~dp0.conda\ddsp.webui.exe %~dp0\webui.bin
 
-@REM pause
+pause

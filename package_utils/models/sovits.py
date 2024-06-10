@@ -1,17 +1,19 @@
 import gc
 import os
-from sys import executable
+from package_utils.exec import executable
 import time
 
 import torch
 import torchaudio
 from SoVITS.inference import infer_tool
 from SoVITS.inference.infer_tool import Svc
-from package_utils.config import JSONReader, YAMLReader
+from package_utils.config import JSONReader, YAMLReader, applyChanges
+from package_utils.const_vars import WORK_DIR_PATH
 from package_utils.dataset_utils import auto_normalize_dataset
-from package_utils.exec import exec
+from package_utils.exec import exec, start_with_cmd
+from package_utils.model_utils import load_pretrained
 from package_utils.ui.FormTypes import FormDictInModelClass
-from .common import common_infer_form, common_preprocess_form, diff_based_infer_form
+from .common import common_infer_form, common_preprocess_form
 import gradio as gr
 
 
@@ -122,7 +124,7 @@ class SoVITSModel:
     }
 
     def model_filter(self, filepath: str):
-        if filepath.endswith(".pth"):
+        if filepath.endswith(".pth") and not filepath.startswith("D_"):
             return "main"
         if os.path.basename(filepath) in ["feature_and_index.pkl", "kmeans_10000.pt"]:
             return "cluster"
@@ -177,8 +179,48 @@ class SoVITSModel:
         with JSONReader(os.path.dirname(main_path) + "/config.json") as config:
             return list(config["spk"].keys())
 
-    def train(self, params):
+    def train(self, params, progress: gr.Progress):
         print(params)
+        sub_model_name = params["_model_name"]
+        if sub_model_name == "So-VITS-SVC - 主模型":
+            working_config_path = os.path.join(WORK_DIR_PATH, "config.json")
+
+            config = applyChanges(
+                working_config_path,
+                params,
+            )
+
+            load_pretrained("sovits", config["model"]["speech_encoder"])
+
+            start_with_cmd(
+                f"{executable} -m SoVITS.train -c {working_config_path} -m workdir"
+            )
+        elif sub_model_name == "So-VITS-SVC - 浅扩散模型":
+            working_config_path = os.path.join(
+                WORK_DIR_PATH, "diffusion", "config.yaml"
+            )
+
+            config = applyChanges(
+                working_config_path,
+                params,
+            )
+
+            load_pretrained("sovits_diff", config["data"]["encoder"])
+
+            start_with_cmd(
+                f"{executable} -m SoVITS.train_diff -c {working_config_path}"
+            )
+        elif sub_model_name == "So-VITS-SVC - 聚类/检索模型":
+            if params["cluster_or_index"] == "cluster":
+                cmd = f"{executable} -m SoVITS.cluster.train_cluster --dataset data/44k"
+                if params["use_gpu"]:
+                    cmd += " --gpu"
+                start_with_cmd(cmd)
+            else:
+                working_config_path = os.path.join(WORK_DIR_PATH, "config.json")
+                start_with_cmd(
+                    f"{executable} -m SoVITS.train_index --root_dir data/44k     -c {working_config_path}"
+                )
 
     def preprocess(self, params, progress=gr.Progress()):
         # aa
@@ -191,6 +233,7 @@ class SoVITSModel:
         exec(
             f"{executable} -m SoVITS.preprocess_new --f0_predictor {params['f0']} --num_processes 4 {'--use_diff' if params['use_diff'] else ''}"
         )
+        return "完成"
 
     def infer(self, params, progress=gr.Progress()):
         wf, sr = torchaudio.load(params["audio"])
@@ -251,7 +294,7 @@ class SoVITSModel:
         self.train_form.update(
             {
                 "main": {
-                    "log_interval": {
+                    "train.log_interval": {
                         "type": "slider",
                         "default": lambda: self.get_config_main()["train"][
                             "log_interval"
@@ -262,7 +305,7 @@ class SoVITSModel:
                         "min": 1,
                         "step": 1,
                     },
-                    "eval_interval": {
+                    "train.eval_interval": {
                         "type": "slider",
                         "default": lambda: self.get_config_main()["train"][
                             "eval_interval"
@@ -273,7 +316,7 @@ class SoVITSModel:
                         "min": 1,
                         "step": 1,
                     },
-                    "all_in_mem": {
+                    "train.all_in_mem": {
                         "type": "dropdown_liked_checkbox",
                         "default": lambda: self.get_config_main()["train"][
                             "all_in_mem"
@@ -281,7 +324,7 @@ class SoVITSModel:
                         "label": "缓存全数据集",
                         "info": "将所有数据集加载到内存中训练，会加快训练速度，但是需要足够的内存",
                     },
-                    "keep_ckpts": {
+                    "train.keep_ckpts": {
                         "type": "slider",
                         "default": lambda: self.get_config_main()["train"][
                             "keep_ckpts"
@@ -292,7 +335,7 @@ class SoVITSModel:
                         "min": 1,
                         "step": 1,
                     },
-                    "batch_size": {
+                    "train.batch_size": {
                         "type": "slider",
                         "default": lambda: self.get_config_main()["train"][
                             "batch_size"
@@ -303,7 +346,7 @@ class SoVITSModel:
                         "min": 1,
                         "step": 1,
                     },
-                    "learning_rate": {
+                    "train.learning_rate": {
                         "type": "slider",
                         "default": lambda: self.get_config_main()["train"][
                             "learning_rate"
@@ -316,7 +359,7 @@ class SoVITSModel:
                     },
                 },
                 "diff": {
-                    "batch_size": {
+                    "train.batchsize": {
                         "type": "slider",
                         "default": lambda: self.get_config_diff()["train"][
                             "batch_size"
@@ -327,7 +370,7 @@ class SoVITSModel:
                         "min": 1,
                         "step": 1,
                     },
-                    "num_workers": {
+                    "train.num_workers": {
                         "type": "slider",
                         "default": lambda: self.get_config_diff()["train"][
                             "num_workers"
@@ -338,14 +381,14 @@ class SoVITSModel:
                         "min": 0,
                         "step": 1,
                     },
-                    "amp_dtype": {
+                    "train.amp_dtype": {
                         "type": "dropdown",
                         "default": lambda: self.get_config_diff()["train"]["amp_dtype"],
                         "label": "训练精度",
                         "info": "选择 fp16、bf16 可以获得更快的速度，但是炸炉概率 up up",
                         "choices": ["fp16", "bf16", "fp32"],
                     },
-                    "lr": {
+                    "train.lr": {
                         "type": "slider",
                         "default": lambda: self.get_config_diff()["train"]["lr"],
                         "step": 0.00001,
@@ -354,7 +397,7 @@ class SoVITSModel:
                         "label": "学习率",
                         "info": "不建议动",
                     },
-                    "interval_val": {
+                    "train.interval_val": {
                         "type": "slider",
                         "default": lambda: self.get_config_diff()["train"][
                             "interval_val"
@@ -365,7 +408,7 @@ class SoVITSModel:
                         "min": 1,
                         "step": 1,
                     },
-                    "interval_log": {
+                    "train.interval_log": {
                         "type": "slider",
                         "default": lambda: self.get_config_diff()["train"][
                             "interval_log"
@@ -376,7 +419,7 @@ class SoVITSModel:
                         "min": 1,
                         "step": 1,
                     },
-                    "train_interval_force_save": {
+                    "train.interval_force_save": {
                         "type": "slider",
                         "label": "强制保存模型间隔",
                         "info": "每 N 步保存一次模型",
@@ -387,16 +430,16 @@ class SoVITSModel:
                         ],
                         "step": 1000,
                     },
-                    "train_gamma": {
+                    "train.gamma": {
                         "type": "slider",
                         "label": "lr 衰减力度",
                         "info": "不建议动",
                         "min": 0,
                         "max": 1,
-                        "default": 0.5,
+                        "default": lambda: self.get_config_diff()["train"]["gamma"],
                         "step": 0.1,
                     },
-                    "train_cache_device": {
+                    "train.cache_device": {
                         "type": "dropdown",
                         "label": "缓存设备",
                         "info": "选择 cuda 可以获得更快的速度，但是需要更大显存的显卡 (SoVITS 主模型无效)",
@@ -405,7 +448,7 @@ class SoVITSModel:
                             "cache_device"
                         ],
                     },
-                    "train_cache_all": {
+                    "train.cache_all_data": {
                         "type": "dropdown_liked_checkbox",
                         "label": "缓存所有数据",
                         "info": "可以获得更快的速度，但是需要大内存/显存的设备",
@@ -413,7 +456,7 @@ class SoVITSModel:
                             "cache_all_data"
                         ],
                     },
-                    "train_epoch": {
+                    "train.epochs": {
                         "type": "slider",
                         "label": "最大训练轮数",
                         "info": "达到设定值时将会停止训练",
@@ -426,6 +469,21 @@ class SoVITSModel:
                         "type": "dropdown_liked_checkbox",
                         "label": "使用预训练模型",
                         "info": "勾选可以大幅减少训练时间，如果你不懂，不要动",
+                        "default": True,
+                    },
+                },
+                "cluster": {
+                    "cluster_or_index": {
+                        "type": "dropdown",
+                        "label": "聚类或检索",
+                        "info": "要训练聚类还是检索模型，检索咬字比聚类稍好",
+                        "choices": ["cluster", "index"],
+                        "default": "cluster",
+                    },
+                    "use_gpu": {
+                        "type": "dropdown_liked_checkbox",
+                        "label": "使用 GPU",
+                        "info": "使用 GPU 可以加速训练，该参数只聚类可用",
                         "default": True,
                     },
                 },

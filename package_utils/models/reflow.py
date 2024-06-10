@@ -2,20 +2,21 @@ import gc
 import hashlib
 import os
 from shutil import rmtree
-from sys import executable
+from package_utils.exec import executable
 import librosa
 import numpy as np
 import torch
 import yaml
 
-from package_utils.config import YAMLReader
+from package_utils.config import YAMLReader, applyChanges
 from package_utils.dataset_utils import DrawArgs, auto_normalize_dataset
+from package_utils.model_utils import load_pretrained
 from .common import common_infer_form, diff_based_infer_form, common_preprocess_form
 from ReFlowVaeSVC.main import cross_fade, upsample, split
 from ReFlowVaeSVC.reflow.vocoder import load_model_vocoder
 from ReFlowVaeSVC.reflow.extractors import F0_Extractor, Volume_Extractor, Units_Encoder
 from ddspsvc.draw import main as draw_main
-from package_utils.exec import exec
+from package_utils.exec import exec, start_with_cmd
 
 import gradio as gr
 import soundfile as sf
@@ -101,8 +102,16 @@ class ReflowVAESVCModel:
             self.spks = config.get("spks", ["默认说话人"])
         return self.spks
 
-    def train(self, params):
-        print(params)
+    def train(self, params, progress: gr.Progress):
+        # print(params)
+        working_config_path = "configs/reflow.yaml"
+        config = applyChanges(working_config_path, params)
+
+        load_pretrained("reflow", config["data"]["encoder"])
+
+        start_with_cmd(
+            f"{executable} -m ReFlowVaeSVC.traomReFlowVaeSVC -c configs/reflow.yaml"
+        )
 
     def preprocess(self, params, progress: gr.Progress = None):
         with open("data/model_type", "w") as f:
@@ -385,7 +394,7 @@ class ReflowVAESVCModel:
         self.train_form.update(
             {
                 "cascade": {
-                    "batch_size": {
+                    "train.batch_size": {
                         "type": "slider",
                         "default": lambda: self.get_config()["train"]["batch_size"],
                         "label": "训练批次大小",
@@ -394,7 +403,7 @@ class ReflowVAESVCModel:
                         "min": 1,
                         "step": 1,
                     },
-                    "num_workers": {
+                    "train.num_workers": {
                         "type": "slider",
                         "default": lambda: self.get_config()["train"]["num_workers"],
                         "label": "训练进程数",
@@ -403,14 +412,14 @@ class ReflowVAESVCModel:
                         "min": 0,
                         "step": 1,
                     },
-                    "amp_dtype": {
+                    "train.amp_dtype": {
                         "type": "dropdown",
                         "default": lambda: self.get_config()["train"]["amp_dtype"],
                         "label": "训练精度",
                         "info": "选择 fp16、bf16 可以获得更快的速度，但是炸炉概率 up up",
                         "choices": ["fp16", "bf16", "fp32"],
                     },
-                    "lr": {
+                    "train.lr": {
                         "type": "slider",
                         "default": lambda: self.get_config()["train"]["lr"],
                         "step": 0.00001,
@@ -419,7 +428,7 @@ class ReflowVAESVCModel:
                         "label": "学习率",
                         "info": "不建议动",
                     },
-                    "interval_val": {
+                    "train.interval_val": {
                         "type": "slider",
                         "default": lambda: self.get_config()["train"]["interval_val"],
                         "label": "验证间隔",
@@ -428,7 +437,7 @@ class ReflowVAESVCModel:
                         "min": 1,
                         "step": 1,
                     },
-                    "interval_log": {
+                    "train.interval_log": {
                         "type": "slider",
                         "default": lambda: self.get_config()["train"]["interval_log"],
                         "label": "日志间隔",
@@ -437,7 +446,7 @@ class ReflowVAESVCModel:
                         "min": 1,
                         "step": 1,
                     },
-                    "train_interval_force_save": {
+                    "train.interval_force_save": {
                         "type": "slider",
                         "label": "强制保存模型间隔",
                         "info": "每 N 步保存一次模型",
@@ -448,29 +457,29 @@ class ReflowVAESVCModel:
                         ],
                         "step": 1000,
                     },
-                    "train_gamma": {
+                    "train.gamma": {
                         "type": "slider",
                         "label": "lr 衰减力度",
                         "info": "不建议动",
                         "min": 0,
                         "max": 1,
-                        "default": 0.5,
+                        "default": lambda: self.get_config()["train"]["gamma"],
                         "step": 0.1,
                     },
-                    "train_cache_device": {
+                    "train.cache_device": {
                         "type": "dropdown",
                         "label": "缓存设备",
                         "info": "选择 cuda 可以获得更快的速度，但是需要更大显存的显卡 (SoVITS 主模型无效)",
                         "choices": ["cuda", "cpu"],
                         "default": lambda: self.get_config()["train"]["cache_device"],
                     },
-                    "train_cache_all": {
+                    "train.cache_all_data": {
                         "type": "dropdown_liked_checkbox",
                         "label": "缓存所有数据",
                         "info": "可以获得更快的速度，但是需要大内存/显存的设备",
                         "default": lambda: self.get_config()["train"]["cache_all_data"],
                     },
-                    "train_epoch": {
+                    "train.epochs": {
                         "type": "slider",
                         "label": "最大训练轮数",
                         "info": "达到设定值时将会停止训练",

@@ -17,7 +17,7 @@ if __name__ == "__main__":
         help="JSON file for configuration",
     )
     parser.add_argument(
-        "--output_dir", type=str, default="logs/44k", help="path to output dir"
+        "--output_dir", type=str, default="exp/workdir", help="path to output dir"
     )
 
     args = parser.parse_args()

@@ -12,7 +12,7 @@ import torch
 
 from . import logger
 
-PYPATH = sys.executable
+PYPATH = ".conda\\python.exe"
 
 
 async def exec_it(command, callback):
