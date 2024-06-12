@@ -156,7 +156,7 @@ class Form:
                     }
                     total_i += 1
 
-                    if item["type"] == "audio":
+                    if item["type"] == "audio" or item.get("individual", False) is True:
                         i = 0
                         if not vertical:
                             row.__exit__()

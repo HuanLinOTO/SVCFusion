@@ -6,6 +6,9 @@ import gradio as gr
 from Music_Source_Separation_Training import inference as msst_inference
 
 import logging
+import ffmpeg
+import torch
+from vr import AudioPre, AudioPreDeEcho
 
 
 def i18n(text):
@@ -13,9 +16,6 @@ def i18n(text):
 
 
 logger = logging.getLogger(__name__)
-import ffmpeg
-import torch
-from vr import AudioPre, AudioPreDeEcho
 
 os.environ["PATH"] += os.pathsep + os.getcwd()
 
@@ -46,7 +46,7 @@ def uvr(
         for path in paths:
             inp_path = os.path.join(inp_root, path)
             print(inp_path)
-            if os.path.isfile(inp_path) == False:
+            if os.path.isfile(inp_path) is False:
                 print(f"File {inp_path} not found")
                 continue
             need_reformat = 1
@@ -67,7 +67,7 @@ def uvr(
                         output,
                     )
                     done = 1
-            except:
+            except Exception:
                 need_reformat = 1
                 traceback.print_exc()
             if need_reformat == 1:
@@ -90,9 +90,9 @@ def uvr(
                         is_hp3,
                         output,
                     )
-            except:
+            except Exception:
                 traceback.print_exc()
-    except:
+    except Exception:
         print(traceback.format_exc())
     finally:
         if torch.cuda.is_available():

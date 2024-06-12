@@ -18,7 +18,7 @@ logging.getLogger("numba").setLevel(logging.WARNING)
 logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 hps = utils.get_hparams_from_file("configs/config.json")
-dconfig = du.load_config("configs/diffusion.yaml")
+dconfig = du.load_config("configs/sovits_diff.yaml")
 sampling_rate = hps.data.sampling_rate
 hop_length = hps.data.hop_length
 speech_encoder = hps["model"]["speech_encoder"]

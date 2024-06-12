@@ -1,3 +1,4 @@
+from package_utils.models.common import infer_fn_proxy
 from package_utils.models.ddsp import DDSPModel
 from package_utils.models.sovits import SoVITSModel
 from package_utils.models.reflow import ReflowVAESVCModel
@@ -16,7 +17,7 @@ infer_form = {}
 for model in model_list:
     infer_form[model.model_name] = {
         "form": model.infer_form,
-        "callback": model.infer,
+        "callback": infer_fn_proxy(model.infer),
     }
 
 preprocess_form = {}

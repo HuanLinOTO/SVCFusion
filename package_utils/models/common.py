@@ -1,8 +1,18 @@
+from package_utils.uvr import getVocalAndInstrument
+
+
 common_infer_form = {
     "audio": {
         "type": "audio",
         "label": "音频文件",
         "info": "需要进行推理的音频文件",
+    },
+    "use_vocal_remove": {
+        "type": "checkbox",
+        "info": "是否去除伴奏",
+        "default": False,
+        "label": "去除伴奏",
+        "individual": True,
     },
     "f0": {
         "type": "dropdown",
@@ -116,3 +126,14 @@ diff_based_preprocess_form = {
         "label": "f0 提取器",
     }
 }
+
+
+def infer_fn_proxy(fn):
+    def infer_fn(params, progress):
+        if params["use_vocal_remove"]:
+            vocal, inst = getVocalAndInstrument(params["audio"], progress=progress)
+        params["audio"] = vocal
+
+        fn(params, progress=progress)
+
+    return infer_fn

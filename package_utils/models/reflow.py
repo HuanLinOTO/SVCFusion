@@ -109,9 +109,7 @@ class ReflowVAESVCModel:
 
         load_pretrained("reflow", config["data"]["encoder"])
 
-        start_with_cmd(
-            f"{executable} -m ReFlowVaeSVC.traomReFlowVaeSVC -c configs/reflow.yaml"
-        )
+        start_with_cmd(f"{executable} -m ReFlowVaeSVC.train -c configs/reflow.yaml")
 
     def preprocess(self, params, progress: gr.Progress = None):
         with open("data/model_type", "w") as f:

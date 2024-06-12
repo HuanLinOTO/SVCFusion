@@ -37,6 +37,7 @@ def get_callback(
     name, debug, progress: rich.progress.Progress, taskid: rich.progress.TaskID
 ):
     def real_cb(output):
+        output = output.strip()
         if debug:
             print(name + ": " + output)
         if "[!!]" in output:
@@ -73,12 +74,19 @@ async def main(args, device, f0p, use_diff, debug):
         # 计算每个进程需要处理的行数
         num_train_lines = len(train_lines)
         num_val_lines = len(val_lines)
-        lines_per_chunk = (num_train_lines + num_val_lines) // args.num_processes
+
+        # 确保切割后的行数正确，并处理可能的剩余行
+        lines_per_chunk_train = len(train_lines) // args.num_processes
+        lines_per_chunk_val = len(val_lines) // args.num_processes
 
         # 分割 train filelist 到 chunks
         for i in range(args.num_processes):
-            start_idx = i * lines_per_chunk
-            end_idx = start_idx + lines_per_chunk
+            start_idx = i * lines_per_chunk_train
+            end_idx = (
+                start_idx + lines_per_chunk_train
+                if i < args.num_processes - 1
+                else len(train_lines)
+            )
 
             train_chunk = train_lines[start_idx:end_idx]
 
@@ -89,8 +97,12 @@ async def main(args, device, f0p, use_diff, debug):
 
         # 分割 val filelist 到 chunks
         for i in range(args.num_processes):
-            start_idx = i * lines_per_chunk
-            end_idx = start_idx + lines_per_chunk
+            start_idx = i * lines_per_chunk_val
+            end_idx = (
+                start_idx + lines_per_chunk_val
+                if i < args.num_processes - 1
+                else len(val_lines)
+            )
 
             val_chunk = val_lines[start_idx:end_idx]
 
@@ -98,7 +110,6 @@ async def main(args, device, f0p, use_diff, debug):
                 f"filelists/{timestamp}/chunk-{i}.txt", "a", encoding="utf-8"
             ) as chunk_file:
                 chunk_file.writelines(val_chunk)
-
         filelists = []
         for root, dirs, files in os.walk(tmp_path):
             for file in files:
@@ -106,6 +117,7 @@ async def main(args, device, f0p, use_diff, debug):
                     filelists.append(os.path.join(root, file))
         tasks = []
         print(filelists)
+        # exit(0)
         num_files = num_train_lines + num_val_lines
         taskid = progress.add_task("Preprocessing", total=num_files)
         for filelist in filelists:
@@ -166,5 +178,6 @@ if __name__ == "__main__":
 
     num_processes = args.num_processes
     use_diff = args.use_diff
-    debug = args.debug
+    # debug = args.debug
+    debug = True
     asyncio.run(main(args=args, device=device, f0p=f0p, use_diff=use_diff, debug=debug))
