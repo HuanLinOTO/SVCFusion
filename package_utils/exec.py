@@ -3,7 +3,7 @@ import subprocess
 
 from loguru import logger
 
-executable = ".conda\\python.exe"
+executable = os.path.abspath(".conda\\python.exe")
 
 
 def exec_it(command):
@@ -39,10 +39,11 @@ def exec_it(command):
 def exec(command):
     logger.info(f"Run command: {command}")
 
-    os.system(command)
+    return os.system(command)
 
 
-def start_with_cmd(cmd):
-    cmd = "call .conda\Scripts\\activate.bat" + " && " + cmd
+def start_with_cmd(cmd: str):
+    # cmd = "call .conda\\Scripts\\activate.bat" + " && " + cmd
+
     logger.info(f"Run command with cmd: {cmd}")
-    subprocess.Popen(["wt\\wt", "cmd", "/k", cmd], shell=True)
+    subprocess.Popen(["wt\\wt", *cmd.split(" ")], shell=True)

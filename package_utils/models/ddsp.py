@@ -44,6 +44,30 @@ class DDSPModel:
         if filepath.endswith(".pt"):
             return "cascade"
 
+    def pack_model(self, model_dict):
+        result = {}
+        result["model_dict"] = {}
+        result["config_dict"] = {}
+        if model_dict.get("cascade", None):
+            result["model_dict"]["cascade"] = torch.load(
+                model_dict["cascade"], map_location="cpu"
+            )
+            config_path = os.path.dirname(model_dict["cascade"]) + "/config.yaml"
+
+            with YAMLReader(config_path) as config:
+                result["config_dict"]["cascade"] = config
+        return result
+
+    def install_model(self, package, model_name):
+        model_dict = package["model_dict"]
+        config_dict = package["config_dict"]
+        base_path = os.path.join("models", model_name)
+        os.makedirs(base_path, exist_ok=True)
+        if "cascade" in model_dict:
+            torch.save(model_dict["cascade"], os.path.join(base_path, "model.pt"))
+            with open(os.path.join(base_path, "config.yaml"), "w") as f:
+                yaml.dump(config_dict["cascade"], f, default_flow_style=False)
+
     def unload_model(self):
         # 回收资源
         if self.model is not None:

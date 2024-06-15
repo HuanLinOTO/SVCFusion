@@ -23,15 +23,21 @@ class PreprocessArgs:
 
 
 def resample(src, dst):
-    exec(
-        f".conda\\python fap/__main__.py resample {src} {dst} --mono",
-    )
+    assert (
+        exec(
+            f".conda\\python fap/__main__.py resample {src} {dst} --mono",
+        )
+        != 0
+    ), "重采样失败，请截图日志反馈"
 
 
 def slice_audio(src, dst, max_duration):
-    exec(
-        f".conda\\python fap/__main__.py slice-audio-v2 {src} {dst} --max-duration {max_duration} --flat-layout --merge-short --clean"
-    )
+    assert (
+        exec(
+            f".conda\\python fap/__main__.py slice-audio-v2 {src} {dst} --max-duration {max_duration} --flat-layout --merge-short --clean"
+        )
+        != 0
+    ), "切割音频失败，请截图日志反馈"
 
 
 def auto_normalize_dataset(

@@ -7,8 +7,8 @@ data:
   encoder_out_channels: 768
   encoder_sample_rate: 16000
   extensions:
-  - wav
-  - flac
+    - wav
+    - flac
   f0_extractor: fcpe
   f0_max: 1200
   f0_min: 40
@@ -26,14 +26,14 @@ model:
   back_bone: wavenet
   n_chans: 768
   n_hidden: 256
-  n_layers: 30
+  n_layers: 20
   n_spk: 1
   type: RectifiedFlow_VAE
   use_attention: true
   use_pitch_aug: false
 model_type_index: 1
 spks:
-- wkr_raw
+  - wkr_raw
 train:
   amp_dtype: fp32
   batch_size: 48

@@ -2,6 +2,7 @@ import os
 from typing import Callable, Dict, TypedDict
 import gradio as gr
 from package_utils.const_vars import WORK_DIR_PATH
+from package_utils.i18n import I
 from package_utils.model_utils import detect_current_model_by_path
 from package_utils.models.inited import model_name_list, model_list
 from package_utils.ui.DeviceChooser import DeviceChooser
@@ -84,10 +85,12 @@ class ModelChooser:
 
         return result
 
-    def update_selected(self, search_path, device, *params_values):
-        pass
+    selected_search_path = ""
 
-    def on_submit(self, search_path, device, *params_values):
+    def update_search_path(self, search_path):
+        self.selected_search_path = search_path
+
+    def update_selected(self, search_path, device, *params_values):
         search_path = self.search_paths[search_path]
         model_type_index = detect_current_model_by_path(search_path)
 
@@ -117,7 +120,12 @@ class ModelChooser:
         result.update(on_topic_extra_form_values)
 
         result = self.result_normalize(result)
-        spks = self.on_submit(model_type_index, result)
+        # Q:我这个变量用于储存已选的参数，应该叫啥名字
+        self.selected_parameters = result
+        self.seleted_model_type_index = model_type_index
+
+    def on_submit(self):
+        spks = self.submit_func(self.seleted_model_type_index, self.selected_parameters)
         if spks is None:
             spks = []
         return gr.update(
@@ -127,6 +135,8 @@ class ModelChooser:
 
     def on_refresh(self, search_path):
         search_path = self.search_paths[search_path]
+        self.update_search_path(search_path)
+
         models = self.get_models_from_search_path(search_path)
         model_type_index = detect_current_model_by_path(search_path)
 
@@ -135,7 +145,6 @@ class ModelChooser:
         for model in model_list:
             for type in model.model_types:
                 m = models.get(type, ["无模型"])
-                print(models, type)
                 m.append("不使用")
                 result.append(
                     gr.update(
@@ -153,11 +162,18 @@ class ModelChooser:
                 value=model_name_list[model_type_index],
                 interactive=model_type_index == -1,
             ),
-            gr.update(visible=model_type_index != -1),
+            gr.update(visible=model_type_index != -1 and self.show_submit_button),
         )
 
-    def __init__(self, on_submit: Callable, show_options=True) -> None:
-        self.on_submit = on_submit
+    def __init__(
+        self,
+        on_submit: Callable = lambda *x: None,
+        show_options=True,
+        show_submit_button=True,
+    ) -> None:
+        self.submit_func = on_submit
+        self.show_submit_button = show_submit_button
+
         self.search_paths = self.refresh_search_paths()
         self.seach_path_dropdown = gr.Dropdown(
             label="搜索路径",
@@ -202,7 +218,6 @@ class ModelChooser:
         with gr.Group():
             self.refresh_btn = gr.Button(
                 "刷新选项",
-                variant="primary",
                 interactive=True,
             )
         with gr.Group():
@@ -229,9 +244,10 @@ class ModelChooser:
             )
 
         self.load_model_btn = gr.Button(
-            "选定模型",
+            I.model_chooser.submit_btn_value,
             variant="primary",
             interactive=True,
+            visible=show_submit_button,
         )
 
         self.seach_path_dropdown.change(
@@ -248,15 +264,25 @@ class ModelChooser:
 
         self.load_model_btn.click(
             self.on_submit,
-            inputs=[
-                self.seach_path_dropdown,
-                self.device_chooser.device_dropdown,
-                *self.model_dropdowns,
-                *(
-                    self.extra_form.param_comp_list
-                    if hasattr(self, "extra_form")
-                    else []
-                ),
-            ],
             outputs=[self.spk_dropdown],
         )
+
+        for item in [
+            self.seach_path_dropdown,
+            self.model_type_dropdown,
+            *self.model_dropdowns,
+            *(self.extra_form.param_comp_list if hasattr(self, "extra_form") else []),
+        ]:
+            item.change(
+                self.update_selected,
+                inputs=[
+                    self.seach_path_dropdown,
+                    self.device_chooser.device_dropdown,
+                    *self.model_dropdowns,
+                    *(
+                        self.extra_form.param_comp_list
+                        if hasattr(self, "extra_form")
+                        else []
+                    ),
+                ],
+            )

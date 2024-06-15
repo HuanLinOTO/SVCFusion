@@ -1,6 +1,11 @@
 import gc
+import json
 import os
 import pickle
+
+import yaml
+from SoVITS.compress_model import copyStateDict
+from SoVITS.models import SynthesizerTrn
 from fap.utils.file import make_dirs
 from package_utils.exec import executable
 import time
@@ -16,6 +21,7 @@ from package_utils.exec import exec, start_with_cmd
 from package_utils.model_utils import load_pretrained
 from package_utils.ui.FormTypes import FormDictInModelClass
 from .common import common_infer_form, common_preprocess_form
+from SoVITS import utils
 import gradio as gr
 
 
@@ -136,19 +142,71 @@ class SoVITSModel:
         },
     }
 
-    def install_model(self, model_dict):
-        print(model_dict)
+    def install_model(self, package, model_name):
+        model_dict = package["model_dict"]
+        config_dict = package["config_dict"]
+        base_path = os.path.join("models", model_name)
+        make_dirs(base_path)
+
         if model_dict.get("main", None):
-            torch.load(model_dict["main"], map_location="cpu")
+            torch.save(model_dict["main"], os.path.join(base_path, "model.pth"))
+            # 将 config_dict["main"] 保存为 config.json
+            with open(os.path.join(base_path, "config.json"), "w") as f:
+                json.dump(config_dict["main"], f)
 
         if model_dict.get("diff", None):
-            torch.load(model_dict["diff"], map_location="cpu")
+            torch.save(model_dict["diff"], os.path.join(base_path, "diff_model.pt"))
+            with open(os.path.join(base_path, "config.yaml"), "w") as f:
+                yaml.dump(config_dict["diff"], f)
 
         if model_dict.get("cluster", None):
-            if model_dict["cluster"].endswith(".pkl"):
-                pickle.load(open(model_dict["cluster"], "rb"))
+            if model_dict["cluster"]["type"] == "index":
+                pickle.dump(
+                    model_dict["cluster"]["model"],
+                    open(os.path.join(base_path, "feature_and_index.pkl"), "wb"),
+                )
             else:
-                torch.load(model_dict["cluster"], map_location="cpu")
+                torch.save(
+                    model_dict["cluster"]["model"],
+                    os.path.join(base_path, "kmeans_10000.pt"),
+                )
+
+    def removeOptimizer(self, config: str, input_model: dict, ishalf: bool):
+        hps = utils.get_hparams_from_file(config)
+
+        net_g = SynthesizerTrn(
+            hps.data.filter_length // 2 + 1,
+            hps.train.segment_size // hps.data.hop_length,
+            **hps.model,
+        )
+
+        optim_g = torch.optim.AdamW(
+            net_g.parameters(),
+            hps.train.learning_rate,
+            betas=hps.train.betas,
+            eps=hps.train.eps,
+        )
+
+        state_dict_g = input_model
+        new_dict_g = copyStateDict(state_dict_g)
+        keys = []
+        for k, v in new_dict_g["model"].items():
+            if "enc_q" in k:
+                continue  # noqa: E701
+            keys.append(k)
+
+        new_dict_g = (
+            {k: new_dict_g["model"][k].half() for k in keys}
+            if ishalf
+            else {k: new_dict_g["model"][k] for k in keys}
+        )
+
+        return {
+            "model": new_dict_g,
+            "iteration": 0,
+            "optimizer": optim_g.state_dict(),
+            "learning_rate": 0.0001,
+        }
 
     def pack_model(self, model_dict):
         print(model_dict)
@@ -157,10 +215,10 @@ class SoVITSModel:
         result["config_dict"] = {}
         if model_dict.get("main", None):
             # return result["main"]
-            result["model_dict"]["main"] = torch.load(
-                model_dict["main"], map_location="cpu"
-            )
             config_path = os.path.dirname(model_dict["main"]) + "/config.json"
+            result["model_dict"]["main"] = self.removeOptimizer(
+                config_path, torch.load(model_dict["main"], map_location="cpu"), True
+            )
             with JSONReader(config_path) as config:
                 result["config_dict"]["main"] = config
 
@@ -174,13 +232,15 @@ class SoVITSModel:
 
         if model_dict.get("cluster", None):
             if model_dict["cluster"].endswith(".pkl"):
-                result["model_dict"]["cluster"] = pickle.load(
-                    open(model_dict["cluster"], "rb")
-                )
+                result["model_dict"]["cluster"] = {
+                    "type": "index",
+                    "model": pickle.load(open(model_dict["cluster"], "rb")),
+                }
             else:
-                result["model_dict"]["cluster"] = torch.load(
-                    model_dict["cluster"], map_location="cpu"
-                )
+                result["model_dict"]["cluster"] = {
+                    "type": "cluster",
+                    "model": torch.load(model_dict["cluster"], map_location="cpu"),
+                }
         return result
 
     def model_filter(self, filepath: str):
@@ -426,8 +486,8 @@ class SoVITSModel:
                         "default": lambda: self.get_config_main()["train"][
                             "num_workers"
                         ],
-                        "label": "数据加载器进程数，仅在 CPU 核心数大于 4 时启用，遵循大就是好原则",
-                        "info": "数据加载器进程数",
+                        "label": "数据加载器进程数",
+                        "info": "仅在 CPU 核心数大于 4 时启用，遵循大就是好原则",
                         "max": 10,
                         "min": 1,
                         "step": 1,

@@ -11,10 +11,6 @@ import torch
 from vr import AudioPre, AudioPreDeEcho
 
 
-def i18n(text):
-    return text
-
-
 logger = logging.getLogger(__name__)
 
 os.environ["PATH"] += os.pathsep + os.getcwd()

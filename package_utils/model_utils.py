@@ -76,8 +76,12 @@ def archieve():
 
 def load_pretrained(model_name, vocoder_name):
     pretrained_path = os.path.join("pretrained", model_name, vocoder_name)
+    if model_name != "sovits_diff":
+        dst = WORK_DIR_PATH
+    else:
+        dst = os.path.join(WORK_DIR_PATH, "diffusion")
     for file in os.listdir(pretrained_path):
-        shutil.copy(os.path.join(pretrained_path, file), WORK_DIR_PATH)
+        shutil.copy(os.path.join(pretrained_path, file), dst)
 
 
 def tensorboard():

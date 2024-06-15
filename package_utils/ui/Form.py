@@ -16,7 +16,6 @@ class Form:
         for i in range(len(self.model_name_list)):
             result.append(gr.update(visible=i == index))
             # result.append(gr.update(visible=True))
-        print("result change_model", result)
         if len(result) == 1:
             return result[0]
         return result
