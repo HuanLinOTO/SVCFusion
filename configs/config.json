@@ -21,7 +21,8 @@
     "port": "8001",
     "keep_ckpts": 3,
     "all_in_mem": false,
-    "vol_aug": false
+    "vol_aug": false,
+    "num_workers": 4
   },
   "data": {
     "training_files": "filelists/train.txt",

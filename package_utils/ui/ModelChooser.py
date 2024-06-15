@@ -1,5 +1,5 @@
 import os
-from typing import Dict, TypedDict
+from typing import Callable, Dict, TypedDict
 import gradio as gr
 from package_utils.const_vars import WORK_DIR_PATH
 from package_utils.model_utils import detect_current_model_by_path
@@ -22,6 +22,8 @@ class ModelChooser:
             ):
                 result[key] = None
         return result
+
+    def get_on_topic_result(): ...
 
     def refresh_search_paths(self):
         self.search_paths = [
@@ -82,10 +84,10 @@ class ModelChooser:
 
         return result
 
-    def on_load_model_click(self, search_path, device, *params_values):
-        for model in model_list:
-            model.unload_model()
+    def update_selected(self, search_path, device, *params_values):
+        pass
 
+    def on_submit(self, search_path, device, *params_values):
         search_path = self.search_paths[search_path]
         model_type_index = detect_current_model_by_path(search_path)
 
@@ -114,7 +116,10 @@ class ModelChooser:
         result["device"] = device
         result.update(on_topic_extra_form_values)
 
-        spks = model_list[model_type_index].load_model(self.result_normalize(result))
+        result = self.result_normalize(result)
+        spks = self.on_submit(model_type_index, result)
+        if spks is None:
+            spks = []
         return gr.update(
             choices=spks if len(spks) > 0 else ["无说话人"],
             value=spks[0] if len(spks) > 0 else "无说话人",
@@ -151,7 +156,8 @@ class ModelChooser:
             gr.update(visible=model_type_index != -1),
         )
 
-    def __init__(self) -> None:
+    def __init__(self, on_submit: Callable, show_options=True) -> None:
+        self.on_submit = on_submit
         self.search_paths = self.refresh_search_paths()
         self.seach_path_dropdown = gr.Dropdown(
             label="搜索路径",
@@ -206,14 +212,15 @@ class ModelChooser:
                     choices=model_name_list,
                     interactive=False,
                 )
-                self.device_chooser = DeviceChooser()
+                self.device_chooser = DeviceChooser(show=show_options)
             self.spk_dropdown = gr.Dropdown(
                 label="选择说话人",
                 choices=["未加载模型"],
                 value="未加载模型",
                 interactive=True,
+                visible=show_options,
             )
-        if len(extra_form) > 0:
+        if len(extra_form) > 0 and show_options:
             self.extra_form = Form(
                 triger_comp=self.model_type_dropdown,
                 models=extra_form,
@@ -222,7 +229,7 @@ class ModelChooser:
             )
 
         self.load_model_btn = gr.Button(
-            "加载模型",
+            "选定模型",
             variant="primary",
             interactive=True,
         )
@@ -240,7 +247,7 @@ class ModelChooser:
         )
 
         self.load_model_btn.click(
-            self.on_load_model_click,
+            self.on_submit,
             inputs=[
                 self.seach_path_dropdown,
                 self.device_chooser.device_dropdown,

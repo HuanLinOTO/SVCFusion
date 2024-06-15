@@ -1,5 +1,6 @@
+from altair import value
 from package_utils.uvr import getVocalAndInstrument
-
+import gradio as gr
 
 common_infer_form = {
     "audio": {
@@ -132,8 +133,16 @@ def infer_fn_proxy(fn):
     def infer_fn(params, progress):
         if params["use_vocal_remove"]:
             vocal, inst = getVocalAndInstrument(params["audio"], progress=progress)
-        params["audio"] = vocal
+            params["audio"] = vocal
 
-        fn(params, progress=progress)
+        res = fn(params, progress=progress)
+
+        return (
+            gr.update(value=res),
+            gr.update(
+                visible=params["use_vocal_remove"],
+                value=inst if params["use_vocal_remove"] else "tmp.wav",
+            ),
+        )
 
     return infer_fn

@@ -1,5 +1,7 @@
 import gc
 import os
+import pickle
+from fap.utils.file import make_dirs
 from package_utils.exec import executable
 import time
 
@@ -25,6 +27,8 @@ class SoVITSModel:
 
     def get_config_main(*args):
         with JSONReader("configs/sovits.json") as config:
+            if config["train"].get("num_workers", None) is None:
+                config["train"]["num_workers"] = 2
             return config
 
     def get_config_diff(*args):
@@ -36,7 +40,7 @@ class SoVITSModel:
             "type": "slider",
             "max": 1,
             "min": 0,
-            "default": 0.5,
+            "default": 0,
             "step": 0.1,
             "label": "聚类/特征比例",
             "info": "聚类/特征占比，范围0-1，若没有训练聚类模型或特征检索则默认0即可",
@@ -89,6 +93,15 @@ class SoVITSModel:
             "label": "二次编码",
             "info": "浅扩散前会对原始音频进行二次编码，玄学选项，有时候效果好，有时候效果差",
         },
+        "clip": {
+            "type": "slider",
+            "max": 100,
+            "min": 0,
+            "default": 0,
+            "step": 1,
+            "label": "强制切片长度",
+            "info": "强制音频切片长度, 0 为不强制",
+        },
     }
 
     train_form = {}
@@ -123,8 +136,59 @@ class SoVITSModel:
         },
     }
 
+    def install_model(self, model_dict):
+        print(model_dict)
+        if model_dict.get("main", None):
+            torch.load(model_dict["main"], map_location="cpu")
+
+        if model_dict.get("diff", None):
+            torch.load(model_dict["diff"], map_location="cpu")
+
+        if model_dict.get("cluster", None):
+            if model_dict["cluster"].endswith(".pkl"):
+                pickle.load(open(model_dict["cluster"], "rb"))
+            else:
+                torch.load(model_dict["cluster"], map_location="cpu")
+
+    def pack_model(self, model_dict):
+        print(model_dict)
+        result = {}
+        result["model_dict"] = {}
+        result["config_dict"] = {}
+        if model_dict.get("main", None):
+            # return result["main"]
+            result["model_dict"]["main"] = torch.load(
+                model_dict["main"], map_location="cpu"
+            )
+            config_path = os.path.dirname(model_dict["main"]) + "/config.json"
+            with JSONReader(config_path) as config:
+                result["config_dict"]["main"] = config
+
+        if model_dict.get("diff", None):
+            result["model_dict"]["diff"] = torch.load(
+                model_dict["diff"], map_location="cpu"
+            )
+            config_path = os.path.dirname(model_dict["diff"]) + "/config.yaml"
+            with YAMLReader(config_path) as config:
+                result["config_dict"]["diff"] = config
+
+        if model_dict.get("cluster", None):
+            if model_dict["cluster"].endswith(".pkl"):
+                result["model_dict"]["cluster"] = pickle.load(
+                    open(model_dict["cluster"], "rb")
+                )
+            else:
+                result["model_dict"]["cluster"] = torch.load(
+                    model_dict["cluster"], map_location="cpu"
+                )
+        return result
+
     def model_filter(self, filepath: str):
-        if filepath.endswith(".pth") and not filepath.startswith("D_"):
+        if (
+            filepath.endswith(".pth")
+            and not filepath.startswith("D_")
+            and not filepath.startswith("G_0")
+        ):
             return "main"
         if os.path.basename(filepath) in ["feature_and_index.pkl", "kmeans_10000.pt"]:
             return "cluster"
@@ -258,7 +322,7 @@ class SoVITSModel:
             "auto_predict_f0": params["audio_predict_f0"],
             "noice_scale": 0.4,
             "pad_seconds": 0.5,
-            "clip_seconds": 0,
+            "clip_seconds": params["clip"],
             "lg_num": params["linear_gradient"],
             "lgr_num": 0.75,
             "f0_predictor": params["f0"],
@@ -356,6 +420,17 @@ class SoVITSModel:
                         "max": 1,
                         "min": 0,
                         "step": 0.00001,
+                    },
+                    "train.num_workers": {
+                        "type": "slider",
+                        "default": lambda: self.get_config_main()["train"][
+                            "num_workers"
+                        ],
+                        "label": "数据加载器进程数，仅在 CPU 核心数大于 4 时启用，遵循大就是好原则",
+                        "info": "数据加载器进程数",
+                        "max": 10,
+                        "min": 1,
+                        "step": 1,
                     },
                 },
                 "diff": {

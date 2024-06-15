@@ -39,3 +39,5 @@ dist*
 *.enigma64
 
 filelists/*
+
+7z/

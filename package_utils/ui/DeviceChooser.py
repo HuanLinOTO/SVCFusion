@@ -12,12 +12,13 @@ class DeviceChooser:
             value="cpu" if not torch.cuda.is_available() else self.cuda_devices[0],
         )
 
-    def __init__(self) -> None:
+    def __init__(self, show=False) -> None:
         self.device_dropdown = gr.Dropdown(
             label="设备",
             value=self.refresh,
             type="index",
             interactive=True,
+            visible=show,
         )
 
     def get_device_str_from_index(index):

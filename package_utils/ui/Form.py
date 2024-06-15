@@ -176,13 +176,19 @@ class Form:
                     inputs.append(extra_inputs[key])
                 # print("group", model_name, group._id)
                 if use_audio_opt:
-                    audio_output = gr.Audio(
+                    audio_output_1 = gr.Audio(
                         type="filepath",
                         label="输出结果",
                     )
+                    audio_output_2 = gr.Audio(
+                        type="filepath",
+                        label="输出结果/伴奏",
+                        visible=False,
+                    )
                 outputs = []
                 if use_audio_opt:
-                    outputs.append(audio_output)
+                    outputs.append(audio_output_1)
+                    outputs.append(audio_output_2)
                 if use_textbox_opt:
                     outputs.append(gr.Textbox(label="输出结果"))
                 submit.click(

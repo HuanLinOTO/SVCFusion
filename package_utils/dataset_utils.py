@@ -53,6 +53,14 @@ def auto_normalize_dataset(
             os.rename(f"{output_dir}/{spk}", f"{output_dir}/{i + 1}")
 
 
+def check_spks():
+    spks = []
+    for f in os.listdir("dataset_raw"):
+        if os.path.isdir(os.path.join("dataset_raw", f)):
+            spks.append(f)
+    return spks
+
+
 def auto_preprocess(
     f0="fcpe",
     encoder="euler",

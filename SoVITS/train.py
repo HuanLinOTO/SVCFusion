@@ -80,7 +80,13 @@ def run(rank, n_gpus, hps):
     train_dataset = TextAudioSpeakerLoader(
         hps.data.training_files, hps, all_in_mem=all_in_mem
     )
-    num_workers = 8 if multiprocessing.cpu_count() > 4 else multiprocessing.cpu_count()
+    num_workers = (
+        hps.train.num_workers
+        if hasattr(hps.train, "num_workers")
+        else 2
+        if multiprocessing.cpu_count() > 4
+        else multiprocessing.cpu_count()
+    )
     if all_in_mem:
         num_workers = 0
     train_loader = DataLoader(

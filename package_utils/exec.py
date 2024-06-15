@@ -44,5 +44,5 @@ def exec(command):
 
 def start_with_cmd(cmd):
     cmd = "call .conda\Scripts\\activate.bat" + " && " + cmd
-    logger.info(f"Run command: {cmd}")
-    subprocess.Popen(["cmd", "/c", "start", "cmd", "/k", cmd], shell=True)
+    logger.info(f"Run command with cmd: {cmd}")
+    subprocess.Popen(["wt\\wt", "cmd", "/k", cmd], shell=True)
