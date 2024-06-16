@@ -16,7 +16,10 @@ class zhCNLocale(Locale):
 
         clean_log_btn_value = "清空日志(确认不再训练再清空)"
 
-        change_model_type_info = "#### 更改模型类型"
+        change_model_type_info = """
+        #### 更改模型类型
+        仅在发生无法识别模型类型时使用！不是转换模型类型！是更改识别的模型类型！
+        """
         change_model_type_btn_value = "确认更改"
         change_success_tip = "更改成功"
         change_fail_tip = "更改失败"
