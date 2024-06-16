@@ -1,7 +1,9 @@
 import hashlib
 import os
+import time
 import traceback
 import gradio as gr
+import torchaudio
 
 from Music_Source_Separation_Training import inference as msst_inference
 
@@ -45,37 +47,37 @@ def uvr(
             if os.path.isfile(inp_path) is False:
                 print(f"File {inp_path} not found")
                 continue
-            need_reformat = 1
+            # need_reformat = 1
             done = 0
-            try:
-                info = ffmpeg.probe(inp_path, cmd="ffprobe")
-                if (
-                    info["streams"][0]["channels"] == 2
-                    and info["streams"][0]["sample_rate"] == "44100"
-                ):
-                    need_reformat = 0
-                    pre_fun._path_audio_(
-                        inp_path,
-                        save_root_ins,
-                        save_root_vocal,
-                        format0,
-                        is_hp3,
-                        output,
-                    )
-                    done = 1
-            except Exception:
-                need_reformat = 1
-                traceback.print_exc()
-            if need_reformat == 1:
-                tmp_path = "%s/%s.reformatted.wav" % (
-                    os.path.join(os.environ["TEMP"]),
-                    os.path.basename(inp_path),
-                )
-                os.system(
-                    'ffmpeg -i "%s" -vn -acodec pcm_s16le -ac 2 -ar 44100 "%s" -y'
-                    % (inp_path, tmp_path)
-                )
-                inp_path = tmp_path
+            # try:
+            #     info = ffmpeg.probe(inp_path, cmd="ffprobe")
+            #     if (
+            #         info["streams"][0]["channels"] == 2
+            #         and info["streams"][0]["sample_rate"] == "44100"
+            #     ):
+            #         need_reformat = 0
+            #         pre_fun._path_audio_(
+            #             inp_path,
+            #             save_root_ins,
+            #             save_root_vocal,
+            #             format0,
+            #             is_hp3,
+            #             output,
+            #         )
+            #         done = 1
+            # except Exception:
+            #     need_reformat = 1
+            #     traceback.print_exc()
+            # if need_reformat == 1:
+            #     tmp_path = "%s/%s.reformatted.wav" % (
+            #         os.path.join("tmp"),
+            #         os.path.basename(inp_path),
+            #     )
+            #     os.system(
+            #         'ffmpeg -i "%s" -vn -acodec pcm_s16le -ac 2 -ar 44100 "%s" -y'
+            #         % (inp_path, tmp_path)
+            #     )
+            #     inp_path = tmp_path
             try:
                 if done == 0:
                     pre_fun._path_audio_(
@@ -181,12 +183,19 @@ def getVocalAndInstrument(inp_path, progress=gr.Progress()):
     deecho_path = f"tmp/uvr5_opt/deecho_{inp_hash}.wav"
     if os.path.exists(deecho_path):
         return deecho_path, inst_path
+
+    wf, sr = torchaudio.load(vocal_path)
+    wf = torchaudio.functional.resample(wf, sr, 44100)
+    # 写入 tmp/时间戳.wav
+    path = f"tmp/{time.time()}.wav"
+    torchaudio.save(path, wf, 44100)
+
     for i in progress.tqdm([1], desc="去混响"):
         uvr(
             "UVR-DeEcho-DeReverb",
             "",
             "tmp/uvr5_opt",
-            [vocal_path],
+            [path],
             "tmp/uvr5_opt",
             10,
             "wav",

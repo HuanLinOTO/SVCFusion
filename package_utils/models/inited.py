@@ -46,3 +46,12 @@ for model in model_list:
             "callback": model.train,
         }
 print(train_models_dict)
+
+__all__ = [
+    "infer_form",
+    "preprocess_form",
+    "train_form",
+    "model_name_list",
+    "train_models_dict",
+    "model_list",
+]

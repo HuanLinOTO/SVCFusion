@@ -11,6 +11,7 @@ from package_utils.const_vars import (
 )
 from package_utils.file import make_dirs
 from package_utils.exec import exec
+from package_utils.i18n import I
 
 
 def reload_models(search_dir):
@@ -104,14 +105,15 @@ def tensorboard():
 
 def detect_current_model_by_path(model_path):
     # 读取 model_path/config.yaml 中的 model_type
-
+    is_unknow = False
     if os.path.exists(model_path + "/config.json"):
         with open(model_path + "/config.json", "r") as f:
             config = json.load(f)
         if config.get("model_type_index") is None:
-            gr.Info("模型类型未知，请手动选择")
+            is_unknown = True
             model_type = -1
         else:
+            is_unknown = False
             model_type = config["model_type_index"]
         return model_type
     elif os.path.exists(model_path + "/config.yaml"):
@@ -119,14 +121,18 @@ def detect_current_model_by_path(model_path):
         with open(model_path + "/config.yaml", "r") as f:
             config = yaml.safe_load(f)
         if config.get("model_type_index") is None:
-            gr.Info("模型类型未知，请手动选择")
+            is_unknown = True
             model_type = -1
         else:
+            is_unknown = False
             model_type = config["model_type_index"]
-        return model_type
     else:
-        gr.Info("模型类型未知，请手动选择")
-        return -1
+        is_unknown = True
+        model_type = -1
+
+    if is_unknown:
+        gr.Info(I.unknown_model_type_tip)
+    return model_type
 
 
 def detect_current_model_by_dataset():

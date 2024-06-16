@@ -3,7 +3,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
 import click
-from loguru import logger
+from SoVITS import logger
 from tqdm import tqdm
 
 from utils.file import AUDIO_EXTENSIONS, list_files, make_dirs

@@ -36,10 +36,11 @@ def exec_it(command):
         yield accumulated_output
 
 
-def exec(command):
+def exec(command: str):
     logger.info(f"Run command: {command}")
-
-    return os.system(command)
+    code = os.system(command)
+    logger.info(f"Command finished with code: {code}")
+    return code
 
 
 def start_with_cmd(cmd: str):
