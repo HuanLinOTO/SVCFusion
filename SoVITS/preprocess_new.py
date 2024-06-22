@@ -3,7 +3,6 @@ import asyncio
 import os
 import shutil
 import subprocess
-import sys
 import time
 
 import rich
@@ -12,7 +11,22 @@ import torch
 
 from . import logger
 
-PYPATH = ".conda\\python.exe"
+# PYPATH = ".conda\\python.exe"
+PYPATH = "python"
+
+
+def timer(func):
+    def func_wrapper(*args, **kwargs):
+        from time import time
+
+        time_start = time()
+        result = func(*args, **kwargs)
+        time_end = time()
+        time_spend = time_end - time_start
+        logger.info("\n{0} cost time {1} s\n".format(func.__name__, time_spend))
+        return result
+
+    return func_wrapper
 
 
 async def exec_it(command, callback):
@@ -37,7 +51,7 @@ def get_callback(
     name, debug, progress: rich.progress.Progress, taskid: rich.progress.TaskID
 ):
     def real_cb(output):
-        output = output.strip()
+        output = output
         if debug:
             print(name + ": " + output)
         if "[!!]" in output:
@@ -47,7 +61,7 @@ def get_callback(
     return real_cb
 
 
-async def main(args, device, f0p, use_diff, debug):
+async def main(args, device, f0p, use_diff, sub_num_workers, debug):
     with logger.Progress() as progress:
         # 这个脚本纯粹为了快，并没有做异常处理
         logger.warning(
@@ -167,6 +181,12 @@ if __name__ == "__main__":
         help="You are advised to set the number of processes to the same as the number of CPU cores",
     )
     parser.add_argument(
+        "--subprocess_num_workers",
+        type=int,
+        default=1,
+        help="Number of workers to use for ThreadPoolExecutor",
+    )
+    parser.add_argument(
         "--debug", action="store_true", help="Whether print subprocess output"
     )
 
@@ -180,4 +200,13 @@ if __name__ == "__main__":
     use_diff = args.use_diff
     # debug = args.debug
     debug = True
-    asyncio.run(main(args=args, device=device, f0p=f0p, use_diff=use_diff, debug=debug))
+    asyncio.run(
+        main(
+            args=args,
+            device=device,
+            f0p=f0p,
+            use_diff=use_diff,
+            debug=debug,
+            sub_num_workers=args.subprocess_num_workers,
+        )
+    )

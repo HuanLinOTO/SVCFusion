@@ -4,8 +4,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.utils import weight_norm
 from torchaudio.transforms import Resample
+from torchfcpe import spawn_bundled_infer_model
 
-from .nvSTFT import STFT
 from .pcmer import PCmer
 
 
@@ -191,60 +191,28 @@ class FCPEInfer:
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
         self.device = device
-        ckpt = torch.load(model_path, map_location=torch.device(self.device))
-        self.args = DotDict(ckpt["config"])
         self.dtype = dtype
-        model = FCPE(
-            input_channel=self.args.model.input_channel,
-            out_dims=self.args.model.out_dims,
-            n_layers=self.args.model.n_layers,
-            n_chans=self.args.model.n_chans,
-            use_siren=self.args.model.use_siren,
-            use_full=self.args.model.use_full,
-            loss_mse_scale=self.args.loss.loss_mse_scale,
-            loss_l2_regularization=self.args.loss.loss_l2_regularization,
-            loss_l2_regularization_scale=self.args.loss.loss_l2_regularization_scale,
-            loss_grad1_mse=self.args.loss.loss_grad1_mse,
-            loss_grad1_mse_scale=self.args.loss.loss_grad1_mse_scale,
-            f0_max=self.args.model.f0_max,
-            f0_min=self.args.model.f0_min,
-            confidence=self.args.model.confidence,
-        )
-        model.to(self.device).to(self.dtype)
-        model.load_state_dict(ckpt["model"])
-        model.eval()
-        self.model = model
-        self.wav2mel = Wav2Mel(self.args, dtype=self.dtype, device=self.device)
 
-    @torch.no_grad()
+        # 使用 spawn_bundled_infer_model 加载模型和配置
+        self.model = spawn_bundled_infer_model(device=self.device)
+
     def __call__(self, audio, sr, threshold=0.05):
         self.model.threshold = threshold
         audio = audio[None, :]
-        mel = self.wav2mel(audio=audio, sample_rate=sr).to(self.dtype)
-        f0 = self.model(mel=mel, infer=True, return_hz_f0=True)
+        f0 = self.model.infer(
+            audio,
+            sr=sr,
+            decoder_mode="local_argmax",
+            threshold=0.006,
+            f0_min=80,
+            f0_max=880,
+            interp_uv=False,
+        )
         return f0
 
 
 class Wav2Mel:
-    def __init__(self, args, device=None, dtype=torch.float32):
-        # self.args = args
-        self.sampling_rate = args.mel.sampling_rate
-        self.hop_size = args.mel.hop_size
-        if device is None:
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.device = device
-        self.dtype = dtype
-        self.stft = STFT(
-            args.mel.sampling_rate,
-            args.mel.num_mels,
-            args.mel.n_fft,
-            args.mel.win_size,
-            args.mel.hop_size,
-            args.mel.fmin,
-            args.mel.fmax,
-        )
-        self.resample_kernel = {}
-
+    # torchfcpe支持wav做输入，所以把这里的wav2mel删掉了😨😨
     def extract_nvstft(self, audio, keyshift=0, train=False):
         mel = self.stft.get_mel(audio, keyshift=keyshift, train=train).transpose(
             1, 2

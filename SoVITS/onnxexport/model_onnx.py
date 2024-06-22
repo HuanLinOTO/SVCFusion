@@ -7,8 +7,8 @@ from torch.nn.utils import spectral_norm, weight_norm
 from SoVITS.modules import attentions, commons, modules
 from SoVITS.modules.commons import get_padding
 from SoVITS.utils import f0_to_coarse
-from ..vdecoder.hifigan.models import Generator
 
+from ..vdecoder.hifigan.models import Generator
 from . import utils
 
 

@@ -93,7 +93,15 @@ def get_content(cmodel, y):
     return c
 
 
+f0_predictor_object = None
+using_f0_predictor_name = None
+
+
 def get_f0_predictor(f0_predictor, hop_length, sampling_rate, **kargs):
+    global f0_predictor_object, using_f0_predictor_name
+    if f0_predictor_object and using_f0_predictor_name == f0_predictor:
+        return f0_predictor_object
+
     if f0_predictor == "pm":
         from SoVITS.modules.F0Predictor.PMF0Predictor import PMF0Predictor
 
@@ -143,6 +151,8 @@ def get_f0_predictor(f0_predictor, hop_length, sampling_rate, **kargs):
         )
     else:
         raise Exception("Unknown f0 predictor")
+
+    using_f0_predictor_name = f0_predictor
     return f0_predictor_object
 
 

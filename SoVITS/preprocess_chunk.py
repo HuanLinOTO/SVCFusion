@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 import random
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import librosa
 import numpy as np
@@ -18,7 +19,8 @@ logging.getLogger("numba").setLevel(logging.WARNING)
 logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 hps = utils.get_hparams_from_file("configs/config.json")
-dconfig = du.load_config("configs/sovits_diff.yaml")
+# dconfig = du.load_config("configs/sovits_diff.yaml")
+dconfig = du.load_config("configs/diffusion.yaml")
 sampling_rate = hps.data.sampling_rate
 hop_length = hps.data.hop_length
 speech_encoder = hps["model"]["speech_encoder"]
@@ -121,6 +123,12 @@ if __name__ == "__main__":
         default="rmvpe",
         help="Select F0 predictor, can select crepe,pm,dio,harvest,rmvpe,fcpe|default: pm(note: crepe is original F0 using mean filter)",
     )
+    parser.add_argument(
+        "--num_workers",
+        type=int,
+        default="1",
+        help="Number of workers to use for ThreadPoolExecutor",
+    )
 
     args = parser.parse_args()
     f0p = args.f0_predictor
@@ -128,7 +136,6 @@ if __name__ == "__main__":
     if device is None:
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    print(speech_encoder)
     logger.info("Using device: " + str(device))
     logger.info("Using SpeechEncoder: " + speech_encoder)
     logger.info("Using extractor: " + f0p)
@@ -152,7 +159,23 @@ if __name__ == "__main__":
         filenames = f.readlines()
         filenames = [f.strip() for f in filenames]
     hmodel = utils.get_speech_encoder(speech_encoder, device=device, log=False)
-    for file in filenames:
-        process_one(file, hmodel, f0p, device, args.use_diff, mel_extractor)
-        logger.info("[!!]")
-        # print(file)
+    # for file in filenames:
+    #     process_one(file, hmodel, f0p, device, args.use_diff, mel_extractor)
+    #     logger.info("[!!]")
+    with ThreadPoolExecutor(max_workers=args.num_workers) as executor:
+        futures = []
+        for file in filenames:
+            futures.append(
+                executor.submit(
+                    process_one,
+                    filename=file,
+                    hmodel=hmodel,
+                    f0p=f0p,
+                    device=device,
+                    diff=args.use_diff,
+                    mel_extractor=mel_extractor,
+                )
+            )
+
+        for future in as_completed(futures):
+            logger.info("[!!]")

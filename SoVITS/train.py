@@ -88,7 +88,7 @@ def run(rank, n_gpus, hps):
         else multiprocessing.cpu_count()
     )
     if all_in_mem:
-        num_workers = 1
+        num_workers = 0
     train_loader = DataLoader(
         train_dataset,
         num_workers=num_workers,
