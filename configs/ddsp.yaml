@@ -32,7 +32,7 @@ model:
   win_length: 2048
 model_type_index: 0
 spks:
-- wkr_raw
+- test
 train:
   amp_dtype: fp32
   batch_size: 60

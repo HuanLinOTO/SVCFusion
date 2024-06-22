@@ -35,3 +35,14 @@ class zhCNLocale(Locale):
         model_name_placeholder = "请输入模型名称"
 
         submit_btn_value = "安装模型"
+
+    class path_chooser(Locale.path_chooser):
+        input_path_label = "输入文件夹"
+        output_path_label = "输出文件夹"
+
+    class fish_audio_preprocess(Locale.fish_audio_preprocess):
+        to_wav_tab = "批量转 WAV"
+        slice_audio_tab = "切音机"
+        preprocess_tab = "数据处理"
+
+        max_duration_label = "最大时长"

@@ -21,7 +21,7 @@ for model in model_list:
     }
 
 preprocess_form = {}
-for model in model_list:
+for model in model_list[:-1]:
     preprocess_form[model.model_name] = {
         "form": model.preprocess_form,
         "callback": model.preprocess,

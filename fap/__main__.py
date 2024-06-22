@@ -4,7 +4,7 @@ from loguru import logger
 
 from cli.resample import resample
 from cli.slice_audio import slice_audio, slice_audio_v2
-from fap.cli.convert_to_wav import to_wav
+from cli.convert_to_wav import to_wav
 
 
 @click.group()

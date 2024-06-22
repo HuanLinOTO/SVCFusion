@@ -105,7 +105,7 @@ def tensorboard():
 
 def detect_current_model_by_path(model_path):
     # 读取 model_path/config.yaml 中的 model_type
-    is_unknow = False
+    is_unknown = False
     if os.path.exists(model_path + "/config.json"):
         with open(model_path + "/config.json", "r") as f:
             config = json.load(f)

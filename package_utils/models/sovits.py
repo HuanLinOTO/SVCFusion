@@ -118,7 +118,13 @@ class SoVITSModel:
             "default": False,
             "label": "训练浅扩散",
             "info": "勾选后将会生成训练浅扩散需要的文件，会比不选慢",
-        }
+        },
+        "vol_emb": {
+            "type": "checkbox",
+            "default": False,
+            "label": "响度嵌入",
+            "info": "勾选后将会使用响度嵌入",
+        },
     }
 
     model_types = {

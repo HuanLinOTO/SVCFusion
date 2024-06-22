@@ -28,7 +28,7 @@ def resample(src, dst):
             f".conda\\python fap/__main__.py resample {src} {dst} --mono",
         )
         == 0
-    ), "重采样失败，请截图日志反馈"
+    ), "重采样失败，请截图日志反馈，日志在上面 不在这里！！"
 
 
 def slice_audio(src, dst, max_duration):
@@ -37,7 +37,7 @@ def slice_audio(src, dst, max_duration):
             f".conda\\python fap/__main__.py slice-audio-v2 {src} {dst} --max-duration {max_duration} --flat-layout --merge-short --clean"
         )
         == 0
-    ), "切割音频失败，请截图日志反馈"
+    ), "切割音频失败，请截图日志反馈，日志在上面 不在这里！！"
 
 
 def auto_normalize_dataset(

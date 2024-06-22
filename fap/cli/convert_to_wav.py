@@ -5,7 +5,7 @@ import click
 from loguru import logger
 from tqdm import tqdm
 
-from fap.utils.file import (
+from utils.file import (
     AUDIO_EXTENSIONS,
     VIDEO_EXTENSIONS,
     list_files,

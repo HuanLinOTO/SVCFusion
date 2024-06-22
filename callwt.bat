@@ -5,7 +5,7 @@ echo 正在启动WebUI……
 
 echo %~dp0
 
-set PATH=   %~dp0\ffmpeg\bin;%PATH%
+set PATH=%~dp0\ffmpeg\bin;%PATH%
 
 call "%~dp0.conda\Scripts\activate.bat"
 

@@ -27,3 +27,14 @@ class Locale:
         model_name_placeholder = ""
 
         submit_btn_value = ""
+
+    class path_chooser:
+        input_path_label = ""
+        output_path_label = ""
+
+    class fish_audio_preprocess:
+        max_duration_label = ""
+        resample_path_label = ""
+        to_wav_path_label = ""
+        slice_audio_label = ""
+        preprocess_tab_label = ""
