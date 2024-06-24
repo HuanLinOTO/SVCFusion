@@ -1,5 +1,6 @@
 from typing import Callable, Dict
 import gradio as gr
+from package_utils.i18n import I
 from package_utils.ui.DeviceChooser import DeviceChooser
 
 from .FormTypes import FormComponent, FormDict, ParamInfo
@@ -32,7 +33,7 @@ class Form:
                 if form[key]["type"] == "device_chooser":
                     result[key] = DeviceChooser.get_device_str_from_index(args[i])
                 elif form[key]["type"] == "dropdown_liked_checkbox":
-                    result[key] = args[i] == "是"
+                    result[key] = args[i] == I.form.dorpdown_liked_checkbox_yes
                 else:
                     result[key] = args[i]
                 i += 1
@@ -69,16 +70,27 @@ class Form:
             if isinstance(item["default"], Callable):
 
                 def value_proxy():
-                    return "是" if item["default"]() else "否"
+                    return (
+                        I.form.dorpdown_liked_checkbox_yes
+                        if item["default"]()
+                        else I.form.dorpdown_liked_checkbox_no
+                    )
             else:
 
                 def value_proxy():
-                    return "是" if item["default"] else "否"
+                    return (
+                        I.form.dorpdown_liked_checkbox_yes
+                        if item["default"]
+                        else I.form.dorpdown_liked_checkbox_no
+                    )
 
             return gr.Dropdown(
                 label=item["label"],
                 info=item["info"],
-                choices=["是", "否"],
+                choices=[
+                    I.form.dorpdown_liked_checkbox_yes,
+                    I.form.dorpdown_liked_checkbox_no,
+                ],
                 value=value_proxy,
                 interactive=True,
             )
@@ -167,7 +179,7 @@ class Form:
                         row.__enter__()
                 if not vertical:
                     row.__exit__()
-                submit = gr.Button("提交", visible=show_submit)
+                submit = gr.Button(I.form.submit_btn_value, visible=show_submit)
                 inputs = [*items]
                 self.extra_inputs_keys = []
                 for key in extra_inputs:
@@ -177,11 +189,11 @@ class Form:
                 if use_audio_opt:
                     audio_output_1 = gr.Audio(
                         type="filepath",
-                        label="输出结果",
+                        label=I.form.audio_output_1,
                     )
                     audio_output_2 = gr.Audio(
                         type="filepath",
-                        label="输出结果/伴奏",
+                        label=I.form.audio_output_2,
                         visible=False,
                     )
                 outputs = []
@@ -189,7 +201,7 @@ class Form:
                     outputs.append(audio_output_1)
                     outputs.append(audio_output_2)
                 if use_textbox_opt:
-                    outputs.append(gr.Textbox(label="输出结果"))
+                    outputs.append(gr.Textbox(label=I.form.textbox_output))
                 submit.click(
                     self.get_fn(model_name),
                     inputs=inputs,

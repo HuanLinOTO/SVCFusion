@@ -1,7 +1,8 @@
+from package_utils.config import get_settings
 from .locale.base import Locale
-from .locale import locale_dict
+from .locale import locale_dict, text_to_locale
 
-lang = "zh-cn"
+lang = text_to_locale[get_settings()["lang"]]
 
 """
 国际化

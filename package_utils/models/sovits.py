@@ -18,6 +18,7 @@ from package_utils.config import JSONReader, YAMLReader, applyChanges
 from package_utils.const_vars import WORK_DIR_PATH
 from package_utils.dataset_utils import auto_normalize_dataset
 from package_utils.exec import exec, start_with_cmd
+from package_utils.i18n import I
 from package_utils.model_utils import load_pretrained
 from package_utils.ui.FormTypes import FormDictInModelClass
 from .common import common_infer_form, common_preprocess_form
@@ -26,6 +27,35 @@ import gradio as gr
 
 
 import soundfile as sf
+
+
+def check_files(directory, use_diff):
+    # 获取目标目录下所有的wav文件
+    wav_files = [f for f in os.listdir(directory) if f.endswith(".wav")]
+
+    missing_files = []
+
+    for wav_file in wav_files:
+        base_name = os.path.splitext(wav_file)[0]
+
+        spec_file = os.path.join(directory, f"{base_name}.spec.pt")
+        f0_file = os.path.join(directory, f"{base_name}.wav.f0.npy")
+        soft_file = os.path.join(directory, f"{base_name}.wav.soft.pt")
+
+        # 以上三个变量缺一个把这个变量就扔进 missingfiles
+        for file in [spec_file, f0_file, soft_file]:
+            if not os.path.exists(file):
+                missing_files.append(file)
+
+        if use_diff:
+            mel_file = os.path.join(directory, f"{base_name}.mel.npy")
+            vol_file = os.path.join(directory, f"{base_name}.vol.npy")
+
+            for file in [mel_file, vol_file]:
+                if not os.path.exists(file):
+                    missing_files.append(file)
+
+    return len(missing_files) == 0
 
 
 class SoVITSModel:
@@ -48,13 +78,13 @@ class SoVITSModel:
             "min": 0,
             "default": 0,
             "step": 0.1,
-            "label": "聚类/特征比例",
-            "info": "聚类/特征占比，范围0-1，若没有训练聚类模型或特征检索则默认0即可",
+            "label": I.sovits.infer.cluster_infer_ratio_label,
+            "info": I.sovits.infer.cluster_infer_ratio_info,
         },
         "linear_gradient": {
             "type": "slider",
-            "info": "两段音频切片的交叉淡入长度",
-            "label": "渐变长度",
+            "info": I.sovits.infer.linear_gradient_info,
+            "label": I.sovits.infer.linear_gradient_label,
             "default": 0,
             "min": 0,
             "max": 1,
@@ -66,8 +96,8 @@ class SoVITSModel:
             "min": 1,
             "default": 100,
             "step": 1,
-            "label": "扩散步数",
-            "info": "越大越接近扩散模型的结果，默认100",
+            "label": I.sovits.infer.k_step_label,
+            "info": I.sovits.infer.k_step_info,
         },
         "enhancer_adaptive_key": {
             "type": "slider",
@@ -75,8 +105,8 @@ class SoVITSModel:
             "min": -12,
             "step": 1,
             "default": 0,
-            "label": "增强器适应",
-            "info": "使增强器适应更高的音域(单位为半音数)|默认为0",
+            "label": I.sovits.infer.enhancer_adaptive_key_label,
+            "info": I.sovits.infer.enhancer_adaptive_key_info,
         },
         "f0_filter_threshold": {
             "type": "slider",
@@ -84,20 +114,20 @@ class SoVITSModel:
             "min": 0,
             "default": 0.05,
             "step": 0.01,
-            "label": "f0 过滤阈值",
-            "info": "只有使用crepe时有效. 数值范围从0-1. 降低该值可减少跑调概率，但会增加哑音",
+            "label": I.sovits.infer.f0_filter_threshold_label,
+            "info": I.sovits.infer.f0_filter_threshold_info,
         },
         "audio_predict_f0": {
             "type": "checkbox",
             "default": False,
-            "info": "语音转换自动预测音高，转换歌声时不要打开这个会严重跑调",
-            "label": "自动 f0 预测",
+            "info": I.sovits.infer.audio_predict_f0_info,
+            "label": I.sovits.infer.audio_predict_f0_label,
         },
         "second_encoding": {
             "type": "checkbox",
             "default": False,
-            "label": "二次编码",
-            "info": "浅扩散前会对原始音频进行二次编码，玄学选项，有时候效果好，有时候效果差",
+            "label": I.sovits.infer.second_encoding_label,
+            "info": I.sovits.infer.second_encoding_info,
         },
         "clip": {
             "type": "slider",
@@ -105,8 +135,8 @@ class SoVITSModel:
             "min": 0,
             "default": 0,
             "step": 1,
-            "label": "强制切片长度",
-            "info": "强制音频切片长度, 0 为不强制",
+            "label": I.sovits.infer.clip_label,
+            "info": I.sovits.infer.clip_info,
         },
     }
 
@@ -116,35 +146,53 @@ class SoVITSModel:
         "use_diff": {
             "type": "checkbox",
             "default": False,
-            "label": "训练浅扩散",
-            "info": "勾选后将会生成训练浅扩散需要的文件，会比不选慢",
+            "label": I.sovits.train.use_diff_label,
+            "info": I.sovits.train.use_diff_info,
         },
-        "vol_emb": {
+        "vol_aug": {
             "type": "checkbox",
             "default": False,
-            "label": "响度嵌入",
-            "info": "勾选后将会使用响度嵌入",
+            "label": I.sovits.train.vol_aug_label,
+            "info": I.sovits.train.vol_aug_info,
+        },
+        "num_workers": {
+            "type": "slider",
+            "default": 4,
+            "label": I.sovits.train.num_workers_label,
+            "info": I.sovits.train.num_workers_info,
+            "max": 10,
+            "min": 1,
+            "step": 1,
+        },
+        "subprocess_num_workers": {
+            "type": "slider",
+            "default": 4,
+            "label": I.sovits.train.subprocess_num_workers_label,
+            "info": I.sovits.train.subprocess_num_workers_info,
+            "max": 64,
+            "min": 1,
+            "step": 1,
         },
     }
 
     model_types = {
-        "main": "主模型",
-        "diff": "浅扩散模型",
-        "cluster": "聚类/检索模型",
+        "main": I.sovits.model_types.main,
+        "diff": I.sovits.model_types.diff,
+        "cluster": I.sovits.model_types.cluster,
     }
 
     model_chooser_extra_form = {
         "enhance": {
             "type": "checkbox",
             "default": False,
-            "label": "NSFHifigan 音频增强",
-            "info": "对部分训练集少的模型有一定的音质增强效果，对训练好的模型有反面效果",
+            "label": I.sovits.model_chooser_extra.enhance_label,
+            "info": I.sovits.model_chooser_extra.enhance_info,
         },
         "feature_retrieval": {
             "type": "checkbox",
             "default": False,
-            "label": "启用特征提取",
-            "info": "是否使用特征检索，如果使用聚类模型将被禁用",
+            "label": I.sovits.model_chooser_extra.feature_retrieval_label,
+            "info": I.sovits.model_chooser_extra.feature_retrieval_info,
         },
     }
 
@@ -310,11 +358,15 @@ class SoVITSModel:
             return list(config["spk"].keys())
 
     def train(self, params, progress: gr.Progress):
-        print(params)
+        # print(params)
         sub_model_name = params["_model_name"]
-        if sub_model_name == "So-VITS-SVC - 主模型":
+        if sub_model_name == f"So-VITS-SVC - {I.sovits.model_types.main}":
+            if not check_files("data/44k"):
+                gr.Info(I.sovits.dataset_not_complete_tip)
+                return
             working_config_path = os.path.join(WORK_DIR_PATH, "config.json")
-
+            if params["train.half_type"] == "fp16":
+                params["train.fp16_run"] = True
             config = applyChanges(
                 working_config_path,
                 params,
@@ -325,7 +377,10 @@ class SoVITSModel:
             start_with_cmd(
                 f"{executable} -m SoVITS.train -c {working_config_path} -m workdir"
             )
-        elif sub_model_name == "So-VITS-SVC - 浅扩散模型":
+        elif sub_model_name == f"So-VITS-SVC - {I.sovits.model_types.diff}":
+            if not check_files("data/44k", True):
+                gr.Info(I.sovits.dataset_not_complete_tip)
+                return
             working_config_path = os.path.join(
                 WORK_DIR_PATH, "diffusion", "config.yaml"
             )
@@ -340,7 +395,7 @@ class SoVITSModel:
             start_with_cmd(
                 f"{executable} -m SoVITS.train_diff -c {working_config_path}"
             )
-        elif sub_model_name == "So-VITS-SVC - 聚类/检索模型":
+        elif sub_model_name == f"So-VITS-SVC - {I.sovits.model_types.cluster}":
             if params["cluster_or_index"] == "cluster":
                 cmd = f"{executable} -m SoVITS.cluster.train_cluster --dataset data/44k"
                 if params["use_gpu"]:
@@ -358,12 +413,12 @@ class SoVITSModel:
             f.write("2")
         auto_normalize_dataset("data/44k", False, progress)
         exec(
-            f"{executable} -m SoVITS.preprocess_flist_config --source_dir ./data/44k --speech_encoder {params['encoder'].replace('contentvec','vec')}"
+            f"{executable} -m SoVITS.preprocess_flist_config --source_dir ./data/44k --speech_encoder {params['encoder'].replace('contentvec','vec')} {'--vol_aug' if params['vol_aug'] else ''}"
         )
         exec(
-            f"{executable} -m SoVITS.preprocess_new --f0_predictor {params['f0']} --num_processes 4 {'--use_diff' if params['use_diff'] else ''}"
+            f"{executable} -m SoVITS.preprocess_new --f0_predictor {params['f0']} --num_processes {params['num_workers']} --subprocess_num_workers {params['subprocess_num_workers']} {'--use_diff' if params['use_diff'] else ''}"
         )
-        return "完成"
+        return I.sovits.finished
 
     def infer(self, params, progress=gr.Progress()):
         wf, sr = torchaudio.load(params["audio"])
@@ -497,6 +552,13 @@ class SoVITSModel:
                         "max": 10,
                         "min": 1,
                         "step": 1,
+                    },
+                    "train.half_type": {
+                        "type": "dropdown",
+                        "default": lambda: self.get_config_main()["train"]["half_type"],
+                        "label": "精度",
+                        "info": "选择 fp16 可以获得更快的速度，但是炸炉概率 up up",
+                        "choices": ["fp16", "fp32", "bf16"],
                     },
                 },
                 "diff": {

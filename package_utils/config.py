@@ -56,7 +56,11 @@ def writeConfig(config_path: str, config: dict, format: str = "json") -> None:
         raise ValueError("Invalid format.")
 
 
-def applyChanges(config_path: str, changes: dict[str, any]) -> dict:
+def applyChanges(
+    config_path: str,
+    changes: dict[str, any],
+    no_skip: bool = False,
+) -> dict:
     if config_path.endswith(".json"):
         with JSONReader(config_path) as c:
             config = c
@@ -65,7 +69,7 @@ def applyChanges(config_path: str, changes: dict[str, any]) -> dict:
             config = c
 
     for key, value in changes.items():
-        if value is None or "." not in key:
+        if value is None or "." not in key and not no_skip:
             continue
         keys = key.split(".")
         d = config
@@ -76,3 +80,8 @@ def applyChanges(config_path: str, changes: dict[str, any]) -> dict:
         d[keys[-1]] = value
     writeConfig(config_path, config, format=config_path.split(".")[-1])
     return config
+
+
+def get_settings():
+    with JSONReader("configs/svcfusion.json") as config:
+        return config

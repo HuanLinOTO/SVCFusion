@@ -10,7 +10,6 @@ reflow_vae_svc_model = ReflowVAESVCModel()
 
 model_list = [ddsp_model, reflow_vae_svc_model, sovits_model]
 model_name_list = [model.model_name for model in model_list]
-model_name_list.append("未知模型")
 
 
 infer_form = {}
@@ -21,11 +20,12 @@ for model in model_list:
     }
 
 preprocess_form = {}
-for model in model_list[:-1]:
+for model in model_list:
     preprocess_form[model.model_name] = {
         "form": model.preprocess_form,
         "callback": model.preprocess,
     }
+
 
 train_form = {}
 
@@ -55,3 +55,5 @@ __all__ = [
     "train_models_dict",
     "model_list",
 ]
+
+model_name_list.append("未知模型")

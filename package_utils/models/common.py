@@ -1,4 +1,3 @@
-from altair import value
 from package_utils.uvr import getVocalAndInstrument
 import gradio as gr
 

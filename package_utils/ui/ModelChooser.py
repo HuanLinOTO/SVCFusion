@@ -19,7 +19,8 @@ class ModelChooser:
     def result_normalize(self, result):
         for key in result:
             if isinstance(result[key], str) and (
-                result[key].endswith("不使用") or result[key].endswith("无模型")
+                result[key].endswith(I.model_chooser.unuse_value)
+                or result[key].endswith(I.model_chooser.no_model_value)
             ):
                 result[key] = None
         return result
@@ -44,10 +45,10 @@ class ModelChooser:
 
     def search_path_to_text(self):
         return [
-            "工作目录",
+            I.model_chooser.workdir_name,
             *[
-                p.replace("models/", "models 文件夹 - ").replace(
-                    "archieve/", "已归档训练 - "
+                p.replace("models/", f"{I.model_chooser.models_dir_name} - ").replace(
+                    "archieve/", f"{I.model_chooser.archieve_dir_name} - "
                 )
                 for p in self.search_paths
                 if not p.startswith("exp")
@@ -129,8 +130,8 @@ class ModelChooser:
         if spks is None:
             spks = []
         return gr.update(
-            choices=spks if len(spks) > 0 else ["无说话人"],
-            value=spks[0] if len(spks) > 0 else "无说话人",
+            choices=spks if len(spks) > 0 else [I.model_chooser.no_spk_value],
+            value=spks[0] if len(spks) > 0 else I.model_chooser.no_spk_value,
         )
 
     def on_refresh(self, search_path):
@@ -144,12 +145,12 @@ class ModelChooser:
         i = 0
         for model in model_list:
             for type in model.model_types:
-                m = models.get(type, ["无模型"])
-                m.append("不使用")
+                m = models.get(type, [I.model_chooser.no_model_value])
+                m.append(I.model_chooser.unuse_value)
                 result.append(
                     gr.update(
                         choices=m,
-                        value=m[0] if len(m) > 0 else "无模型",
+                        value=m[0] if len(m) > 0 else I.model_chooser.no_model_value,
                         visible=self.dropdown_index2model_info[i]["model_type_index"]
                         == model_type_index,
                     )
@@ -176,7 +177,7 @@ class ModelChooser:
 
         self.search_paths = self.refresh_search_paths()
         self.seach_path_dropdown = gr.Dropdown(
-            label="搜索路径",
+            label=I.model_chooser.search_path_label,
             value=self.get_search_path_val,
             type="index",
             interactive=True,
@@ -191,12 +192,13 @@ class ModelChooser:
 
         for model in model_list:
             for type in model.model_types:
-                m = models.get(type, ["无模型"])
+                m = models.get(type, [I.model_chooser.no_model_value])
                 self.model_dropdowns.append(
                     gr.Dropdown(
-                        label="选择模型-" + model.model_types[type],
+                        label=f"{I.model_chooser.choose_model_dropdown_prefix} - "
+                        + model.model_types[type],
                         choices=m,
-                        value=m[0] if len(m) > 0 else "无模型",
+                        value=m[0] if len(m) > 0 else I.model_chooser.no_model_value,
                         interactive=True,
                         visible=is_first_model,
                     )
@@ -217,21 +219,21 @@ class ModelChooser:
 
         with gr.Group():
             self.refresh_btn = gr.Button(
-                "刷新选项",
+                I.model_chooser.refresh_btn_value,
                 interactive=True,
             )
         with gr.Group():
             with gr.Row():
                 self.model_type_dropdown = gr.Dropdown(
-                    label="模型类型",
+                    label=I.model_chooser.model_type_dropdown_label,
                     choices=model_name_list,
                     interactive=False,
                 )
                 self.device_chooser = DeviceChooser(show=show_options)
             self.spk_dropdown = gr.Dropdown(
-                label="选择说话人",
-                choices=["未加载模型"],
-                value="未加载模型",
+                label=I.model_chooser.spk_dropdown_label,
+                choices=[I.model_chooser.no_spk_option],
+                value=I.model_chooser.no_spk_option,
                 interactive=True,
                 visible=show_options,
             )

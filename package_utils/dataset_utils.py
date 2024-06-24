@@ -31,6 +31,15 @@ def resample(src, dst):
     ), "重采样失败，请截图日志反馈，日志在上面 不在这里！！"
 
 
+def to_wav(src, dst):
+    assert (
+        exec(
+            f".conda\\python fap/__main__.py to-wav {src} {dst}",
+        )
+        == 0
+    ), "转 WAV 失败，请截图日志反馈，日志在上面 不在这里！！"
+
+
 def slice_audio(src, dst, max_duration):
     assert (
         exec(

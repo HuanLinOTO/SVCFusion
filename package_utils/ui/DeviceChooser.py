@@ -2,6 +2,7 @@ import gradio as gr
 import torch
 
 from package_utils.device import get_cuda_devices
+from package_utils.i18n import I
 
 
 class DeviceChooser:
@@ -14,7 +15,7 @@ class DeviceChooser:
 
     def __init__(self, show=False) -> None:
         self.device_dropdown = gr.Dropdown(
-            label="设备",
+            label=I.device_chooser.device_dropdown_label,
             value=self.refresh,
             type="index",
             interactive=True,
