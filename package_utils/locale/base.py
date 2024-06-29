@@ -52,10 +52,26 @@ class Locale:
         little_vram_tip = ""  # 
         open_dataset_folder_btn_value = ""  # 打开数据集文件夹
         choose_model_label = ""  # 选择模型
+    class train:
+        current_train_model_label = ""  # 当前训练模型
+        gd_plus_1 = ""  # 点我加功德
+        gd_plus_1_tip = ""  # 功德 +1，炸炉 -1
+        choose_sub_model_label = ""  # 选择子模型
+        archieve_btn_value = ""  # 归档工作目录
+        stop_btn_value = ""  # 停止训练
+        archieving_tip = ""  # 正在归档，请勿多次点击
+        archieved_tip = ""  # 归档完成，请查看打开的文件夹
+        stopped_tip = ""  # 已发送停止训练命令，请查看训练窗口
     class settings:
+        page = ""  # 页面
         pkg_settings_label = ""  # 整合包设置
-        lang_label = ""  # 语言
-        lang_info = ""  # 更改语言需要重启整合包
+        sovits_settings_label = ""  # SoVITS 设置
+        class pkg:
+            lang_label = ""  # 语言
+            lang_info = ""  # 更改语言需要重启整合包
+        class sovits:
+            resolve_port_clash_label = ""  # 尝试解决端口冲突问题
+        saved_tip = ""  # 已保存
     class install_model:
         tip = ""  # 
         file_label = ""  # 上传模型包
@@ -77,8 +93,34 @@ class Locale:
         submit_btn_value = ""  # 开始
         vocal_label = ""  # 输出-人声
         inst_label = ""  # 输出-伴奏
+    class common_infer:
+        audio_label = ""  # 音频文件
+        use_vocal_remove_label = ""  # 去除伴奏
+        use_vocal_remove_info = ""  # 是否去除伴奏
+        f0_label = ""  # f0 提取器
+        f0_info = ""  # 用于音高提取/预测的模型
+        keychange_label = ""  # 变调
+        keychange_info = ""  # 参考：男转女 12，女转男 -12，音色不像可以调节这个
+        threshold_label = ""  # 切片阈值
+        threshold_info = ""  # 人声切片的阈值，如果有底噪可以调为 -40 或更高
+    class diff_based_infer:
+        method_label = ""  # 采样器
+        method_info = ""  # 用于 reflow 的采样器
+        infer_step_label = ""  # 推理步数
+        infer_step_info = ""  # 推理步长，默认就行
+        t_start_label = ""  # T Start
+        t_start_info = ""  # 不知道
+    class diff_based_preprocess:
+        method_label = ""  # f0 提取器
+        method_info = ""  # 用于 reflow 的采样器
+    class common_preprocess:
+        encoder_label = ""  # 声音编码器
+        encoder_info = ""  # 用于对声音进行编码的模型
+        f0_label = ""  # f0 提取器
+        f0_info = ""  # 用于音高提取/预测的模型
     class sovits:
         dataset_not_complete_tip = ""  # 数据集不完整，请检查数据集或重新预处理
+        finished = ""  # 完成
         class infer:
             cluster_infer_ratio_label = ""  # 聚类/特征比例
             cluster_infer_ratio_info = ""  # (
@@ -114,3 +156,65 @@ class Locale:
             enhance_info = ""  # (
             feature_retrieval_label = ""  # 启用特征提取
             feature_retrieval_info = ""  # 是否使用特征检索，如果使用聚类模型将被禁用
+    class ddsp6:
+        infer_tip = ""  # 推理 DDSP 模型
+        class model_types:
+            cascade = ""  # 级联模型
+        class train:
+            batch_size_label = ""  # 训练批次大小
+            batch_size_info = ""  # 越大越好，越大越占显存，注意不能超过训练集条数
+            num_workers_label = ""  # 训练进程数
+            num_workers_info = ""  # 如果你显卡挺好，可以设为 0
+            amp_dtype_label = ""  # 训练精度
+            amp_dtype_info = ""  # 选择 fp16、bf16 可以获得更快的速度，但是炸炉概率 up up
+            lr_label = ""  # 学习率
+            lr_info = ""  # 不建议动
+            interval_val_label = ""  # 验证间隔
+            interval_val_info = ""  # 每 N 步验证一次，同时保存
+            interval_log_label = ""  # 日志间隔
+            interval_log_info = ""  # 每 N 步输出一次日志
+            interval_force_save_label = ""  # 强制保存模型间隔
+            interval_force_save_info = ""  # 每 N 步保存一次模型
+            gamma_label = ""  # lr 衰减力度
+            gamma_info = ""  # 不建议动
+            cache_device_label = ""  # 缓存设备
+            cache_device_info = ""  # 选择 cuda 可以获得更快的速度，但是需要更大显存的显卡 (SoVITS 主模型无效)
+            cache_all_data_label = ""  # 缓存所有数据
+            cache_all_data_info = ""  # 可以获得更快的速度，但是需要大内存/显存的设备
+            epochs_label = ""  # 最大训练轮数
+            epochs_info = ""  # 达到设定值时将会停止训练
+            use_pretrain_label = ""  # 使用预训练模型
+            use_pretrain_info = ""  # 勾选可以大幅减少训练时间，如果你不懂，不要动
+    class reflow:
+        infer_tip = ""  # 推理 ReflowVAESVC 模型
+        class train:
+            batch_size_label = ""  # 训练批次大小
+            batch_size_info = ""  # 越大越好，越大越占显存，注意不能超过训练集条数
+            num_workers_label = ""  # 训练进程数
+            num_workers_info = ""  # 如果你显卡挺好，可以设为 0
+            amp_dtype_label = ""  # 训练精度
+            amp_dtype_info = ""  # 选择 fp16、bf16 可以获得更快的速度，但是炸炉概率 up up
+            lr_label = ""  # 学习率
+            lr_info = ""  # 不建议动
+            interval_val_label = ""  # 验证间隔
+            interval_val_info = ""  # 每 N 步验证一次，同时保存
+            interval_log_label = ""  # 日志间隔
+            interval_log_info = ""  # 每 N 步输出一次日志
+            interval_force_save_label = ""  # 强制保存模型间隔
+            interval_force_save_info = ""  # 每 N 步保存一次模型
+            gamma_label = ""  # lr 衰减力度
+            gamma_info = ""  # 不建议动
+            cache_device_label = ""  # 缓存设备
+            cache_device_info = ""  # 选择 cuda 可以获得更快的速度，但是需要更大显存的显卡 (SoVITS 主模型无效)
+            cache_all_data_label = ""  # 缓存所有数据
+            cache_all_data_info = ""  # 可以获得更快的速度，但是需要大内存/显存的设备
+            epochs_label = ""  # 最大训练轮数
+            epochs_info = ""  # 达到设定值时将会停止训练
+            use_pretrain_label = ""  # 使用预训练模型
+            use_pretrain_info = ""  # 勾选可以大幅减少训练时间，如果你不懂，不要动
+        class model_types:
+            cascade = ""  # 级联模型
+    default_spk_name = ""  # 默认说话人
+    preprocess_draw_desc = ""  # 划分验证集
+    preprocess_desc = ""  # 预处理(进度去终端看)
+    preprocess_finished = ""  # 预处理完成

@@ -14,7 +14,7 @@ import torch
 import torchaudio
 from SoVITS.inference import infer_tool
 from SoVITS.inference.infer_tool import Svc
-from package_utils.config import JSONReader, YAMLReader, applyChanges
+from package_utils.config import JSONReader, YAMLReader, applyChanges, system_config
 from package_utils.const_vars import WORK_DIR_PATH
 from package_utils.dataset_utils import auto_normalize_dataset
 from package_utils.exec import exec, start_with_cmd
@@ -22,9 +22,11 @@ from package_utils.i18n import I
 from package_utils.model_utils import load_pretrained
 from package_utils.ui.FormTypes import FormDictInModelClass
 from .common import common_infer_form, common_preprocess_form
-from SoVITS import utils
+from SoVITS import logger, utils
 import gradio as gr
 
+
+from get_free_port import get_dynamic_ports
 
 import soundfile as sf
 
@@ -302,6 +304,10 @@ class SoVITSModel:
             filepath.endswith(".pth")
             and not filepath.startswith("D_")
             and not filepath.startswith("G_0")
+            and filepath
+            not in [
+                "model_0.pt",
+            ]
         ):
             return "main"
         if os.path.basename(filepath) in ["feature_and_index.pkl", "kmeans_10000.pt"]:
@@ -367,6 +373,12 @@ class SoVITSModel:
             working_config_path = os.path.join(WORK_DIR_PATH, "config.json")
             if params["train.half_type"] == "fp16":
                 params["train.fp16_run"] = True
+
+            if system_config.sovits.resolve_port_clash:
+                params["train.port"] = str(get_dynamic_ports()[0])
+                logger.info(
+                    f"Try to resolve port clasling with port {params['train.port']}"
+                )
             config = applyChanges(
                 working_config_path,
                 params,
@@ -404,7 +416,7 @@ class SoVITSModel:
             else:
                 working_config_path = os.path.join(WORK_DIR_PATH, "config.json")
                 start_with_cmd(
-                    f"{executable} -m SoVITS.train_index --root_dir data/44k     -c {working_config_path}"
+                    f"{executable} -m SoVITS.train_index --root_dir data/44k -c {working_config_path}"
                 )
 
     def preprocess(self, params, progress=gr.Progress()):

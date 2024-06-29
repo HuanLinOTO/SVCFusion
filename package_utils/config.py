@@ -1,4 +1,5 @@
 import json
+import os
 import yaml
 
 
@@ -83,5 +84,87 @@ def applyChanges(
 
 
 def get_settings():
+    if not os.path.exists("configs/svcfusion.json"):
+        # 写个 {} 进去
+        with open("configs/svcfusion.json", "w") as f:
+            f.write("{}")
     with JSONReader("configs/svcfusion.json") as config:
         return config
+
+
+class DefaultSystemConfig:
+    class pkg:
+        lang = "简体中文"
+
+    class sovits:
+        resolve_port_clash = False
+
+
+class SystemConfig(dict):
+    def __init__(self, *args, **kwargs):
+        self.default_class = kwargs.pop("default_class", None)
+        super(SystemConfig, self).__init__(*args, **kwargs)
+
+    def __getattr__(self, item):
+        settings = get_settings()
+        if item in self:
+            value = self[item]
+        elif item in settings:
+            value = settings[item]
+            self[item] = value  # 缓存设置值
+        else:
+            value = None
+
+        if value is None and self.default_class:
+            value = getattr(self.default_class, item, None)
+            if value is not None:
+                if isinstance(value, type):
+                    return SystemConfig(default_class=value)
+                return value
+
+        if value is None:
+            raise AttributeError(f"'SystemConfig' object has no attribute '{item}'")
+
+        if isinstance(value, dict) and not isinstance(value, SystemConfig):
+            value = SystemConfig(value, default_class=self.default_class)
+            self[item] = value
+
+        return value
+
+    def __setattr__(self, item, value):
+        self[item] = value
+
+    def __delattr__(self, item):
+        del self[item]
+
+    def __setitem__(self, key, value):
+        if isinstance(value, dict) and not isinstance(value, SystemConfig):
+            value = SystemConfig(value, default_class=self.default_class)
+        super().__setitem__(key, value)
+
+    def __getitem__(self, item):
+        if item in self:
+            value = super().__getitem__(item)
+        else:
+            settings = get_settings()
+            value = settings.get(item)
+            if value is not None:
+                self[item] = value
+            else:
+                raise KeyError(f"'SystemConfig' object has no key '{item}'")
+
+        if isinstance(value, dict) and not isinstance(value, SystemConfig):
+            value = SystemConfig(value, default_class=self.default_class)
+            self[item] = value
+
+        return value
+
+
+system_config: DefaultSystemConfig = SystemConfig(
+    get_settings(),
+    default_class=DefaultSystemConfig,
+)
+
+__all__ = [
+    "system_config",
+]

@@ -1,42 +1,58 @@
 from package_utils.config import JSONReader, applyChanges
 from package_utils.i18n import I
+from package_utils.config import system_config
 from package_utils.ui.Form import Form
 
 import gradio as gr
 
+from package_utils.ui.FormTypes import FormDict
+
 
 class Settings:
-    def get_config(*args):
-        with JSONReader("configs/svcfusion.json") as config:
-            return config
+    def get_save_config_fn(self, prefix):
+        def fn(config, progress=None):
+            tmp = {
+                prefix: config,
+            }
+            applyChanges(
+                "configs/svcfusion.json",
+                tmp,
+                no_skip=True,
+            )
+            gr.Info(I.settings.saved_tip)
 
-    def save_config(self, config, progress=None):
-        # with JSONReader("configs/svcfusion.json") as c:
-        #     c.update(config)
-        applyChanges("configs/svcfusion.json", config, no_skip=True)
-        gr.Info("已保存")
+        return fn
 
     def __init__(self):
-        self.form = {
+        self.form: FormDict = {
             I.settings.pkg_settings_label: {
                 "form": {
                     "lang": {
-                        "label": I.settings.lang_label,
+                        "label": I.settings.pkg.lang_label,
                         "type": "dropdown",
-                        "info": I.settings.lang_info,
+                        "info": I.settings.pkg.lang_info,
                         "choices": ["简体中文", "English"],
-                        "default": lambda: self.get_config()["lang"],
+                        "default": lambda: system_config.pkg.lang,
                     },
                 },
-                "callback": self.save_config,
-            }
+                "callback": self.get_save_config_fn("pkg"),
+            },
+            I.settings.sovits_settings_label: {
+                "form": {
+                    "resolve_port_clash": {
+                        "type": "checkbox",
+                        "label": I.settings.sovits.resolve_port_clash_label,
+                        "info": I.settings.sovits.resolve_port_clash_label,
+                        "default": lambda: system_config.sovits.resolve_port_clash,
+                    }
+                },
+                "callback": self.get_save_config_fn("sovits"),
+            },
         }
 
         self.triger = gr.Dropdown(
-            label="页面",
-            choices=[
-                I.settings.pkg_settings_label,
-            ],
+            label=I.settings.page,
+            choices=[I.settings.pkg_settings_label, I.settings.sovits_settings_label],
             value=I.settings.pkg_settings_label,
             interactive=True,
         )

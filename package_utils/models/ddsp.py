@@ -13,6 +13,7 @@ import yaml
 
 from package_utils.config import YAMLReader, applyChanges
 from package_utils.dataset_utils import DrawArgs, auto_normalize_dataset
+from package_utils.i18n import I
 from package_utils.model_utils import load_pretrained
 from .common import common_infer_form, diff_based_infer_form, common_preprocess_form
 from ddspsvc.reflow.vocoder import load_model_vocoder
@@ -38,7 +39,9 @@ class DDSPModel:
 
     preprocess_form = {}
 
-    model_types = {"cascade": "级联模型"}
+    model_types = {
+        "cascade": I.ddsp6.model_types.cascade,
+    }
 
     def model_filter(self, filepath: str):
         if filepath.endswith(".pt"):
@@ -120,7 +123,7 @@ class DDSPModel:
 
         config_path = os.path.join(os.path.dirname(path), "config.yaml")
         with YAMLReader(config_path) as config:
-            self.spks = config.get("spks", ["默认说话人"])
+            self.spks = config.get("spks", [I.default_spk_name])
         return self.spks
 
     def train(self, params, progress: gr.Progress):
@@ -154,7 +157,7 @@ class DDSPModel:
 
         auto_normalize_dataset("data/train/audio", True, progress)
 
-        for i in progress.tqdm(range(1), desc="划分验证集"):
+        for i in progress.tqdm(range(1), desc=I.preprocess_draw_desc):
             rmtree("data/val")
             draw_main(DrawArgs())
 
@@ -167,11 +170,11 @@ class DDSPModel:
         with open("configs/ddsp.yaml", "w") as f:
             yaml.dump(config, f, default_flow_style=False)
 
-        for i in progress.tqdm(range(1), desc="预处理(进度去终端看)"):
+        for i in progress.tqdm(range(1), desc=I.preprocess_desc):
             exec(
                 f"{executable} -m ddspsvc.preprocess -c configs/ddsp.yaml -d {params['device']}"
             )
-        return gr.update(value="完成")
+        return gr.update(value=I.preprocess_finished)
 
     def infer(
         self,
@@ -334,7 +337,7 @@ class DDSPModel:
         print("Cut the input audio into " + str(len(segments)) + " slices")
         with torch.no_grad():
             pgs = (
-                progress.tqdm(segments, desc="推理 DDSP 模型")
+                progress.tqdm(segments, desc=I.ddsp6.infer_tip)
                 if type(progress) is not type(None)
                 else segments
             )
@@ -399,8 +402,8 @@ class DDSPModel:
                     "train.batch_size": {
                         "type": "slider",
                         "default": lambda: self.get_config()["train"]["batch_size"],
-                        "label": "训练批次大小",
-                        "info": "越大越好，越大越占显存，注意不能超过训练集条数",
+                        "label": I.ddsp6.train.batch_size_label,
+                        "info": I.ddsp6.train.batch_size_info,
                         "max": 9999,
                         "min": 1,
                         "step": 1,
@@ -408,8 +411,8 @@ class DDSPModel:
                     "train.num_workers": {
                         "type": "slider",
                         "default": lambda: self.get_config()["train"]["num_workers"],
-                        "label": "训练进程数",
-                        "info": "如果你显卡挺好，可以设为 0",
+                        "label": I.ddsp6.train.num_workers_label,
+                        "info": I.ddsp6.train.num_workers_info,
                         "max": 9999,
                         "min": 0,
                         "step": 1,
@@ -417,8 +420,8 @@ class DDSPModel:
                     "train.amp_dtype": {
                         "type": "dropdown",
                         "default": lambda: self.get_config()["train"]["amp_dtype"],
-                        "label": "训练精度",
-                        "info": "选择 fp16、bf16 可以获得更快的速度，但是炸炉概率 up up",
+                        "label": I.ddsp6.train.amp_dtype_label,
+                        "info": I.ddsp6.train.amp_dtype_info,
                         "choices": ["fp16", "bf16", "fp32"],
                     },
                     "train.lr": {
@@ -427,14 +430,14 @@ class DDSPModel:
                         "step": 0.00001,
                         "min": 0.00001,
                         "max": 0.1,
-                        "label": "学习率",
-                        "info": "不建议动",
+                        "label": I.ddsp6.train.lr_label,
+                        "info": I.ddsp6.train.lr_info,
                     },
                     "train.interval_val": {
                         "type": "slider",
                         "default": lambda: self.get_config()["train"]["interval_val"],
-                        "label": "验证间隔",
-                        "info": "每 N 步验证一次，同时保存",
+                        "label": I.ddsp6.train.interval_val_label,
+                        "info": I.ddsp6.train.interval_val_info,
                         "max": 10000,
                         "min": 1,
                         "step": 1,
@@ -442,16 +445,16 @@ class DDSPModel:
                     "train.interval_log": {
                         "type": "slider",
                         "default": lambda: self.get_config()["train"]["interval_log"],
-                        "label": "日志间隔",
-                        "info": "每 N 步输出一次日志",
+                        "label": I.ddsp6.train.interval_log_label,
+                        "info": I.ddsp6.train.interval_log_info,
                         "max": 10000,
                         "min": 1,
                         "step": 1,
                     },
                     "train.interval_force_save": {
                         "type": "slider",
-                        "label": "强制保存模型间隔",
-                        "info": "每 N 步保存一次模型",
+                        "label": I.ddsp6.train.interval_force_save_label,
+                        "info": I.ddsp6.train.interval_force_save_info,
                         "min": 0,
                         "max": 100000,
                         "default": lambda: self.get_config()["train"][
@@ -461,8 +464,8 @@ class DDSPModel:
                     },
                     "train.gamma": {
                         "type": "slider",
-                        "label": "lr 衰减力度",
-                        "info": "不建议动",
+                        "label": I.ddsp6.train.gamma_label,
+                        "info": I.ddsp6.train.gamma_info,
                         "min": 0,
                         "max": 1,
                         "default": lambda: self.get_config()["train"]["gamma"],
@@ -470,21 +473,21 @@ class DDSPModel:
                     },
                     "train.cache_device": {
                         "type": "dropdown",
-                        "label": "缓存设备",
-                        "info": "选择 cuda 可以获得更快的速度，但是需要更大显存的显卡 (SoVITS 主模型无效)",
+                        "label": I.ddsp6.train.cache_device_label,
+                        "info": I.ddsp6.train.cache_device_info,
                         "choices": ["cuda", "cpu"],
                         "default": lambda: self.get_config()["train"]["cache_device"],
                     },
                     "train.cache_all_data": {
                         "type": "dropdown_liked_checkbox",
-                        "label": "缓存所有数据",
-                        "info": "可以获得更快的速度，但是需要大内存/显存的设备",
+                        "label": I.ddsp6.train.cache_all_data_label,
+                        "info": I.ddsp6.train.cache_all_data_info,
                         "default": lambda: self.get_config()["train"]["cache_all_data"],
                     },
                     "train.epochs": {
                         "type": "slider",
-                        "label": "最大训练轮数",
-                        "info": "达到设定值时将会停止训练",
+                        "label": I.ddsp6.train.epochs_label,
+                        "info": I.ddsp6.train.epochs_info,
                         "min": 50000,
                         "max": 1000000,
                         "default": lambda: self.get_config()["train"]["epochs"],
@@ -492,8 +495,8 @@ class DDSPModel:
                     },
                     "use_pretrain": {
                         "type": "dropdown_liked_checkbox",
-                        "label": "使用预训练模型",
-                        "info": "勾选可以大幅减少训练时间，如果你不懂，不要动",
+                        "label": I.ddsp6.train.use_pretrain_label,
+                        "info": I.ddsp6.train.use_pretrain_info,
                         "default": True,
                     },
                 }

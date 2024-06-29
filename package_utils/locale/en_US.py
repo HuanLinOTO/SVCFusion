@@ -20,7 +20,7 @@ class enUSLocale(Locale):
         unuse_value = "Do Not Use"
         no_spk_value = "No Speaker"
 
-        choose_model_dropdown_prefix = "Select Model"
+        choose_model_dropdown_prefix = "Choose Model"
 
         refresh_btn_value = "Refresh Options"
 
@@ -39,22 +39,22 @@ class enUSLocale(Locale):
     class model_manager(Locale.model_manager):
         pack_btn_value = "Pack Model"
         pack_result_label = "Pack Result"
-        packing_tip = "Packing, please do not click multiple times"
+        packing_tip = "Packing in progress, please do not click multiple times"
         unpackable_tip = "This model does not support packing"
 
-        clean_log_btn_value = "Clear Logs (confirm no more training before clearing)"
+        clean_log_btn_value = "Clear Logs (Confirm not training before clearing)"
 
         change_model_type_info = """
         #### Change Model Type
-        Use only when the model type cannot be recognized! This is not for converting model types! It's for changing the recognized model type!
+        Only use when the model type cannot be recognized! This is not for converting model types! It is for changing the recognized model type!
         """
         change_model_type_btn_value = "Confirm Change"
         change_success_tip = "Change Successful"
         change_fail_tip = "Change Failed"
 
     class main_ui(Locale.main_ui):
-        release_memory_btn_value = "Attempt to Release VRAM/Memory"
-        released_tip = "Attempted to Release VRAM/Memory"
+        release_memory_btn_value = "Attempt to Release Memory"
+        released_tip = "Attempted to release memory"
         infer_tab = "💡Inference"
         preprocess_tab = "⏳Data Processing"
         train_tab = "🏋️‍♂️Training"
@@ -71,45 +71,64 @@ class enUSLocale(Locale):
 
     class preprocess(Locale.preprocess):
         tip = """
-            Please first place your dataset (i.e., a bunch of `.wav` files) into the `dataset_raw/your_character_name` folder in the package
+            Please place your dataset (a bunch of `.wav` files) into the `dataset_raw/YourCharacterName` folder under the integration package.
 
-            You can train multiple characters at the same time by creating multiple character folders
+            You can train multiple characters simultaneously by creating multiple character folders.
 
-            After placing, your directory should look like this
+            After placement, your directory should look like this:
 
             ```
             dataset_raw/
-            |-your_character_name1/
+            |-YourCharacterName1/
             |  | 1.wav
             |  | 2.wav
             |  | 3.wav
             |  ...
-            |-your_character_name2/
+            |-YourCharacterName2/
             |  | 1.wav
             |  | 2.wav
             |  | 3.wav
             |  ...
             ```
 
-            If you don't understand anything, just click the button below for fully automated data processing
+            If you don't understand anything, just click the button below for automatic data processing.
 
-            If you understand the significance of the parameters, you can switch to manual mode for more detailed data processing
-            
-            **CPU users, please use FCPE as the F0 extractor/predictor**
+            If you understand the parameters, you can switch to manual mode for more detailed data processing.
+
+            **CPU users please use FCPE as the F0 extractor/predictor**
         """
         little_vram_tip = """
-            ## The current device does not have a graphics card with more than 6GB of VRAM, it is recommended to only train DDSP models
+            ## The current device does not have a graphics card with more than 6GB of VRAM, only DDSP model training is recommended.
         """
 
         open_dataset_folder_btn_value = "Open Dataset Folder"
 
-        choose_model_label = "Select Model"
+        choose_model_label = "Choose Model"
+
+    class train(Locale.train):
+        current_train_model_label = "Current Training Model"
+        gd_plus_1 = "Click me to add merit"
+        gd_plus_1_tip = "Merit +1, furnace explosion -1"
+
+        choose_sub_model_label = "Select Submodel"
+
+        archieve_btn_value = "Archive Working Directory"
+        stop_btn_value = "Stop Training"
+
+        archieving_tip = "Archiving in progress, please do not click multiple times"
+        archieved_tip = "Archiving complete, please check the opened folder"
+
+        stopped_tip = "Stop training command sent, please check the training window"
 
     class settings(Locale.settings):
-        pkg_settings_label = "Package Settings"
+        page = "Page"
+
+        pkg_settings_label = "Integration Package Settings"
 
         lang_label = "Language"
-        lang_info = "Changing the language requires restarting the package"
+        lang_info = "Changing the language requires restarting the integration package"
+
+        saved_tip = "Saved"
 
     class install_model(Locale.install_model):
         tip = """
@@ -119,7 +138,7 @@ class enUSLocale(Locale):
         file_label = "Upload Model Package"
 
         model_name_label = "Model Name"
-        model_name_placeholder = "Please enter model name"
+        model_name_placeholder = "Please enter the model name"
 
         submit_btn_value = "Install Model"
 
@@ -139,63 +158,195 @@ class enUSLocale(Locale):
     class vocal_remove(Locale.vocal_remove):
         input_audio_label = "Input Audio"
         submit_btn_value = "Start"
-        vocal_label = "Output - Vocals"
+        vocal_label = "Output - Vocal"
         inst_label = "Output - Instrumental"
+
+    class common_infer(Locale.common_infer):
+        audio_label = "Audio File"
+
+        use_vocal_remove_label = "Remove Accompaniment"
+        use_vocal_remove_info = "Whether to remove accompaniment"
+
+        f0_label = "F0 Extractor"
+        f0_info = "Model for pitch extraction/prediction"
+
+        keychange_label = "Key Change"
+        keychange_info = "Reference: Male to Female 12, Female to Male -12, adjust if the tone is not accurate"
+
+        threshold_label = "Slice Threshold"
+        threshold_info = "Threshold for voice slicing, if there is background noise, set to -40 or higher"
+
+    class diff_based_infer(Locale.diff_based_infer):
+        method_label = "Sampler"
+        method_info = "Sampler for reflow"
+
+        infer_step_label = "Inference Steps"
+        infer_step_info = "Inference step length, default is fine"
+
+        t_start_label = "T Start"
+        t_start_info = "Not sure"
+
+    class diff_based_preprocess(Locale.diff_based_preprocess):
+        method_label = "F0 Extractor"
+        method_info = "Sampler for reflow"
+
+    class common_preprocess(Locale.common_preprocess):
+        encoder_label = "Voice Encoder"
+        encoder_info = "Model for encoding voice"
+
+        f0_label = "F0 Extractor"
+        f0_info = "Model for pitch extraction/prediction"
 
     class sovits(Locale.sovits):
         dataset_not_complete_tip = (
-            "Dataset is incomplete, please check the dataset or preprocess again"
+            "Dataset incomplete, please check the dataset or preprocess again"
         )
-        finished = "Completed"
+        finished = "Finished"
 
         class infer(Locale.sovits.infer):
             cluster_infer_ratio_label = "Cluster/Feature Ratio"
-            cluster_infer_ratio_info = "Ratio of clustering/features, range 0-1. If no clustering model or feature retrieval is trained, default to 0"
+            cluster_infer_ratio_info = "Cluster/Feature ratio, range 0-1, if no cluster model or feature retrieval trained, default is 0"
 
-            linear_gradient_info = "Crossfade length for two audio segments"
+            linear_gradient_info = "Crossfade length for two audio slices"
             linear_gradient_label = "Gradient Length"
 
             k_step_label = "Diffusion Steps"
-            k_step_info = "The larger the number, the closer to the diffusion model result, default is 100"
+            k_step_info = (
+                "The larger the closer to the diffusion model result, default is 100"
+            )
 
             enhancer_adaptive_key_label = "Enhancer Adaptation"
-            enhancer_adaptive_key_info = "Make the enhancer adapt to a higher pitch range (unit is semitone)|Default is 0"
+            enhancer_adaptive_key_info = "Makes the enhancer adapt to higher pitch (unit in semitones), default is 0"
 
-            f0_filter_threshold_label = "f0 Filter Threshold"
-            f0_filter_threshold_info = "Only effective when using crepe. The range is from 0-1. Lowering this value can reduce the probability of off-pitch, but increase the probability of muted sound"
+            f0_filter_threshold_label = "F0 Filter Threshold"
+            f0_filter_threshold_info = "Only effective when using crepe. Range is 0-1. Lowering this value can reduce detuning probability, but increases muted notes."
 
-            audio_predict_f0_label = "Automatic f0 Prediction"
-            audio_predict_f0_info = "Automatically predict pitch for voice conversion, do not turn this on when converting singing voice, it will cause severe off-pitch"
+            audio_predict_f0_label = "Auto F0 Prediction"
+            audio_predict_f0_info = "Auto pitch prediction for voice conversion, do not enable this for singing voice conversion as it will cause severe detuning"
 
-            second_encoding_label = "Secondary Encoding"
-            second_encoding_info = "Secondary encoding of the original audio before shallow diffusion, esoteric option, sometimes it works well, sometimes it works poorly"
+            second_encoding_label = "Second Encoding"
+            second_encoding_info = "The original audio will be secondarily encoded before shallow diffusion, a metaphysical option, sometimes good, sometimes bad."
 
-            clip_label = "Force Clip Length"
-            clip_info = "Force the audio clip length, 0 means no force"
+            clip_label = "Force Slice Length"
+            clip_info = "Force audio slice length, 0 means no force"
 
         class train(Locale.sovits.train):
             use_diff_label = "Train Shallow Diffusion"
-            use_diff_info = "Check this to generate files needed for training shallow diffusion, it will be slower than not selecting"
+            use_diff_info = "Selecting this will generate files needed for shallow diffusion training, will be slower than unselected."
 
-            vol_aug_label = "Volume Embedding"
-            vol_aug_info = "Check this to use volume embedding"
+            vol_aug_label = "Loudness Embedding"
+            vol_aug_info = "Selecting this will use loudness embedding."
 
-            num_workers_label = "Number of Processes"
-            num_workers_info = "Theoretically the larger the number, the faster"
+            num_workers_label = "Number of Workers"
+            num_workers_info = "Theoretically the larger the faster"
 
-            subprocess_num_workers_label = "Number of Threads per Process"
-            subprocess_num_workers_info = (
-                "Theoretically the larger the number, the faster"
-            )
+            subprocess_num_workers_label = "Threads per Worker"
+            subprocess_num_workers_info = "Theoretically the larger the faster"
 
         class model_types(Locale.sovits.model_types):
             main = "Main Model"
             diff = "Shallow Diffusion"
-            cluster = "Clustering/Retrieval Model"
+            cluster = "Cluster/Retrieval Model"
 
         class model_chooser_extra(Locale.sovits.model_chooser_extra):
             enhance_label = "NSFHifigan Audio Enhancement"
-            enhance_info = "Has certain audio quality enhancement effects for models with a small training set, has adverse effects on well-trained models"
+            enhance_info = "Provides some audio quality enhancement for models with few training sets, has negative effects on well-trained models."
 
             feature_retrieval_label = "Enable Feature Retrieval"
-            feature_retrieval_info = "Whether to use feature retrieval, will be disabled if clustering model is used"
+            feature_retrieval_info = "Whether to use feature retrieval, if using a cluster model, this will be disabled."
+
+    class ddsp6(Locale.ddsp6):
+        infer_tip = "Inference DDSP Model"
+
+        class model_types(Locale.ddsp6.model_types):
+            cascade = "Cascade Model"
+
+        class train(Locale.ddsp6.train):
+            batch_size_label = "Training Batch Size"
+            batch_size_info = "The larger the better, the larger the more VRAM it consumes, make sure not to exceed the number of training sets"
+
+            num_workers_label = "Number of Training Processes"
+            num_workers_info = "If your graphics card is good, set it to 0"
+
+            amp_dtype_label = "Training Precision"
+            amp_dtype_info = "Choosing fp16, bf16 can achieve faster speed, but increases the probability of furnace explosion"
+
+            lr_label = "Learning Rate"
+            lr_info = "Not recommended to change"
+
+            interval_val_label = "Validation Interval"
+            interval_val_info = "Validate every N steps, and save"
+
+            interval_log_label = "Log Interval"
+            interval_log_info = "Log output every N steps"
+
+            interval_force_save_label = "Force Save Model Interval"
+            interval_force_save_info = "Save model every N steps"
+
+            gamma_label = "LR Decay Intensity"
+            gamma_info = "Not recommended to change"
+
+            cache_device_label = "Cache Device"
+            cache_device_info = "Choosing cuda can achieve faster speed, but requires a larger VRAM graphics card (invalid for SoVITS main model)"
+
+            cache_all_data_label = "Cache All Data"
+            cache_all_data_info = (
+                "Can achieve faster speed, but requires a device with large memory/VRAM"
+            )
+
+            epochs_label = "Max Training Epochs"
+            epochs_info = "Training will stop when the set value is reached"
+
+            use_pretrain_label = "Use Pretrained Model"
+            use_pretrain_info = "Selecting this can greatly reduce training time, if you don't understand, don't change"
+
+    class reflow(Locale.reflow):
+        infer_tip = "Inference ReflowVAESVC Model"
+
+        class train(Locale.ddsp6.train):
+            batch_size_label = "Training Batch Size"
+            batch_size_info = "The larger the better, the larger the more VRAM it consumes, make sure not to exceed the number of training sets"
+
+            num_workers_label = "Number of Training Processes"
+            num_workers_info = "If your graphics card is good, set it to 0"
+
+            amp_dtype_label = "Training Precision"
+            amp_dtype_info = "Choosing fp16, bf16 can achieve faster speed, but increases the probability of furnace explosion"
+
+            lr_label = "Learning Rate"
+            lr_info = "Not recommended to change"
+
+            interval_val_label = "Validation Interval"
+            interval_val_info = "Validate every N steps, and save"
+
+            interval_log_label = "Log Interval"
+            interval_log_info = "Log output every N steps"
+
+            interval_force_save_label = "Force Save Model Interval"
+            interval_force_save_info = "Save model every N steps"
+
+            gamma_label = "LR Decay Intensity"
+            gamma_info = "Not recommended to change"
+
+            cache_device_label = "Cache Device"
+            cache_device_info = "Choosing cuda can achieve faster speed, but requires a larger VRAM graphics card (invalid for SoVITS main model)"
+
+            cache_all_data_label = "Cache All Data"
+            cache_all_data_info = (
+                "Can achieve faster speed, but requires a device with large memory/VRAM"
+            )
+
+            epochs_label = "Max Training Epochs"
+            epochs_info = "Training will stop when the set value is reached"
+
+            use_pretrain_label = "Use Pretrained Model"
+            use_pretrain_info = "Selecting this can greatly reduce training time, if you don't understand, don't change"
+
+        class model_types(Locale.reflow.model_types):
+            cascade = "Cascade Model"
+
+    default_spk_name = "Default Speaker"
+
+    preprocess_draw_desc = "Split Validation Set"
+    preprocess_desc = "Preprocessing (see terminal for progress)"
+    preprocess_finished = "Preprocessing Complete"

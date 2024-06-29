@@ -19,6 +19,9 @@ from SoVITS.models import (
     MultiPeriodDiscriminator,
     SynthesizerTrn,
 )
+
+from SoVITS.logger import Progress
+
 from SoVITS.modules import commons
 from SoVITS.modules.losses import (
     discriminator_loss,
@@ -182,7 +185,7 @@ def run(rank, n_gpus, hps):
         logger.info("Compiled!")
 
     scaler = GradScaler(enabled=hps.train.fp16_run)
-    with logger.Progress() as progress:
+    with Progress() as progress:
         for epoch in range(epoch_str, hps.train.epochs + 1):
             # set up warm-up learning rate
             if epoch <= warmup_epoch:
@@ -414,7 +417,9 @@ def train_and_evaluate(
                     scalars=scalar_dict,
                 )
             # 达到保存步数或者 stop 文件存在
-            if global_step % hps.train.eval_interval == 0 or os.path.exists("stop.txt"):
+            if global_step % hps.train.eval_interval == 0 or os.path.exists(
+                os.path.join(hps.model_dir, "stop.txt")
+            ):
                 if os.path.exists("stop.txt"):
                     logger.info("stop.txt found, stop training")
                 evaluate(hps, net_g, eval_loader, writer_eval)

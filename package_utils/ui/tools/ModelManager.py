@@ -39,7 +39,9 @@ class ModelManager:
     def clear_log(self):
         search_path = self.model_chooser.selected_search_path
         model_type_index = self.model_chooser.seleted_model_type_index
-        shutil.rmtree(os.path.join(search_path, "logs"))
+        log_path = os.path.join(search_path, "logs")
+        if os.path.exists(log_path):
+            shutil.rmtree(log_path)
 
         # sovits only
         if model_type_index == 2:
