@@ -145,8 +145,9 @@ class ModelChooser:
         i = 0
         for model in model_list:
             for type in model.model_types:
-                m = models.get(type, [I.model_chooser.no_model_value])
-                m.append(I.model_chooser.unuse_value)
+                m: list = models.get(type, [I.model_chooser.no_model_value])
+                if I.model_chooser.unuse_value in m:
+                    m.append(I.model_chooser.unuse_value)
                 result.append(
                     gr.update(
                         choices=m,
@@ -164,6 +165,19 @@ class ModelChooser:
                 interactive=model_type_index == -1,
             ),
             gr.update(visible=model_type_index != -1 and self.show_submit_button),
+        )
+
+    def on_refresh_with_search_path(self, search_path):
+        if not search_path:
+            result = [gr.update() for i in range((len(self.model_dropdowns) + 3))]
+            return result
+        result = self.on_refresh(search_path)
+        return (
+            gr.update(
+                choices=self.choices,
+                value=search_path,
+            ),
+            *result,
         )
 
     def __init__(
@@ -255,13 +269,22 @@ class ModelChooser:
         self.seach_path_dropdown.change(
             self.on_refresh,
             [self.seach_path_dropdown],
-            [*self.model_dropdowns, self.model_type_dropdown, self.load_model_btn],
+            [
+                *self.model_dropdowns,
+                self.model_type_dropdown,
+                self.load_model_btn,
+            ],
         )
 
         self.refresh_btn.click(
-            self.on_refresh,
+            self.on_refresh_with_search_path,
             [self.seach_path_dropdown],
-            [*self.model_dropdowns, self.model_type_dropdown, self.load_model_btn],
+            [
+                self.seach_path_dropdown,
+                *self.model_dropdowns,
+                self.model_type_dropdown,
+                self.load_model_btn,
+            ],
         )
 
         self.load_model_btn.click(

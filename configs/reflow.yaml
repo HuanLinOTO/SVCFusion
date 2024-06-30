@@ -7,8 +7,8 @@ data:
   encoder_out_channels: 768
   encoder_sample_rate: 16000
   extensions:
-    - wav
-    - flac
+  - wav
+  - flac
   f0_extractor: fcpe
   f0_max: 1200
   f0_min: 40
@@ -33,7 +33,7 @@ model:
   use_pitch_aug: false
 model_type_index: 1
 spks:
-  - wkr_raw
+- QQ2222225007
 train:
   amp_dtype: fp32
   batch_size: 48
@@ -43,7 +43,7 @@ train:
   decay_step: 150000
   epochs: 100000
   gamma: 0.5
-  interval_force_save: 10000
+  interval_force_save: 2000
   interval_log: 1
   interval_val: 1000
   lr: 0.0001

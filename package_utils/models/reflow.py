@@ -41,7 +41,7 @@ class ReflowVAESVCModel:
             return config
 
     def model_filter(self, filepath: str):
-        if filepath.endswith(".pt"):
+        if filepath.endswith(".pt") and filepath != "model_0.pt":
             return "cascade"
 
     def pack_model(self, model_dict):

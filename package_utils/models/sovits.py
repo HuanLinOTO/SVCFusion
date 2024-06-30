@@ -31,7 +31,7 @@ from get_free_port import get_dynamic_ports
 import soundfile as sf
 
 
-def check_files(directory, use_diff):
+def check_files(directory, use_diff=False):
     # 获取目标目录下所有的wav文件
     wav_files = [f for f in os.listdir(directory) if f.endswith(".wav")]
 
@@ -304,10 +304,7 @@ class SoVITSModel:
             filepath.endswith(".pth")
             and not filepath.startswith("D_")
             and not filepath.startswith("G_0")
-            and filepath
-            not in [
-                "model_0.pt",
-            ]
+            and filepath not in ["model_0.pt", "diffusion/model_0.pt"]
         ):
             return "main"
         if os.path.basename(filepath) in ["feature_and_index.pkl", "kmeans_10000.pt"]:

@@ -17,6 +17,8 @@ from scipy.io.wavfile import read
 from sklearn.cluster import MiniBatchKMeans
 from torch.nn import functional as F
 
+from package_utils.config import JSONReader
+
 from . import logger
 
 MATPLOTLIB_FLAG = False
@@ -438,14 +440,13 @@ def get_hparams(init=True):
     config_path = args.config
     config_save_path = os.path.join(model_dir, "config.json")
     if init:
-        with open(config_path, "r") as f:
-            data = f.read()
+        with JSONReader(config_save_path) as f:
+            config = f
         with open(config_save_path, "w") as f:
-            f.write(data)
+            json.dump(config, f, indent=4)
     else:
-        with open(config_save_path, "r") as f:
-            data = f.read()
-    config = json.loads(data)
+        with JSONReader(config_path) as f:
+            config = f
 
     hparams = HParams(**config)
     hparams.model_dir = model_dir
@@ -454,9 +455,8 @@ def get_hparams(init=True):
 
 def get_hparams_from_dir(model_dir):
     config_save_path = os.path.join(model_dir, "config.json")
-    with open(config_save_path, "r") as f:
-        data = f.read()
-    config = json.loads(data)
+    with JSONReader(config_save_path) as f:
+        config = f
 
     hparams = HParams(**config)
     hparams.model_dir = model_dir
@@ -464,9 +464,8 @@ def get_hparams_from_dir(model_dir):
 
 
 def get_hparams_from_file(config_path, infer_mode=False):
-    with open(config_path, "r") as f:
-        data = f.read()
-    config = json.loads(data)
+    with JSONReader(config_path) as f:
+        config = f
     hparams = HParams(**config) if not infer_mode else InferHParams(**config)
     return hparams
 

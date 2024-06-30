@@ -5,6 +5,7 @@ import shutil
 import time
 import gradio as gr
 
+from fap.utils.file import make_dirs
 from package_utils.const_vars import FOUZU, WORK_DIR_PATH
 from package_utils.i18n import I
 from package_utils.model_utils import detect_current_model_by_dataset
@@ -34,6 +35,12 @@ class Train:
             shutil.copy(f"{dst}/config.yaml", f"{WORK_DIR_PATH}/config.yaml")
         if os.path.exists(f"{dst}/config.json"):
             shutil.copy(f"{dst}/config.json", f"{WORK_DIR_PATH}/config.json")
+        if os.path.exists(f"{dst}/diffusion/config.yaml"):
+            make_dirs(f"{WORK_DIR_PATH}/diffusion")
+            shutil.copy(
+                f"{dst}/diffusion/config.yaml",
+                f"{WORK_DIR_PATH}/diffusion/config.yaml",
+            )
         # 用explorer打开归档目录
         os.system(f"explorer {os.path.abspath(dst)}")
         gr.Info(I.train.archieved_tip)

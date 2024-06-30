@@ -107,6 +107,9 @@ class zhCNLocale(Locale):
 
     class train(Locale.train):
         current_train_model_label = "当前训练模型"
+
+        fouzu_tip = "~~整了个赛博佛祖，希望对你有帮助~~"
+
         gd_plus_1 = "点我加功德"
         gd_plus_1_tip = "功德 +1，炸炉 -1"
 

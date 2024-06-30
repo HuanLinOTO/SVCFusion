@@ -6,6 +6,7 @@ import subprocess
 import gradio as gr
 import yaml
 
+from package_utils.config import JSONReader, YAMLReader
 from package_utils.const_vars import (
     WORK_DIR_PATH,
 )
@@ -107,25 +108,22 @@ def detect_current_model_by_path(model_path):
     # 读取 model_path/config.yaml 中的 model_type
     is_unknown = False
     if os.path.exists(model_path + "/config.json"):
-        with open(model_path + "/config.json", "r") as f:
-            config = json.load(f)
-        if config.get("model_type_index") is None:
-            is_unknown = True
-            model_type = -1
-        else:
-            is_unknown = False
-            model_type = config["model_type_index"]
-        return model_type
+        with JSONReader(model_path + "/config.json") as config:
+            if config.get("model_type_index") is None:
+                is_unknown = True
+                model_type = -1
+            else:
+                is_unknown = False
+                model_type = config["model_type_index"]
     elif os.path.exists(model_path + "/config.yaml"):
         # DDSP / ReflowVAE
-        with open(model_path + "/config.yaml", "r") as f:
-            config = yaml.safe_load(f)
-        if config.get("model_type_index") is None:
-            is_unknown = True
-            model_type = -1
-        else:
-            is_unknown = False
-            model_type = config["model_type_index"]
+        with YAMLReader(model_path + "/config.yaml") as config:
+            if config.get("model_type_index") is None:
+                is_unknown = True
+                model_type = -1
+            else:
+                is_unknown = False
+                model_type = config["model_type_index"]
     else:
         is_unknown = True
         model_type = -1

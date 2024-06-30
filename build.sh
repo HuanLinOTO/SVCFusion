@@ -1,4 +1,4 @@
-python buildtools.py
+python scripts/buildtools.py
 python -m nuitka .\dist.py --module
 rm dist.py
 rm dist.pyi

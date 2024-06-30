@@ -42,7 +42,7 @@ train:
   decay_step: 50000
   epochs: 100000
   gamma: 0.5
-  interval_force_save: 10000
+  interval_force_save: 2000
   interval_log: 1
   interval_val: 2000
   lambda_ddsp: 1

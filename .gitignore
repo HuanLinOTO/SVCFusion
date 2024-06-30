@@ -33,7 +33,7 @@ workdir
 *.7z
 
 .conda
-buildtools.py
+scripts/buildtools.py
 dist*
 
 *.enigma64

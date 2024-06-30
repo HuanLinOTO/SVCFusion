@@ -1,6 +1,7 @@
 from package_utils.config import JSONReader, applyChanges
 from package_utils.i18n import I
 from package_utils.config import system_config
+from package_utils.locale import text_to_locale
 from package_utils.ui.Form import Form
 
 import gradio as gr
@@ -31,7 +32,7 @@ class Settings:
                         "label": I.settings.pkg.lang_label,
                         "type": "dropdown",
                         "info": I.settings.pkg.lang_info,
-                        "choices": ["简体中文", "English"],
+                        "choices": text_to_locale.keys(),
                         "default": lambda: system_config.pkg.lang,
                     },
                 },

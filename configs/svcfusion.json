@@ -1,12 +1,1 @@
-{
-    "lang": "English",
-    "_model_name": "整合包设置",
-    "pkg": {
-        "lang": "English",
-        "_model_name": "整合包设置"
-    },
-    "sovits": {
-        "resolve_port_clash": true,
-        "_model_name": ""
-    }
-}
+{}
