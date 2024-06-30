@@ -32,10 +32,10 @@ model:
   win_length: 2048
 model_type_index: 0
 spks:
-- test
+- QQ447931754
 train:
   amp_dtype: fp32
-  batch_size: 60
+  batch_size: 48
   cache_all_data: true
   cache_device: cpu
   cache_fp16: true
@@ -44,7 +44,7 @@ train:
   gamma: 0.5
   interval_force_save: 2000
   interval_log: 1
-  interval_val: 2000
+  interval_val: 1000
   lambda_ddsp: 1
   lr: 0.0002
   num_workers: 2

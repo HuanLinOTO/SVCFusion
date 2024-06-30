@@ -277,10 +277,9 @@ class ModelChooser:
         )
 
         self.refresh_btn.click(
-            self.on_refresh_with_search_path,
+            self.on_refresh,
             [self.seach_path_dropdown],
             [
-                self.seach_path_dropdown,
                 *self.model_dropdowns,
                 self.model_type_dropdown,
                 self.load_model_btn,
