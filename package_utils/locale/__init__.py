@@ -13,7 +13,6 @@ locale_dict = {}
 text_to_locale = {}
 
 for filename in os.listdir(os.path.dirname(__file__)):
-    print(filename)
     if filename.endswith(".py") and filename not in ["__init__.py", "base.py"]:
         file_path = os.path.join(os.path.dirname(__file__), filename)
         module_name = os.path.splitext(filename)[0]
@@ -24,7 +23,6 @@ for filename in os.listdir(os.path.dirname(__file__)):
             and hasattr(module, "locale_name")
             and hasattr(module, "locale_display_name")
         ):
-            print("aaa")
             _Locale = getattr(module, "_Locale")
             locale_name = getattr(module, "locale_name")
             locale_display_name = getattr(module, "locale_display_name")

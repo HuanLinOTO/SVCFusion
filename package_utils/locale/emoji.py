@@ -122,7 +122,6 @@ class _Locale(Locale):
 
         saved_tip = "✔️"
         ddsp6_settings_label = ""
-        ddsp6 = ""
 
     class install_model(Locale.install_model):
         tip = """
