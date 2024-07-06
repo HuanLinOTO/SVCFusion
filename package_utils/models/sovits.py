@@ -148,20 +148,20 @@ class SoVITSModel:
         "use_diff": {
             "type": "checkbox",
             "default": False,
-            "label": I.sovits.train.use_diff_label,
-            "info": I.sovits.train.use_diff_info,
+            "label": I.sovits.preprocess.use_diff_label,
+            "info": I.sovits.preprocess.use_diff_info,
         },
         "vol_aug": {
             "type": "checkbox",
             "default": False,
-            "label": I.sovits.train.vol_aug_label,
-            "info": I.sovits.train.vol_aug_info,
+            "label": I.sovits.preprocess.vol_aug_label,
+            "info": I.sovits.preprocess.vol_aug_info,
         },
         "num_workers": {
             "type": "slider",
             "default": 4,
-            "label": I.sovits.train.num_workers_label,
-            "info": I.sovits.train.num_workers_info,
+            "label": I.sovits.preprocess.num_workers_label,
+            "info": I.sovits.preprocess.num_workers_info,
             "max": 10,
             "min": 1,
             "step": 1,
@@ -169,8 +169,8 @@ class SoVITSModel:
         "subprocess_num_workers": {
             "type": "slider",
             "default": 4,
-            "label": I.sovits.train.subprocess_num_workers_label,
-            "info": I.sovits.train.subprocess_num_workers_info,
+            "label": I.sovits.preprocess.subprocess_num_workers_label,
+            "info": I.sovits.preprocess.subprocess_num_workers_info,
             "max": 64,
             "min": 1,
             "step": 1,
@@ -438,7 +438,7 @@ class SoVITSModel:
             src=torchaudio.functional.resample(
                 waveform=wf, orig_freq=sr, new_freq=44100
             ),
-            sample_rate=sr,
+            sample_rate=44100,
         )
 
         kwarg = {
@@ -485,6 +485,9 @@ class SoVITSModel:
         self.preprocess_form.update(self._preprocess_form)
         self.preprocess_form.update(common_preprocess_form)
 
+        # 给 SoVITS 的 logger 挂上gradio progress
+        logger.use_gradio_progress = True
+
         self.train_form.update(
             {
                 "main": {
@@ -493,8 +496,8 @@ class SoVITSModel:
                         "default": lambda: self.get_config_main()["train"][
                             "log_interval"
                         ],
-                        "label": "日志间隔",
-                        "info": "每 N 步输出一次日志",
+                        "label": I.sovits.train_main.log_interval_label,
+                        "info": I.sovits.train_main.log_interval_info,
                         "max": 10000,
                         "min": 1,
                         "step": 1,
@@ -504,8 +507,8 @@ class SoVITSModel:
                         "default": lambda: self.get_config_main()["train"][
                             "eval_interval"
                         ],
-                        "label": "验证间隔",
-                        "info": "每 N 步保存一次并验证",
+                        "label": I.sovits.train_main.eval_interval_label,
+                        "info": I.sovits.train_main.eval_interval_info,
                         "max": 10000,
                         "min": 1,
                         "step": 1,
@@ -515,16 +518,16 @@ class SoVITSModel:
                         "default": lambda: self.get_config_main()["train"][
                             "all_in_mem"
                         ],
-                        "label": "缓存全数据集",
-                        "info": "将所有数据集加载到内存中训练，会加快训练速度，但是需要足够的内存",
+                        "label": I.sovits.train_main.all_in_mem_label,
+                        "info": I.sovits.train_main.all_in_mem_info,
                     },
                     "train.keep_ckpts": {
                         "type": "slider",
                         "default": lambda: self.get_config_main()["train"][
                             "keep_ckpts"
                         ],
-                        "label": "保留检查点",
-                        "info": "保留最近 N 个检查点",
+                        "label": I.sovits.train_main.keep_ckpts_label,
+                        "info": I.sovits.train_main.keep_ckpts_info,
                         "max": 100,
                         "min": 1,
                         "step": 1,
@@ -534,8 +537,8 @@ class SoVITSModel:
                         "default": lambda: self.get_config_main()["train"][
                             "batch_size"
                         ],
-                        "label": "训练批次大小",
-                        "info": "越大越好，越大越占显存",
+                        "label": I.sovits.train_main.batch_size_label,
+                        "info": I.sovits.train_main.batch_size_info,
                         "max": 1000,
                         "min": 1,
                         "step": 1,
@@ -545,8 +548,8 @@ class SoVITSModel:
                         "default": lambda: self.get_config_main()["train"][
                             "learning_rate"
                         ],
-                        "label": "学习率",
-                        "info": "学习率",
+                        "label": I.sovits.train_main.learning_rate_label,
+                        "info": I.sovits.train_main.learning_rate_info,
                         "max": 1,
                         "min": 0,
                         "step": 0.00001,
@@ -556,8 +559,8 @@ class SoVITSModel:
                         "default": lambda: self.get_config_main()["train"][
                             "num_workers"
                         ],
-                        "label": "数据加载器进程数",
-                        "info": "仅在 CPU 核心数大于 4 时启用，遵循大就是好原则",
+                        "label": I.sovits.train_main.num_workers_label,
+                        "info": I.sovits.train_main.num_workers_info,
                         "max": 10,
                         "min": 1,
                         "step": 1,
@@ -565,8 +568,8 @@ class SoVITSModel:
                     "train.half_type": {
                         "type": "dropdown",
                         "default": lambda: self.get_config_main()["train"]["half_type"],
-                        "label": "精度",
-                        "info": "选择 fp16 可以获得更快的速度，但是炸炉概率 up up",
+                        "label": I.sovits.train_main.half_type_label,
+                        "info": I.sovits.train_main.half_type_info,
                         "choices": ["fp16", "fp32", "bf16"],
                     },
                 },
@@ -576,8 +579,8 @@ class SoVITSModel:
                         "default": lambda: self.get_config_diff()["train"][
                             "batch_size"
                         ],
-                        "label": "训练批次大小",
-                        "info": "越大越好，越大越占显存，注意不能超过训练集条数",
+                        "label": I.sovits.train_diff.batchsize_label,
+                        "info": I.sovits.train_diff.batchsize_info,
                         "max": 9999,
                         "min": 1,
                         "step": 1,
@@ -587,8 +590,8 @@ class SoVITSModel:
                         "default": lambda: self.get_config_diff()["train"][
                             "num_workers"
                         ],
-                        "label": "训练进程数",
-                        "info": "如果你显卡挺好，可以设为 0",
+                        "label": I.sovits.train_diff.num_workers_label,
+                        "info": I.sovits.train_diff.num_workers_info,
                         "max": 9999,
                         "min": 0,
                         "step": 1,
@@ -596,8 +599,8 @@ class SoVITSModel:
                     "train.amp_dtype": {
                         "type": "dropdown",
                         "default": lambda: self.get_config_diff()["train"]["amp_dtype"],
-                        "label": "训练精度",
-                        "info": "选择 fp16、bf16 可以获得更快的速度，但是炸炉概率 up up",
+                        "label": I.sovits.train_diff.amp_dtype_label,
+                        "info": I.sovits.train_diff.amp_dtype_info,
                         "choices": ["fp16", "bf16", "fp32"],
                     },
                     "train.lr": {
@@ -606,16 +609,16 @@ class SoVITSModel:
                         "step": 0.00001,
                         "min": 0.00001,
                         "max": 0.1,
-                        "label": "学习率",
-                        "info": "不建议动",
+                        "label": I.sovits.train_diff.lr_label,
+                        "info": I.sovits.train_diff.lr_info,
                     },
                     "train.interval_val": {
                         "type": "slider",
                         "default": lambda: self.get_config_diff()["train"][
                             "interval_val"
                         ],
-                        "label": "验证间隔",
-                        "info": "每 N 步验证一次，同时保存",
+                        "label": I.sovits.train_diff.interval_val_label,
+                        "info": I.sovits.train_diff.interval_val_info,
                         "max": 10000,
                         "min": 1,
                         "step": 1,
@@ -625,16 +628,16 @@ class SoVITSModel:
                         "default": lambda: self.get_config_diff()["train"][
                             "interval_log"
                         ],
-                        "label": "日志间隔",
-                        "info": "每 N 步输出一次日志",
+                        "label": I.sovits.train_diff.interval_log_label,
+                        "info": I.sovits.train_diff.interval_log_info,
                         "max": 10000,
                         "min": 1,
                         "step": 1,
                     },
                     "train.interval_force_save": {
                         "type": "slider",
-                        "label": "强制保存模型间隔",
-                        "info": "每 N 步保存一次模型",
+                        "label": I.sovits.train_diff.interval_force_save_label,
+                        "info": I.sovits.train_diff.interval_force_save_info,
                         "min": 0,
                         "max": 100000,
                         "default": lambda: self.get_config_diff()["train"][
@@ -644,8 +647,8 @@ class SoVITSModel:
                     },
                     "train.gamma": {
                         "type": "slider",
-                        "label": "lr 衰减力度",
-                        "info": "不建议动",
+                        "label": I.sovits.train_diff.gamma_label,
+                        "info": I.sovits.train_diff.gamma_info,
                         "min": 0,
                         "max": 1,
                         "default": lambda: self.get_config_diff()["train"]["gamma"],
@@ -653,8 +656,8 @@ class SoVITSModel:
                     },
                     "train.cache_device": {
                         "type": "dropdown",
-                        "label": "缓存设备",
-                        "info": "选择 cuda 可以获得更快的速度，但是需要更大显存的显卡 (SoVITS 主模型无效)",
+                        "label": I.sovits.train_diff.cache_device_label,
+                        "info": I.sovits.train_diff.cache_device_info,
                         "choices": ["cuda", "cpu"],
                         "default": lambda: self.get_config_diff()["train"][
                             "cache_device"
@@ -662,16 +665,16 @@ class SoVITSModel:
                     },
                     "train.cache_all_data": {
                         "type": "dropdown_liked_checkbox",
-                        "label": "缓存所有数据",
-                        "info": "可以获得更快的速度，但是需要大内存/显存的设备",
+                        "label": I.sovits.train_diff.cache_all_data_label,
+                        "info": I.sovits.train_diff.cache_all_data_info,
                         "default": lambda: self.get_config_diff()["train"][
                             "cache_all_data"
                         ],
                     },
                     "train.epochs": {
                         "type": "slider",
-                        "label": "最大训练轮数",
-                        "info": "达到设定值时将会停止训练",
+                        "label": I.sovits.train_diff.epochs_label,
+                        "info": I.sovits.train_diff.epochs_info,
                         "min": 50000,
                         "max": 1000000,
                         "default": lambda: self.get_config_diff()["train"]["epochs"],
@@ -679,23 +682,23 @@ class SoVITSModel:
                     },
                     "use_pretrain": {
                         "type": "dropdown_liked_checkbox",
-                        "label": "使用预训练模型",
-                        "info": "勾选可以大幅减少训练时间，如果你不懂，不要动",
+                        "label": I.sovits.train_diff.use_pretrain_label,
+                        "info": I.sovits.train_diff.use_pretrain_info,
                         "default": True,
                     },
                 },
                 "cluster": {
                     "cluster_or_index": {
                         "type": "dropdown",
-                        "label": "聚类或检索",
-                        "info": "要训练聚类还是检索模型，检索咬字比聚类稍好",
+                        "label": I.sovits.train_cluster.cluster_or_index_label,
+                        "info": I.sovits.train_cluster.cluster_or_index_info,
                         "choices": ["cluster", "index"],
                         "default": "cluster",
                     },
                     "use_gpu": {
                         "type": "dropdown_liked_checkbox",
-                        "label": "使用 GPU",
-                        "info": "使用 GPU 可以加速训练，该参数只聚类可用",
+                        "label": I.sovits.train_cluster.use_gpu_label,
+                        "info": I.sovits.train_cluster.use_gpu_info,
                         "default": True,
                     },
                 },

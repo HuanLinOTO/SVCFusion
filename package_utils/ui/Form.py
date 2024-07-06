@@ -61,9 +61,10 @@ class Form:
         elif item["type"] == "dropdown":
             return gr.Dropdown(
                 label=item["label"],
-                info=item["info"],
+                info=item.get("info", None),
                 choices=item["choices"],
                 value=item["default"],
+                type=item.get("value_type", "value"),
                 interactive=True,
             )
         elif item["type"] == "dropdown_liked_checkbox":

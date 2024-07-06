@@ -1,18 +1,35 @@
-from package_utils.locale.emoji import emojiLocale
-from package_utils.locale.en_US import enUSLocale
-from package_utils.locale.zh_CN import zhCNLocale
+import os
+import importlib.util
 
 
-locale_dict = {
-    "zh-cn": zhCNLocale,
-    "en-us": enUSLocale,
-    "emoji": emojiLocale,
-}
+def load_module_from_file(module_name, file_path):
+    spec = importlib.util.spec_from_file_location(module_name, file_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
-text_to_locale = {
-    "简体中文": "zh-cn",
-    "English": "en-us",
-    "😎": "emoji",
-}
+
+locale_dict = {}
+text_to_locale = {}
+
+for filename in os.listdir(os.path.dirname(__file__)):
+    print(filename)
+    if filename.endswith(".py") and filename not in ["__init__.py", "base.py"]:
+        file_path = os.path.join(os.path.dirname(__file__), filename)
+        module_name = os.path.splitext(filename)[0]
+        module = load_module_from_file(module_name, file_path)
+
+        if (
+            hasattr(module, "_Locale")
+            and hasattr(module, "locale_name")
+            and hasattr(module, "locale_display_name")
+        ):
+            print("aaa")
+            _Locale = getattr(module, "_Locale")
+            locale_name = getattr(module, "locale_name")
+            locale_display_name = getattr(module, "locale_display_name")
+
+            locale_dict[locale_name] = _Locale
+            text_to_locale[locale_display_name] = locale_name
 
 __all__ = ["locale_dict", "text_to_locale"]

@@ -1,7 +1,10 @@
-from .base import Locale
+from package_utils.locale.base import Locale
+
+locale_name = "en-us"
+locale_display_name = "English (US)"
 
 
-class enUSLocale(Locale):
+class _Locale(Locale):
     unknown_model_type_tip = "Unknown model type, please select manually"
 
     class device_chooser(Locale.device_chooser):
@@ -238,7 +241,7 @@ class enUSLocale(Locale):
             clip_label = "Force Slice Length"
             clip_info = "Force audio slice length, 0 means no force"
 
-        class train(Locale.sovits.train):
+        class preprocess(Locale.sovits.preprocess):
             use_diff_label = "Train Shallow Diffusion"
             use_diff_info = "Check this to generate files needed for training shallow diffusion, will be slower than not checking"
 

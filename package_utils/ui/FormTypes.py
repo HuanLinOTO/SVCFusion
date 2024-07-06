@@ -17,6 +17,7 @@ class Dropdown(TypedDict):
     info: str
     choices: List[str]
     default: str
+    value_type: Literal["value", "index"]
 
 
 class Checkbox(TypedDict):

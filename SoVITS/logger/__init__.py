@@ -64,14 +64,55 @@ def hps(hps):
     console.print(hps)
 
 
+use_gradio_progress = False
+
+
+class GradioProgress:
+    def __init__(self) -> None:
+        import gradio as gr
+
+        self.progress = gr.Progress
+
+    def __getattr__(self, name):
+        return getattr(self.progress, name)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args): ...
+
+
+class ProgressProxy:
+    def __init__(self, progress) -> None:
+        self.progress = progress
+
+    def __getattr__(self, name):
+        global use_gradio_progress
+        print("getattr", name)
+        if name == "track" and use_gradio_progress:
+            import gradio as gr
+
+            return gr.Progress().tqdm
+
+        res = getattr(self.progress, name)
+        return res
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args): ...
+
+
 def Progress():  # noqa: F811
-    return _Progress(
-        TextColumn("[progress.description]{task.description}"),
-        # TextColumn("[progress.description]W"),
-        BarColumn(),
-        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-        TimeRemainingColumn(),
-        TextColumn("[red]*Elapsed[/red]"),
-        TimeElapsedColumn(),
-        console=console,
+    return ProgressProxy(
+        _Progress(
+            TextColumn("[progress.description]{task.description}"),
+            # TextColumn("[progress.description]W"),
+            BarColumn(),
+            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+            TimeRemainingColumn(),
+            TextColumn("[red]*Elapsed[/red]"),
+            TimeElapsedColumn(),
+            console=console,
+        )
     )

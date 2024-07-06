@@ -54,6 +54,7 @@ class Locale:
         choose_model_label = ""  # 选择模型
     class train:
         current_train_model_label = ""  # 当前训练模型
+        fouzu_tip = ""  # ~~整了个赛博佛祖，希望对你有帮助~~
         gd_plus_1 = ""  # 点我加功德
         gd_plus_1_tip = ""  # 功德 +1，炸炉 -1
         choose_sub_model_label = ""  # 选择子模型
@@ -65,12 +66,16 @@ class Locale:
     class settings:
         page = ""  # 页面
         pkg_settings_label = ""  # 整合包设置
-        sovits_settings_label = ""  # SoVITS 设置
+        sovits_settings_label = ""  # So-VITS-SVC 设置
+        ddsp6_settings_label = ""  # DDSP-SVC 6 设置
         class pkg:
             lang_label = ""  # 语言
             lang_info = ""  # 更改语言需要重启整合包
         class sovits:
             resolve_port_clash_label = ""  # 尝试解决端口冲突问题
+        class ddsp6:
+            pretrained_model_preference_dropdown_label = ""  # 底模偏好
+            default_pretrained_model = ""  # 默认底模
         saved_tip = ""  # 已保存
     class install_model:
         tip = ""  # 
@@ -121,6 +126,53 @@ class Locale:
     class sovits:
         dataset_not_complete_tip = ""  # 数据集不完整，请检查数据集或重新预处理
         finished = ""  # 完成
+        class train_main:
+            log_interval_label = ""  # 日志间隔
+            log_interval_info = ""  # 每 N 步输出一次日志
+            eval_interval_label = ""  # 验证间隔
+            eval_interval_info = ""  # 每 N 步保存一次并验证
+            all_in_mem_label = ""  # 缓存全数据集
+            all_in_mem_info = ""  # (
+            keep_ckpts_label = ""  # 保留检查点
+            keep_ckpts_info = ""  # 保留最近 N 个检查点
+            batch_size_label = ""  # 训练批次大小
+            batch_size_info = ""  # 越大越好，越大越占显存
+            learning_rate_label = ""  # 学习率
+            learning_rate_info = ""  # 学习率
+            num_workers_label = ""  # 数据加载器进程数
+            num_workers_info = ""  # 仅在 CPU 核心数大于 4 时启用，遵循大就是好原则
+            half_type_label = ""  # 精度
+            half_type_info = ""  # 选择 fp16 可以获得更快的速度，但是炸炉概率 up up
+        class train_diff:
+            batchsize_label = ""  # 训练批次大小
+            batchsize_info = ""  # 越大越好，越大越占显存，注意不能超过训练集条数
+            num_workers_label = ""  # 训练进程数
+            num_workers_info = ""  # 如果你显卡挺好，可以设为 0
+            amp_dtype_label = ""  # 训练精度
+            amp_dtype_info = ""  # 选择 fp16、bf16 可以获得更快的速度，但是炸炉概率 up up
+            lr_label = ""  # 学习率
+            lr_info = ""  # 不建议动
+            interval_val_label = ""  # 验证间隔
+            interval_val_info = ""  # 每 N 步验证一次，同时保存
+            interval_log_label = ""  # 日志间隔
+            interval_log_info = ""  # 每 N 步输出一次日志
+            interval_force_save_label = ""  # 强制保存模型间隔
+            interval_force_save_info = ""  # 每 N 步保存一次模型
+            gamma_label = ""  # lr 衰减力度
+            gamma_info = ""  # 不建议动
+            cache_device_label = ""  # 缓存设备
+            cache_device_info = ""  # 选择 cuda 可以获得更快的速度，但是需要更大显存的显卡 (SoVITS 主模型无效)
+            cache_all_data_label = ""  # 缓存所有数据
+            cache_all_data_info = ""  # 可以获得更快的速度，但是需要大内存/显存的设备
+            epochs_label = ""  # 最大训练轮数
+            epochs_info = ""  # 达到设定值时将会停止训练
+            use_pretrain_label = ""  # 使用预训练模型
+            use_pretrain_info = ""  # 勾选可以大幅减少训练时间，如果你不懂，不要动
+        class train_cluster:
+            cluster_or_index_label = ""  # 聚类或检索
+            cluster_or_index_info = ""  # 要训练聚类还是检索模型，检索咬字比聚类稍好
+            use_gpu_label = ""  # 使用 GPU
+            use_gpu_info = ""  # 使用 GPU 可以加速训练，该参数只聚类可用
         class infer:
             cluster_infer_ratio_label = ""  # 聚类/特征比例
             cluster_infer_ratio_info = ""  # (
@@ -138,7 +190,7 @@ class Locale:
             second_encoding_info = ""  # (
             clip_label = ""  # 强制切片长度
             clip_info = ""  # 强制音频切片长度, 0 为不强制
-        class train:
+        class preprocess:
             use_diff_label = ""  # 训练浅扩散
             use_diff_info = ""  # 勾选后将会生成训练浅扩散需要的文件，会比不选慢
             vol_aug_label = ""  # 响度嵌入
