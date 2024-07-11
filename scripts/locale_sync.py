@@ -11,7 +11,8 @@ def load_module_from_file(module_name, file_path):
 
 
 locale_dict: dict[str, dict] = {}
-text_to_locale = {}
+locale_to_display_name = {}
+locale_to_path = {}
 
 
 def merge_dicts(ref, source, prefix=""):
@@ -45,7 +46,11 @@ for filename in os.listdir("package_utils/locale"):
             locale_display_name = getattr(module, "locale_display_name")
 
             locale_dict[locale_name] = _Locale
-            text_to_locale[locale_display_name] = locale_name
+            locale_to_display_name[locale_name] = locale_display_name
+
+            locale_to_path[locale_name] = os.path.join("package_utils/locale", filename)
+
+            print(f"Loaded {locale_name} from {filename}")
 
 
 def remove_magic(dict):
@@ -66,11 +71,17 @@ LocaleDict = dict[str, "LocaleDict"]
 
 
 # 要递归的
-def dict_to_class_code(source, class_name):
-    code = f"class {class_name}:\n"
+def dict_to_class_code(source, class_name, extent_node="", is_root=False):
+    if extent_node:
+        extent_name = f"{extent_node}{'' if is_root else '.'+class_name}"
+        code = f"class {class_name}({extent_name}):\n"
+    else:
+        code = f"class {class_name}:\n"
     for key, value in source.items():
         if isinstance(value, dict):
-            code += dict_to_class_code(value, key)
+            tmp = dict_to_class_code(value, key, extent_name if extent_node else "")
+            for i in tmp.split("\n"):
+                code += f"    {i}\n"
         else:
             if isinstance(value, str):
                 if "\n" in value:
@@ -100,6 +111,21 @@ for lang in locale_dict:
         locale,
         lang,
     )
-    class_code = dict_to_class_code(result, "Locale")
-    save_locale_file(class_code, f"package_utils/locale/{lang}.py")
+    class_code = dict_to_class_code(
+        result,
+        "_Locale",
+        "Locale",
+        True,
+    )
+    save_locale_file(
+        f"""
+from package_utils.locale.base import Locale
+
+locale_name = "{lang}"
+locale_display_name = "{locale_to_display_name[lang]}"
+
+"""
+        + class_code,
+        locale_to_path[lang],
+    )
     print(f"Saved {lang}.py")
