@@ -111,8 +111,20 @@ class MSSTArgs:
         self.model_type = model_type
 
 
-def run_bsroformer(inp_path, inp_hash, progress=gr.Progress()):
+def run_msst(inp_path, inp_hash, progress=gr.Progress(), model_type="bs_roformer"):
     global bsroformer_model, bsroformer_config
+
+    model_type_to_info = {
+        "bs_roformer": {
+            "config": "Music_Source_Separation_Training/configs/model_bs_roformer_ep_368_sdr_12.9628.yaml",
+            "model": "other_weights/model_bs_roformer_ep_368_sdr_12.9628.ckpt",
+        },
+        "mel_band_roformer": {
+            "config": r"Music_Source_Separation_Training\configs\config_vocals_mel_band_roformer.yaml",
+            "model": "model_mel_band_roformer_ep_3005_sdr_11.4360.ckpt",
+        },
+    }
+
     vocal_path = f"./tmp/bsroformer_opt/{inp_hash}_Vocals.wav"
     inst_path = f"./tmp/bsroformer_opt/{inp_hash}_Instrument.wav"
     if os.path.exists(vocal_path) and os.path.exists(inst_path):
@@ -125,7 +137,7 @@ def run_bsroformer(inp_path, inp_hash, progress=gr.Progress()):
     )
     if not bsroformer_model:
         bsroformer_model, bsroformer_config = msst_inference.get_model_from_config(
-            "bs_roformer",
+            model_type,
             "Music_Source_Separation_Training/configs/model_bs_roformer_ep_368_sdr_12.9628.yaml",
         )
         model_path = "other_weights/model_bs_roformer_ep_368_sdr_12.9628.ckpt"
@@ -178,7 +190,7 @@ def getVocalAndInstrument(inp_path, progress=gr.Progress()):
     inp_hash = hashlib.md5(inp_path.encode()).hexdigest()
 
     # uvr('karaoke_remove_inst', '', 'tmp/uvr5_opt', [inp_path], 'tmp/uvr5_opt', 10, 'wav', f'vocal_{inp_hash}.wav')
-    vocal_path, inst_path = run_bsroformer(inp_path, inp_hash, progress=progress)
+    vocal_path, inst_path = run_msst(inp_path, inp_hash, progress=progress)
     deecho_path = f"tmp/uvr5_opt/deecho_{inp_hash}.wav"
     if os.path.exists(deecho_path):
         return deecho_path, inst_path

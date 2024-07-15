@@ -23,3 +23,9 @@ python -m scripts.locale_sync
 ```sh
 python -m scripts.spawn_base_locale
 ```
+
+## 参考/引用
+
+- [ZFTurbo/Music-Source-Separation-Training](https://github.com/ZFTurbo/Music-Source-Separation-Training)
+- [huanlinoto/so-vits-svc](https://github.com/huanlinoto/so-vits-svc) (forked and customized from [svc-develop-team/so-vits-svc](https://github.com/svc-develop-team/so-vits-svc))
+- [huanlinoto/DDSP-SVC](https://github.com/huanlinoto/DDSP-SVC) (forked and customized from [yxlllc/DDSP-SVC](https://github.com/yxlllc/DDSP-SVC/)

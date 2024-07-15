@@ -1,6 +1,6 @@
 from os import system
 from package_utils.config import system_config
-from .locale.base import _Locale as Locale
+from .locale.base import Locale
 from .locale import locale_dict, text_to_locale
 
 lang = text_to_locale[system_config.pkg.lang]

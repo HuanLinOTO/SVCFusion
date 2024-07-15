@@ -42,3 +42,10 @@ filelists/*
 
 7z/
 webui.cpython-310-x86_64-linux-gnu.so
+
+
+configs/*_*
+configs/*test*
+configs/*copy*
+
+assets/
