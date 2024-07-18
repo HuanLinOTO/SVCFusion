@@ -1,6 +1,9 @@
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import gc
 import os
 import sys
 import time
+import concurrent
 import numpy as np
 import torch
 import librosa
@@ -8,6 +11,80 @@ from ddspsvc.logger.saver import Saver
 from ddspsvc.logger import utils
 from torch import autocast
 from torch.cuda.amp import GradScaler
+
+
+def single_test(
+    bidx,
+    data,
+    num_batches,
+    args,
+    model,
+    vocoder,
+    saver: Saver,
+):
+    with torch.no_grad():
+        fn = data["name"][0]
+        print("--------")
+        print("{}/{} - {}".format(bidx, num_batches, fn))
+
+        # unpack data
+        for k in data.keys():
+            if not k.startswith("name"):
+                data[k] = data[k].to(args.device)
+        print(">>", data["name"][0])
+
+        # forward
+        st_time = time.time()
+        mel = model(
+            data["units"],
+            data["f0"],
+            data["volume"],
+            data["spk_id"],
+            vocoder=vocoder,
+            infer=True,
+            return_wav=False,
+            infer_step=args.infer.infer_step,
+            method=args.infer.method,
+            t_start=args.model.t_start,
+        )
+        signal = vocoder.infer(mel, data["f0"])
+        ed_time = time.time()
+
+        # RTF
+        run_time = ed_time - st_time
+        song_time = signal.shape[-1] / args.data.sampling_rate
+        rtf = run_time / song_time
+        print("RTF: {}  | {} / {}".format(rtf, run_time, song_time))
+
+        # loss
+        ddsp_loss, reflow_loss = model(
+            data["units"],
+            data["f0"],
+            data["volume"],
+            data["spk_id"],
+            vocoder=vocoder,
+            gt_spec=data["mel"],
+            infer=False,
+            t_start=args.model.t_start,
+        )
+        new_test_ddsp_loss = ddsp_loss.item()
+        new_test_reflow_loss = reflow_loss.item()
+
+        # log mel
+        saver.log_spec(data["name"][0], data["mel"], mel)
+        del mel
+
+        # log audio
+        path_audio = os.path.join(args.data.valid_path, "audio", data["name_ext"][0])
+        audio, sr = librosa.load(path_audio, sr=args.data.sampling_rate)
+        if len(audio.shape) > 1:
+            audio = librosa.to_mono(audio)
+        audio = torch.from_numpy(audio).unsqueeze(0).to(signal)
+        saver.log_audio({fn + "/gt.wav": audio, fn + "/pred.wav": signal})
+        del audio, signal
+        torch.cuda.empty_cache()
+        gc.collect()
+        return rtf, new_test_ddsp_loss, new_test_reflow_loss
 
 
 def test(args, model, vocoder, loader_test, saver):
@@ -22,69 +99,41 @@ def test(args, model, vocoder, loader_test, saver):
     num_batches = len(loader_test)
     rtf_all = []
 
+    if hasattr(args.train, "val_workers"):
+        print(" [test] use {} workers".format(args.train.val_workers))
     # run
-    with torch.no_grad():
-        for bidx, data in enumerate(loader_test):
-            fn = data["name"][0]
-            print("--------")
-            print("{}/{} - {}".format(bidx, num_batches, fn))
-
-            # unpack data
-            for k in data.keys():
-                if not k.startswith("name"):
-                    data[k] = data[k].to(args.device)
-            print(">>", data["name"][0])
-
-            # forward
-            st_time = time.time()
-            mel = model(
-                data["units"],
-                data["f0"],
-                data["volume"],
-                data["spk_id"],
-                vocoder=vocoder,
-                infer=True,
-                return_wav=False,
-                infer_step=args.infer.infer_step,
-                method=args.infer.method,
-                t_start=args.model.t_start,
+    with ThreadPoolExecutor(
+        max_workers=getattr(args.train, "val_workers", 1)
+    ) as executor:
+        futures = [
+            executor.submit(
+                single_test,
+                bidx,
+                data,
+                num_batches,
+                args,
+                model,
+                vocoder,
+                saver,
             )
-            signal = vocoder.infer(mel, data["f0"])
-            ed_time = time.time()
-
-            # RTF
-            run_time = ed_time - st_time
-            song_time = signal.shape[-1] / args.data.sampling_rate
-            rtf = run_time / song_time
-            print("RTF: {}  | {} / {}".format(rtf, run_time, song_time))
+            for bidx, data in enumerate(loader_test)
+        ]
+        for future in as_completed(futures):
+            rtf, ddsp_loss, reflow_loss = future.result()
+            test_ddsp_loss += ddsp_loss
+            test_reflow_loss += reflow_loss
             rtf_all.append(rtf)
-
-            # loss
-            ddsp_loss, reflow_loss = model(
-                data["units"],
-                data["f0"],
-                data["volume"],
-                data["spk_id"],
-                vocoder=vocoder,
-                gt_spec=data["mel"],
-                infer=False,
-                t_start=args.model.t_start,
-            )
-            test_ddsp_loss += ddsp_loss.item()
-            test_reflow_loss += reflow_loss.item()
-
-            # log mel
-            saver.log_spec(data["name"][0], data["mel"], mel)
-
-            # log audio
-            path_audio = os.path.join(
-                args.data.valid_path, "audio", data["name_ext"][0]
-            )
-            audio, sr = librosa.load(path_audio, sr=args.data.sampling_rate)
-            if len(audio.shape) > 1:
-                audio = librosa.to_mono(audio)
-            audio = torch.from_numpy(audio).unsqueeze(0).to(signal)
-            saver.log_audio({fn + "/gt.wav": audio, fn + "/pred.wav": signal})
+        # for bidx, data in enumerate(loader_test):
+        #     new_test_ddsp_loss, new_test_reflow_loss = single_test(
+        #         bidx,
+        #         data,
+        #         rtf_all,
+        #         num_batches,
+        #         args,
+        #         model,
+        #         vocoder,
+        #         saver,
+        #     )
 
     # report
     test_ddsp_loss /= num_batches
@@ -209,35 +258,40 @@ def train(
                 )
 
             # validation
-            if saver.global_step % args.train.interval_val == 0:
+            if saver.global_step % args.train.interval_force_save == 0:
                 optimizer_save = optimizer if args.train.save_opt else None
 
                 # save latest
                 saver.save_model(model, optimizer_save, postfix=f"{saver.global_step}")
-                last_val_step = saver.global_step - args.train.interval_val
-                if last_val_step % args.train.interval_force_save != 0:
-                    saver.delete_model(postfix=f"{last_val_step}")
 
-                # run testing set
-                test_ddsp_loss, test_reflow_loss = test(
-                    args, model, vocoder, loader_test, saver
-                )
-                test_loss = args.train.lambda_ddsp * test_ddsp_loss + test_reflow_loss
+                # 这里是一次为了训练底模而写的更改 who fucking want to wait it!
+                # last_val_step = saver.global_step - args.train.interval_val
+                # if last_val_step % args.train.interval_force_save != 0:
+                #     saver.delete_model(postfix=f"{last_val_step}")
 
-                # log loss
-                saver.log_info(
-                    " --- <validation> --- \nloss: {:.3f}. ".format(
-                        test_loss,
+                if saver.global_step % args.train.interval_force_save == 0:
+                    # run testing set
+                    test_ddsp_loss, test_reflow_loss = test(
+                        args, model, vocoder, loader_test, saver
                     )
-                )
+                    test_loss = (
+                        args.train.lambda_ddsp * test_ddsp_loss + test_reflow_loss
+                    )
 
-                saver.log_value(
-                    {
-                        "validation/loss": test_loss,
-                        "validation/ddsp_loss": test_ddsp_loss,
-                        "validation/reflow_loss": test_reflow_loss,
-                    }
-                )
+                    # log loss
+                    saver.log_info(
+                        " --- <validation> --- \nloss: {:.3f}. ".format(
+                            test_loss,
+                        )
+                    )
+
+                    saver.log_value(
+                        {
+                            "validation/loss": test_loss,
+                            "validation/ddsp_loss": test_ddsp_loss,
+                            "validation/reflow_loss": test_reflow_loss,
+                        }
+                    )
 
                 model.train()
 

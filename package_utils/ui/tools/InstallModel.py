@@ -19,7 +19,7 @@ class InstallModel:
         with open(os.path.join(base_path, "config.yaml"), "w") as f:
             f.write(yaml.dump(package["config"]))
 
-        torch.save(package["model"], os.path.join(base_path, "model.pt"))
+        torch.save(package, os.path.join(base_path, "model.pt"))
 
     def install_model(self, file, model_name):
         if not file:

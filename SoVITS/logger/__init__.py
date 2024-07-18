@@ -87,20 +87,23 @@ class ProgressProxy:
         self.progress = progress
 
     def __getattr__(self, name):
-        global use_gradio_progress
-        print("getattr", name)
+        global use_gradio_progress, info
+        # info(name)
         if name == "track" and use_gradio_progress:
             import gradio as gr
 
             return gr.Progress().tqdm
 
         res = getattr(self.progress, name)
+        info(res)
         return res
 
     def __enter__(self):
+        self.progress.__enter__()
         return self
 
-    def __exit__(self, *args): ...
+    def __exit__(self, *args):
+        self.progress.__exit__(*args)
 
 
 def Progress():  # noqa: F811

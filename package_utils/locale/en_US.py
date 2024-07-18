@@ -43,9 +43,11 @@ class _Locale(Locale):
         
             
                 
-                        #### Change Model Type
-                        Use only if the model type cannot be recognized! This is not for converting the model type! It's for changing the recognized model type!
-                        
+                    
+                            #### Change Model Type
+                            Use only if the model type cannot be recognized! This is not for converting the model type! It's for changing the recognized model type!
+                            
+                    
                 
             
         
@@ -75,32 +77,34 @@ class _Locale(Locale):
         
             
                 
-                            Please put your dataset (a bunch of `.wav` files) into the `dataset_raw/Your Character Name` folder under the integration package
-                
-                            You can train multiple characters at the same time by creating multiple character folders
-                
-                            Once placed, your directory should look like this:
-                
-                            ```
-                            dataset_raw/
-                            |-Your Character Name1/
-                            |  | 1.wav
-                            |  | 2.wav
-                            |  | 3.wav
-                            |  ...
-                            |-Your Character Name2/
-                            |  | 1.wav
-                            |  | 2.wav
-                            |  | 3.wav
-                            |  ...
-                            ```
-                
-                            If you don't understand anything, just click the button below for automatic data processing
-                
-                            If you understand the parameters, you can switch to manual mode for more detailed data processing
+                    
+                                Please put your dataset (a bunch of `.wav` files) into the `dataset_raw/Your Character Name` folder under the integration package
+                    
+                                You can train multiple characters at the same time by creating multiple character folders
+                    
+                                Once placed, your directory should look like this:
+                    
+                                ```
+                                dataset_raw/
+                                |-Your Character Name1/
+                                |  | 1.wav
+                                |  | 2.wav
+                                |  | 3.wav
+                                |  ...
+                                |-Your Character Name2/
+                                |  | 1.wav
+                                |  | 2.wav
+                                |  | 3.wav
+                                |  ...
+                                ```
+                    
+                                If you don't understand anything, just click the button below for automatic data processing
+                    
+                                If you understand the parameters, you can switch to manual mode for more detailed data processing
+                                
+                                **CPU users, please use FCPE as the F0 extractor/predictor**
                             
-                            **CPU users, please use FCPE as the F0 extractor/predictor**
-                        
+                    
                 
             
         
@@ -110,8 +114,10 @@ class _Locale(Locale):
         
             
                 
-                            ## The current device does not have a GPU with more than 6GB of VRAM, only training DDSP models is recommended
-                        
+                    
+                                ## The current device does not have a GPU with more than 6GB of VRAM, only training DDSP models is recommended
+                            
+                    
                 
             
         
@@ -130,6 +136,9 @@ class _Locale(Locale):
         archieving_tip = "Archiving, please do not click multiple times"
         archieved_tip = "Archiving Complete, please check the opened folder"
         stopped_tip = "Stop training command sent, please check the training window"
+        tensorboard_btn = "启动 Tensorboard"
+        launching_tb_tip = "正在启动 Tensorboard，请稍后"
+        launched_tb_tip = "Tensorboard 已在 {1} 开放"
     
     class settings(Locale.settings):
         page = "Page"
@@ -156,8 +165,10 @@ class _Locale(Locale):
         
             
                 
-                        ## Currently only supports uploading .sf_pkg/.h0_ddsp_pkg_model format model packages
-                        
+                    
+                            ## Currently only supports uploading .sf_pkg/.h0_ddsp_pkg_model format model packages
+                            
+                    
                 
             
         
@@ -195,6 +206,8 @@ class _Locale(Locale):
         keychange_info = "Reference: male to female 12, female to male -12, adjust this if the timbre is not right"
         threshold_label = "Slicing Threshold"
         threshold_info = "Slicing threshold for vocals, adjust to -40 or higher if there is background noise"
+        use_harmony_remove_label = "去除和声"
+        use_harmony_remove_info = "是否去除和声（必须先勾选移除伴奏）"
     
     class diff_based_infer(Locale.diff_based_infer):
         method_label = "Sampler"
@@ -244,6 +257,8 @@ class _Locale(Locale):
             num_workers_info = "Theoretically the larger the faster"
             subprocess_num_workers_label = "Threads per Process"
             subprocess_num_workers_info = "Theoretically the larger the faster"
+            debug_label = "是否开启 Debug 模式"
+            debug_info = "开启后会输出调试信息，非特殊情况没必要开"
         
         class model_types(Locale.sovits.model_types):
             main = "Main Model"

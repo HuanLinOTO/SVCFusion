@@ -14,9 +14,7 @@ inside_multiline_string = False
 
 for line in lines:
     stripped_line = line.strip()
-    stripped_line = stripped_line.replace(
-        "class zhCNLocale(Locale):", "class Locale():"
-    )
+    stripped_line = stripped_line.replace("class _Locale(Locale):", "class Locale():")
     # 如果是类定义行，去掉继承的父类
     if (
         stripped_line.startswith("class")

@@ -1,3 +1,4 @@
+import os
 from package_utils.i18n import I
 from package_utils.uvr import getVocalAndInstrument
 import gradio as gr
@@ -12,6 +13,13 @@ common_infer_form = {
         "info": I.common_infer.use_vocal_remove_info,
         "default": False,
         "label": I.common_infer.use_vocal_remove_label,
+        "individual": True,
+    },
+    "use_remove_harmony": {
+        "type": "checkbox",
+        "info": I.common_infer.use_harmony_remove_info,
+        "default": False,
+        "label": I.common_infer.use_harmony_remove_label,
         "individual": True,
     },
     "f0": {
@@ -133,6 +141,8 @@ def infer_fn_proxy(fn):
         if params["use_vocal_remove"]:
             vocal, inst = getVocalAndInstrument(params["audio"], progress=progress)
             params["audio"] = vocal
+            if params["use_remove_harmony"]:
+                pass
 
         res = fn(params, progress=progress)
 
@@ -145,3 +155,14 @@ def infer_fn_proxy(fn):
         )
 
     return infer_fn
+
+
+def train_fn_proxy(fn):
+    def train_fn(params, progress):
+        if os.path.exists("exp/workdir/stop.txt"):
+            # del it
+            os.remove("exp/workdir/stop.txt")
+        res = fn(params, progress=progress)
+        return gr.update(value=res)
+
+    return train_fn

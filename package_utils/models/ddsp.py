@@ -11,7 +11,7 @@ import torch
 import soundfile as sf
 import yaml
 
-from package_utils.config import YAMLReader, applyChanges
+from package_utils.config import YAMLReader, applyChanges, system_config
 from package_utils.dataset_utils import DrawArgs, auto_normalize_dataset
 from package_utils.i18n import I
 from package_utils.model_utils import load_pretrained
@@ -129,9 +129,25 @@ class DDSPModel:
     def train(self, params, progress: gr.Progress):
         # print(params)
         working_config_path = "configs/ddsp.yaml"
+        net_info = {
+            0: {
+                "model.n_chans": 512,
+                "model.n_layers": 6,
+            },
+            1: {
+                "model.n_chans": 1024,
+                "model.n_layers": 12,
+            },
+        }
+
+        params.update(net_info[system_config.ddsp6.pretrained_model_preference])
+
         config = applyChanges(working_config_path, params)
 
-        load_pretrained("ddsp6", config["data"]["encoder"])
+        load_pretrained(
+            "ddsp6",
+            f'{config["data"]["encoder"]}.{system_config.ddsp6.pretrained_model_preference}',
+        )
 
         start_with_cmd(f"{executable} -m ddspsvc.train_reflow -c configs/ddsp.yaml")
 

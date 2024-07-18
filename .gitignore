@@ -49,3 +49,6 @@ configs/*test*
 configs/*copy*
 
 assets/
+webui*
+
+scripts/buildtools*

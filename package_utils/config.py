@@ -12,9 +12,10 @@ class YAMLReader:
     def __enter__(self):
         try:
             self.file = open(self.file_path, "r", encoding="utf-8")
-        except UnicodeDecodeError:
+            self.data = yaml.safe_load(self.file)
+        except Exception:
             self.file = open(self.file_path, "r", encoding="gbk")
-        self.data = yaml.safe_load(self.file)
+            self.data = yaml.safe_load(self.file)
         return self.data
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -29,8 +30,12 @@ class JSONReader:
         self.data = None
 
     def __enter__(self):
-        self.file = open(self.file_path, "r", encoding="utf-8")
-        self.data = json.load(self.file)
+        try:
+            self.file = open(self.file_path, "r", encoding="utf-8")
+            self.data = json.load(self.file)
+        except Exception:
+            self.file = open(self.file_path, "r", encoding="gbk")
+            self.data = json.load(self.file)
         return self.data
 
     def __exit__(self, exc_type, exc_value, traceback):

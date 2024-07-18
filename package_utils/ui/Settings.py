@@ -28,6 +28,7 @@ class Settings:
     def __init__(self):
         ddsp6_pretrain_models = [
             I.settings.ddsp6.default_pretrained_model,
+            I.settings.ddsp6.large_pretrained_model,
         ]
 
         self.form: FormDict = {

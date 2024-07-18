@@ -1,5 +1,5 @@
 # coding: utf-8
-__author__ = 'Roman Solovyev (ZFTurbo): https://github.com/ZFTurbo/'
+__author__ = "Roman Solovyev (ZFTurbo): https://github.com/ZFTurbo/"
 
 import time
 import numpy as np
@@ -12,54 +12,59 @@ from omegaconf import OmegaConf
 import gradio as gr
 
 
-
 def get_model_from_config(model_type, config_path):
     with open(config_path) as f:
-        if model_type == 'htdemucs':
+        if model_type == "htdemucs":
             config = OmegaConf.load(config_path)
         else:
             config = ConfigDict(yaml.load(f, Loader=yaml.FullLoader))
 
-    if model_type == 'mdx23c':
-        from Music_Source_Separation_Training.models.mdx23c_tfc_tdf_v3 import TFC_TDF_net
+    if model_type == "mdx23c":
+        from Music_Source_Separation_Training.models.mdx23c_tfc_tdf_v3 import (
+            TFC_TDF_net,
+        )
+
         model = TFC_TDF_net(config)
-    elif model_type == 'htdemucs':
+    elif model_type == "htdemucs":
         from Music_Source_Separation_Training.models.demucs4ht import get_model
+
         model = get_model(config)
-    elif model_type == 'segm_models':
+    elif model_type == "segm_models":
         from Music_Source_Separation_Training.models.segm_models import Segm_Models_Net
+
         model = Segm_Models_Net(config)
-    elif model_type == 'mel_band_roformer':
+    elif model_type == "mel_band_roformer":
         from Music_Source_Separation_Training.models.bs_roformer import MelBandRoformer
-        model = MelBandRoformer(
-            **dict(config.model)
-        )
-    elif model_type == 'bs_roformer':
+
+        model = MelBandRoformer(**dict(config.model))
+    elif model_type == "bs_roformer":
         from Music_Source_Separation_Training.models.bs_roformer import BSRoformer
-        model = BSRoformer(
-            **dict(config.model)
+
+        model = BSRoformer(**dict(config.model))
+    elif model_type == "swin_upernet":
+        from Music_Source_Separation_Training.models.upernet_swin_transformers import (
+            Swin_UperNet_Model,
         )
-    elif model_type == 'swin_upernet':
-        from Music_Source_Separation_Training.models.upernet_swin_transformers import Swin_UperNet_Model
+
         model = Swin_UperNet_Model(config)
-    elif model_type == 'bandit':
-        from Music_Source_Separation_Training.models.bandit.core.model import MultiMaskMultiSourceBandSplitRNNSimple
-        model = MultiMaskMultiSourceBandSplitRNNSimple(
-            **config.model
+    elif model_type == "bandit":
+        from Music_Source_Separation_Training.models.bandit.core.model import (
+            MultiMaskMultiSourceBandSplitRNNSimple,
         )
-    elif model_type == 'scnet':
+
+        model = MultiMaskMultiSourceBandSplitRNNSimple(**config.model)
+    elif model_type == "scnet":
         from Music_Source_Separation_Training.models.scnet import SCNet
-        model = SCNet(
-            **config.model
-        )
+
+        model = SCNet(**config.model)
     else:
-        print('Unknown model: {}'.format(model_type))
+        print("Unknown model: {}".format(model_type))
         model = None
 
     return model, config
 
 
-def demix_track(config, model, mix, device, progress=gr.Progress()):
+def demix_track(config, model, mix, device, progress=gr.Progress(), progress_desc=""):
     C = config.audio.chunk_size
     N = config.inference.num_overlap
     step = int(C // N)
@@ -70,12 +75,12 @@ def demix_track(config, model, mix, device, progress=gr.Progress()):
 
     # Do pad from the beginning and end to account floating window results better
     if length_init > 2 * border and (border > 0):
-        mix = nn.functional.pad(mix, (border, border), mode='reflect')
+        mix = nn.functional.pad(mix, (border, border), mode="reflect")
 
     with torch.cuda.amp.autocast():
         with torch.inference_mode():
             if config.training.target_instrument is not None:
-                req_shape = (1, ) + tuple(mix.shape)
+                req_shape = (1,) + tuple(mix.shape)
             else:
                 req_shape = (len(config.training.instruments),) + tuple(mix.shape)
 
@@ -84,17 +89,26 @@ def demix_track(config, model, mix, device, progress=gr.Progress()):
             i = 0
             batch_data = []
             batch_locations = []
-            pbar = progress.tqdm(list(range(mix.shape[1])),total=mix.shape[1], desc="去伴奏")
+            pbar = progress.tqdm(
+                list(range(mix.shape[1])), total=mix.shape[1], desc=progress_desc
+            )
             while i < mix.shape[1]:
                 pbar.update(step)
                 # print(i, i + C, mix.shape[1])
-                part = mix[:, i:i + C].to(device)
+                part = mix[:, i : i + C].to(device)
                 length = part.shape[-1]
                 if length < C:
                     if length > C // 2 + 1:
-                        part = nn.functional.pad(input=part, pad=(0, C - length), mode='reflect')
+                        part = nn.functional.pad(
+                            input=part, pad=(0, C - length), mode="reflect"
+                        )
                     else:
-                        part = nn.functional.pad(input=part, pad=(0, C - length, 0, 0), mode='constant', value=0)
+                        part = nn.functional.pad(
+                            input=part,
+                            pad=(0, C - length, 0, 0),
+                            mode="constant",
+                            value=0,
+                        )
                 batch_data.append(part)
                 batch_locations.append((i, length))
                 i += step
@@ -104,8 +118,8 @@ def demix_track(config, model, mix, device, progress=gr.Progress()):
                     x = model(arr)
                     for j in range(len(batch_locations)):
                         start, l = batch_locations[j]
-                        result[..., start:start+l] += x[j][..., :l].cpu()
-                        counter[..., start:start+l] += 1.
+                        result[..., start : start + l] += x[j][..., :l].cpu()
+                        counter[..., start : start + l] += 1.0
                     batch_data = []
                     batch_locations = []
 
@@ -120,7 +134,9 @@ def demix_track(config, model, mix, device, progress=gr.Progress()):
     if config.training.target_instrument is None:
         return {k: v for k, v in zip(config.training.instruments, estimated_sources)}
     else:
-        return {k: v for k, v in zip([config.training.target_instrument], estimated_sources)}
+        return {
+            k: v for k, v in zip([config.training.target_instrument], estimated_sources)
+        }
 
 
 def demix_track_demucs(config, model, mix, device):
@@ -133,7 +149,7 @@ def demix_track_demucs(config, model, mix, device):
 
     with torch.cuda.amp.autocast(enabled=config.training.use_amp):
         with torch.inference_mode():
-            req_shape = (S, ) + tuple(mix.shape)
+            req_shape = (S,) + tuple(mix.shape)
             result = torch.zeros(req_shape, dtype=torch.float32)
             counter = torch.zeros(req_shape, dtype=torch.float32)
             i = 0
@@ -141,10 +157,12 @@ def demix_track_demucs(config, model, mix, device):
             batch_locations = []
             while i < mix.shape[1]:
                 # print(i, i + C, mix.shape[1])
-                part = mix[:, i:i + C].to(device)
+                part = mix[:, i : i + C].to(device)
                 length = part.shape[-1]
                 if length < C:
-                    part = nn.functional.pad(input=part, pad=(0, C - length, 0, 0), mode='constant', value=0)
+                    part = nn.functional.pad(
+                        input=part, pad=(0, C - length, 0, 0), mode="constant", value=0
+                    )
                 batch_data.append(part)
                 batch_locations.append((i, length))
                 i += step
@@ -154,8 +172,8 @@ def demix_track_demucs(config, model, mix, device):
                     x = model(arr)
                     for j in range(len(batch_locations)):
                         start, l = batch_locations[j]
-                        result[..., start:start+l] += x[j][..., :l].cpu()
-                        counter[..., start:start+l] += 1.
+                        result[..., start : start + l] += x[j][..., :l].cpu()
+                        counter[..., start : start + l] += 1.0
                     batch_data = []
                     batch_locations = []
 

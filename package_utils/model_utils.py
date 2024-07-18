@@ -76,8 +76,8 @@ def archieve():
         exec("explorer " + path.replace("/", "\\"))
 
 
-def load_pretrained(model_name, vocoder_name):
-    pretrained_path = os.path.join("pretrained", model_name, vocoder_name)
+def load_pretrained(model_name, extra):
+    pretrained_path = os.path.join("pretrained", model_name, extra)
     if model_name != "sovits_diff":
         dst = WORK_DIR_PATH
     else:

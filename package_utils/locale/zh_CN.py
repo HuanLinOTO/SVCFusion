@@ -126,6 +126,11 @@ class _Locale(Locale):
 
         stopped_tip = "已发送停止训练命令，请查看训练窗口"
 
+        tensorboard_btn = "启动 Tensorboard"
+
+        launching_tb_tip = "正在启动 Tensorboard，请稍后"
+        launched_tb_tip = "Tensorboard 已在 {1} 开放"
+
     class settings(Locale.settings):
         page = "页面"
 
@@ -143,7 +148,7 @@ class _Locale(Locale):
         class ddsp6(Locale.settings.ddsp6):
             pretrained_model_preference_dropdown_label = "底模偏好"
             default_pretrained_model = "默认底模 512 x 6"
-            large_pretrained_model = "大网络底模 1024 x 6"
+            large_pretrained_model = "大网络底模 1024 x 12"
 
         saved_tip = "已保存"
 
@@ -183,6 +188,9 @@ class _Locale(Locale):
 
         use_vocal_remove_label = "去除伴奏"
         use_vocal_remove_info = "是否去除伴奏"
+
+        use_harmony_remove_label = "去除和声"
+        use_harmony_remove_info = "是否去除和声（必须先勾选移除伴奏）"
 
         f0_label = "f0 提取器"
         f0_info = "用于音高提取/预测的模型"
@@ -332,6 +340,9 @@ class _Locale(Locale):
 
             subprocess_num_workers_label = "每个进程的线程数"
             subprocess_num_workers_info = "理论越大越快"
+
+            debug_label = "是否开启 Debug 模式"
+            debug_info = "开启后会输出调试信息，非特殊情况没必要开"
 
         class model_types(Locale.sovits.model_types):
             main = "主模型"

@@ -6,6 +6,7 @@ import time
 import gradio as gr
 
 from fap.utils.file import make_dirs
+from package_utils import model_utils
 from package_utils.const_vars import FOUZU, WORK_DIR_PATH
 from package_utils.i18n import I
 from package_utils.model_utils import detect_current_model_by_dataset
@@ -15,6 +16,7 @@ from package_utils.models.inited import (
     train_models_dict,
 )
 from package_utils.ui.Form import Form
+import webbrowser
 
 
 class Train:
@@ -24,6 +26,16 @@ class Train:
             choices=train_models_dict[model_name],
             value=train_models_dict[model_name][0],
         )
+
+    tb_url = ""
+
+    def launch_tb(self):
+        gr.Info(I.train.launching_tb_tip)
+        if not self.tb_url:
+            self.tb_url = model_utils.tensorboard()
+
+        webbrowser.open(self.tb_url)
+        gr.Info(I.train.launched_tb_tip.replace("{1}", self.tb_url))
 
     def archieve(self):
         gr.Info(I.train.archieving_tip)
@@ -100,6 +112,11 @@ class Train:
                         I.train.stop_btn_value,
                         variant="stop",
                     )
+                with gr.Row():
+                    tensorboard_btn = gr.Button(
+                        I.train.tensorboard_btn,
+                        variant="primary",
+                    )
 
             train_model_type.change(
                 self.on_change_train_model,
@@ -110,3 +127,5 @@ class Train:
                 self.archieve,
             )
             stop_btn.click(self.stop)
+
+            tensorboard_btn.click(self.launch_tb)

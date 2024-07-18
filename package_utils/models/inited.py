@@ -1,4 +1,4 @@
-from package_utils.models.common import infer_fn_proxy
+from package_utils.models.common import infer_fn_proxy, train_fn_proxy
 from package_utils.models.ddsp import DDSPModel
 from package_utils.models.sovits import SoVITSModel
 from package_utils.models.reflow import ReflowVAESVCModel
@@ -43,7 +43,7 @@ for model in model_list:
 
         train_form[display_name] = {
             "form": model.train_form[sub_model],
-            "callback": model.train,
+            "callback": train_fn_proxy(model.train),
         }
 print(train_models_dict)
 
