@@ -187,9 +187,12 @@ class DDSPModel:
             yaml.dump(config, f, default_flow_style=False)
 
         for i in progress.tqdm(range(1), desc=I.preprocess_desc):
-            exec(
-                f"{executable} -m ddspsvc.preprocess -c configs/ddsp.yaml -d {params['device']}"
-            )
+            assert (
+                exec(
+                    f"{executable} -m ddspsvc.preprocess -c configs/ddsp.yaml -d {params['device']}"
+                )
+                == 0
+            ), I.preprocess_failed_tip
         return gr.update(value=I.preprocess_finished)
 
     def infer(

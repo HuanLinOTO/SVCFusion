@@ -12,7 +12,7 @@ from ddspsvc.draw import main as draw_main
 
 class DrawArgs:
     val = "data/val/audio"
-    sample_rate = 44100
+    sample_rate = 1
     train = "data/train/audio"
     extensions = ["wav", "flac"]
 

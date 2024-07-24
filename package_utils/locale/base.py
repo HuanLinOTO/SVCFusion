@@ -2,6 +2,7 @@ locale_name = ""  # zh-cn
 locale_display_name = ""  # 简体中文
 class Locale:
     unknown_model_type_tip = ""  # 模型类型未知，请手动选择
+    preprocess_failed_tip = ""  # 预处理失败！请截图控制台信息并加群反馈
     class device_chooser:
         device_dropdown_label = ""  # 设备
     class model_chooser:

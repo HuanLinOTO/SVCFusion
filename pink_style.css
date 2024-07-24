@@ -1,0 +1,34 @@
+button.stop {
+    background-color: var(--color-red-500);
+    color: white;
+    /* color: var(--neutral-900); */
+}
+
+textarea {
+    box-shadow: 1px 1px 3px 0px #e0e0e0 !important;
+}
+
+* {
+    --primary-50: #FFE4E1 !important;
+    --primary-100: #FFB6C1 !important;
+    --primary-200: #FF9AA2 !important;
+    --primary-300: #FF7B89 !important;
+    --primary-400: #FF5E78 !important;
+    --primary-500: #FF4C68 !important;
+    --primary-600: #FF3A58 !important;
+    --primary-700: #FF2948 !important;
+    --primary-800: #FF1838 !important;
+    --primary-900: #FF0728 !important;
+    --primary-950: #FF0018 !important;
+    --secondary-50: #E0F7FA !important;
+    --secondary-100: #B2EBF2 !important;
+    --secondary-200: #80DEEA !important;
+    --secondary-300: #4DD0E1 !important;
+    --secondary-400: #26C6DA !important;
+    --secondary-500: #00BCD4 !important;
+    --secondary-600: #00ACC1 !important;
+    --secondary-700: #0097A7 !important;
+    --secondary-800: #00838F !important;
+    --secondary-900: #006064 !important;
+    --secondary-950: #004D40 !important;
+}

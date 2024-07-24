@@ -44,9 +44,11 @@ class _Locale(Locale):
             
                 
                     
-                            #### Change Model Type
-                            Use only if the model type cannot be recognized! This is not for converting the model type! It's for changing the recognized model type!
-                            
+                        
+                                #### Change Model Type
+                                Use only if the model type cannot be recognized! This is not for converting the model type! It's for changing the recognized model type!
+                                
+                        
                     
                 
             
@@ -78,32 +80,34 @@ class _Locale(Locale):
             
                 
                     
-                                Please put your dataset (a bunch of `.wav` files) into the `dataset_raw/Your Character Name` folder under the integration package
-                    
-                                You can train multiple characters at the same time by creating multiple character folders
-                    
-                                Once placed, your directory should look like this:
-                    
-                                ```
-                                dataset_raw/
-                                |-Your Character Name1/
-                                |  | 1.wav
-                                |  | 2.wav
-                                |  | 3.wav
-                                |  ...
-                                |-Your Character Name2/
-                                |  | 1.wav
-                                |  | 2.wav
-                                |  | 3.wav
-                                |  ...
-                                ```
-                    
-                                If you don't understand anything, just click the button below for automatic data processing
-                    
-                                If you understand the parameters, you can switch to manual mode for more detailed data processing
+                        
+                                    Please put your dataset (a bunch of `.wav` files) into the `dataset_raw/Your Character Name` folder under the integration package
+                        
+                                    You can train multiple characters at the same time by creating multiple character folders
+                        
+                                    Once placed, your directory should look like this:
+                        
+                                    ```
+                                    dataset_raw/
+                                    |-Your Character Name1/
+                                    |  | 1.wav
+                                    |  | 2.wav
+                                    |  | 3.wav
+                                    |  ...
+                                    |-Your Character Name2/
+                                    |  | 1.wav
+                                    |  | 2.wav
+                                    |  | 3.wav
+                                    |  ...
+                                    ```
+                        
+                                    If you don't understand anything, just click the button below for automatic data processing
+                        
+                                    If you understand the parameters, you can switch to manual mode for more detailed data processing
+                                    
+                                    **CPU users, please use FCPE as the F0 extractor/predictor**
                                 
-                                **CPU users, please use FCPE as the F0 extractor/predictor**
-                            
+                        
                     
                 
             
@@ -115,8 +119,10 @@ class _Locale(Locale):
             
                 
                     
-                                ## The current device does not have a GPU with more than 6GB of VRAM, only training DDSP models is recommended
-                            
+                        
+                                    ## The current device does not have a GPU with more than 6GB of VRAM, only training DDSP models is recommended
+                                
+                        
                     
                 
             
@@ -166,8 +172,10 @@ class _Locale(Locale):
             
                 
                     
-                            ## Currently only supports uploading .sf_pkg/.h0_ddsp_pkg_model format model packages
-                            
+                        
+                                ## Currently only supports uploading .sf_pkg/.h0_ddsp_pkg_model format model packages
+                                
+                        
                     
                 
             
@@ -390,3 +398,4 @@ class _Locale(Locale):
     preprocess_draw_desc = "Divide Validation Set"
     preprocess_desc = "Preprocess (see progress in terminal)"
     preprocess_finished = "Preprocessing Complete"
+    preprocess_failed_tip = "预处理失败！请截图控制台信息并加群反馈"

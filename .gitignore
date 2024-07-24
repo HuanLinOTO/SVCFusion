@@ -51,4 +51,7 @@ configs/*copy*
 assets/
 webui*
 
+ACE*
+
 scripts/buildtools*
+scripts/build*

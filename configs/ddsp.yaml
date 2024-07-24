@@ -9,7 +9,7 @@ data:
   encoder_sample_rate: 16000
   extensions:
   - wav
-  f0_extractor: fcpe
+  f0_extractor: rmvpe
   f0_max: 800
   f0_min: 65
   sampling_rate: 44100
@@ -23,8 +23,8 @@ infer:
   infer_step: 20
   method: euler
 model:
-  n_chans: 512
-  n_layers: 6
+  n_chans: 1024
+  n_layers: 12
   n_spk: 1
   t_start: 0.7
   type: RectifiedFlow
@@ -32,7 +32,7 @@ model:
   win_length: 2048
 model_type_index: 0
 spks:
-- QQ756107584
+- 纳西妲
 train:
   amp_dtype: fp32
   batch_size: 60
@@ -44,7 +44,7 @@ train:
   gamma: 0.5
   interval_force_save: 1000
   interval_log: 1
-  interval_val: 1000
+  interval_val: 100
   lambda_ddsp: 1
   lr: 0.0002
   num_workers: 2
