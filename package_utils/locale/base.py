@@ -1,8 +1,9 @@
 locale_name = ""  # zh-cn
 locale_display_name = ""  # 简体中文
 class Locale:
-    unknown_model_type_tip = ""  # 模型类型未知，请手动选择
+    unknown_model_type_tip = ""  # 模型类型未知，请去 小工具-模型管理 确认模型类型
     preprocess_failed_tip = ""  # 预处理失败！请截图控制台信息并加群反馈
+    error_when_infer = ""  # 推理时遇到错误<br>已跳过{1}文件<br>详细查看控制台<br>{2}
     class device_chooser:
         device_dropdown_label = ""  # 设备
     class model_chooser:
@@ -48,8 +49,20 @@ class Locale:
         install_model_tab = ""  # 安装模型
         fish_audio_preprocess_tab = ""  # 简单音频处理
         vocal_remove_tab = ""  # 人声分离
+        compatible_tab = ""  # 模型兼容
         detect_spk_tip = ""  # 已检测到的角色：
         spk_not_found_tip = ""  # 未检测到任何角色
+    class compatible_models:
+        upload_error = ""  # 上传错误，请检查文件是否完整
+        model_name_label = ""  # 模型名称
+        upload_success = ""  # 上传成功
+        model_exists = ""  # 模型已存在
+        compatible_sovits = ""  # SoVITS 模型兼容
+        sovits_main_model_label = ""  # SoVITS 主模型
+        sovits_diff_model_label = ""  # SoVITS 浅扩散
+        sovits_cluster_model_label = ""  # SoVITS 聚类/检索
+        sovits_main_model_config_label = ""  # SoVITS 主模型配置
+        sovits_diff_model_config_label = ""  # SoVITS 浅扩散配置
     class preprocess:
         tip = ""  # 
         little_vram_tip = ""  # 
@@ -107,6 +120,7 @@ class Locale:
         inst_label = ""  # 输出-伴奏
     class common_infer:
         audio_label = ""  # 音频文件
+        use_batch_label = ""  # 启用批量处理
         use_vocal_remove_label = ""  # 去除伴奏
         use_vocal_remove_info = ""  # 是否去除伴奏
         use_harmony_remove_label = ""  # 去除和声
@@ -117,14 +131,16 @@ class Locale:
         keychange_info = ""  # 参考：男转女 12，女转男 -12，音色不像可以调节这个
         threshold_label = ""  # 切片阈值
         threshold_info = ""  # 人声切片的阈值，如果有底噪可以调为 -40 或更高
-    class diff_based_infer:
+    class ddsp_based_infer:
         method_label = ""  # 采样器
         method_info = ""  # 用于 reflow 的采样器
         infer_step_label = ""  # 推理步数
         infer_step_info = ""  # 推理步长，默认就行
         t_start_label = ""  # T Start
         t_start_info = ""  # 不知道
-    class diff_based_preprocess:
+        num_formant_shift_key_label = ""  # 共振峰偏移
+        num_formant_shift_key_info = ""  # 值越大声音越细，值越小声音越粗
+    class ddsp_based_preprocess:
         method_label = ""  # f0 提取器
         method_info = ""  # 用于 reflow 的采样器
     class common_preprocess:

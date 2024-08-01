@@ -43,3 +43,6 @@ FOUZU = r"""
         佛祖保佑        永不炸炉
 ```
 """
+
+
+EMPTY_WAV_PATH = "tmp/empty.wav"

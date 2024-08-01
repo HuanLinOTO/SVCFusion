@@ -104,7 +104,7 @@ def tensorboard():
         subprocess.Popen([cmd], shell=True)
 
 
-def detect_current_model_by_path(model_path):
+def detect_current_model_by_path(model_path, alert=False):
     # 读取 model_path/config.yaml 中的 model_type
     is_unknown = False
     if os.path.exists(model_path + "/config.json"):
@@ -128,7 +128,7 @@ def detect_current_model_by_path(model_path):
         is_unknown = True
         model_type = -1
 
-    if is_unknown:
+    if is_unknown and alert:
         gr.Info(I.unknown_model_type_tip)
     return model_type
 

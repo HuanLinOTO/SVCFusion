@@ -95,7 +95,6 @@ class ProgressProxy:
             return gr.Progress().tqdm
 
         res = getattr(self.progress, name)
-        info(res)
         return res
 
     def __enter__(self):

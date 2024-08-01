@@ -119,9 +119,13 @@ def run_msst(
             "config": "Music_Source_Separation_Training/configs/model_bs_roformer_ep_368_sdr_12.9628.yaml",
             "model": "other_weights/model_bs_roformer_ep_368_sdr_12.9628.ckpt",
         },
-        "mel_band_roformer": {
+        "deverb_mel_band_roformer": {
             "config": r"Music_Source_Separation_Training\configs\deverb_mel_band_roformer.yaml",
             "model": "other_weights/deverb_mel_band_roformer_ep_27_sdr_10.4567.ckpt",
+        },
+        "deverb_bs_roformer": {
+            "config": r"Music_Source_Separation_Training\configs\deverb_bs_roformer_8_256dim_8depth.yaml",
+            "model": "other_weights/deverb_bs_roformer_8_256dim_8depth.ckpt",
         },
     }
 
@@ -134,7 +138,7 @@ def run_msst(
         model_type="bs_roformer",
     )
     msst_model, bsroformer_config = msst_inference.get_model_from_config(
-        model_type,
+        model_type if model_type != "deverb_bs_roformer" else "bs_roformer",
         model_type_to_info[model_type]["config"],
     )
     model_path = model_type_to_info[model_type]["model"]
@@ -196,7 +200,7 @@ def getVocalAndInstrument(inp_path, progress=gr.Progress()):
         vocal_path,
         inp_hash,
         progress=progress,
-        model_type="mel_band_roformer",
+        model_type="deverb_bs_roformer",
         progress_desc="去混响",
         save_inst=False,
     )

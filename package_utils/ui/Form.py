@@ -7,6 +7,12 @@ from .FormTypes import FormComponent, FormDict, ParamInfo
 
 
 class Form:
+    def get_change_display_fn(self, reserve):
+        def fn(value):
+            return gr.update(visible=value if reserve else not value)
+
+        return fn
+
     def change_model(self, model):
         # 如果 self.model_name_list 不存在 model，index 给个 -1
         if model not in self.model_name_list:
@@ -57,6 +63,7 @@ class Form:
                 value=item["default"],
                 step=item["step"],
                 interactive=True,
+                visible=item.get("visible", True),
             )
         elif item["type"] == "dropdown":
             return gr.Dropdown(
@@ -66,6 +73,7 @@ class Form:
                 value=item["default"],
                 type=item.get("value_type", "value"),
                 interactive=True,
+                visible=item.get("visible", True),
             )
         elif item["type"] == "dropdown_liked_checkbox":
             if isinstance(item["default"], Callable):
@@ -94,23 +102,33 @@ class Form:
                 ],
                 value=value_proxy,
                 interactive=True,
+                visible=item.get("visible", True),
             )
-        elif item["type"] == "checkbox":
+        elif item["type"] == "checkbox" or item["type"] == "show_switch":
             return gr.Checkbox(
                 label=item["label"],
-                info=item["info"],
+                info=item.get("info", None),
                 value=item["default"],
                 interactive=True,
+                visible=item.get("visible", True),
             )
         elif item["type"] == "audio":
             return gr.Audio(
                 label=item["label"],
                 type="filepath",
                 interactive=True,
+                visible=item.get("visible", True),
                 editable=True,
             )
         elif item["type"] == "device_chooser":
-            return DeviceChooser().device_dropdown
+            return DeviceChooser(show=True).device_dropdown
+        elif item["type"] == "file":
+            return gr.Files(
+                label=item["label"],
+                type="filepath",
+                interactive=True,
+                visible=item.get("visible", True),
+            )
         else:
             raise Exception("未知类型", item)
 
@@ -129,6 +147,8 @@ class Form:
         self.model_name_list = []
 
         self.index2param_info: Dict[int, ParamInfo] = {}
+        self.key2param_info: Dict[str, ParamInfo] = {}
+
         self.param_comp_list = []
 
         groups = []
@@ -165,7 +185,16 @@ class Form:
                     self.index2param_info[total_i] = {
                         "model_name": model_name,
                         "key": key,
+                        "comp": comp,
+                        "info": item,
                     }
+                    self.key2param_info[key] = {
+                        "model_name": model_name,
+                        "key": key,
+                        "comp": comp,
+                        "info": item,
+                    }
+
                     total_i += 1
 
                     if item["type"] == "audio" or item.get("individual", False) is True:
@@ -197,10 +226,22 @@ class Form:
                         label=I.form.audio_output_2,
                         visible=False,
                     )
+                    audio_output_batch_1 = gr.Files(
+                        type="filepath",
+                        label=I.form.audio_output_1,
+                        visible=False,
+                    )
+                    audio_output_batch_2 = gr.Files(
+                        type="filepath",
+                        label=I.form.audio_output_2,
+                        visible=False,
+                    )
                 outputs = []
                 if use_audio_opt:
                     outputs.append(audio_output_1)
                     outputs.append(audio_output_2)
+                    outputs.append(audio_output_batch_1)
+                    outputs.append(audio_output_batch_2)
                 if use_textbox_opt:
                     outputs.append(gr.Textbox(label=I.form.textbox_output))
                 submit.click(
@@ -208,4 +249,28 @@ class Form:
                     inputs=inputs,
                     outputs=outputs,
                 )
+
+                # 后处理
+
+                for key in self.key2param_info:
+                    item = self.key2param_info[key]["info"]
+                    if item["type"] == "show_switch":
+                        comp: gr.Checkbox = self.key2param_info[key]["comp"]
+                        for sub_comp in item["default_show"]:
+                            comp.change(
+                                self.get_change_display_fn(False),
+                                inputs=[comp],
+                                outputs=[
+                                    self.key2param_info[sub_comp]["comp"],
+                                ],
+                            )
+                        for sub_comp in item["other_show"]:
+                            comp.change(
+                                self.get_change_display_fn(True),
+                                inputs=[comp],
+                                outputs=[
+                                    self.key2param_info[sub_comp]["comp"],
+                                ],
+                            )
+
         triger_comp.change(self.change_model, inputs=[triger_comp], outputs=groups)

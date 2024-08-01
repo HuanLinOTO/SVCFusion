@@ -1,3 +1,4 @@
+import gradio as gr
 from typing import Callable, Dict, List, Literal, TypedDict, Union
 
 
@@ -52,6 +53,7 @@ class FormDictItemWithDynamicForm(TypedDict):
 class ParamInfo(TypedDict):
     model_name: str
     key: str
+    comp: gr.component
 
 
 FormDict = Dict[str, Union[FormDictItem, FormDictItemWithDynamicForm]]

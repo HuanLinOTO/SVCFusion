@@ -42,9 +42,37 @@ class _Locale(Locale):
     
         
             
-                    #### 🔄🤖
-                    ❗❓🤖🔍！❌🔄🤖！✔️🔍🤖！
+                
                     
+                        
+                            
+                                
+                                    
+                                        
+                                            
+                                                
+                                                    
+                                                        
+                                                            
+                                                                
+                                                                    
+                                                                            #### 🔄🤖
+                                                                            ❗❓🤖🔍！❌🔄🤖！✔️🔍🤖！
+                                                                            
+                                                                    
+                                                                
+                                                            
+                                                        
+                                                    
+                                                
+                                            
+                                        
+                                    
+                                
+                            
+                        
+                    
+                
             
         
     """
@@ -66,38 +94,67 @@ class _Locale(Locale):
         vocal_remove_tab = "🗣️❌"
         detect_spk_tip = "✔️🗣️:"
         spk_not_found_tip = "❌🗣️"
+        compatible_tab = "模型兼容"
     
     class preprocess(Locale.preprocess):
         tip = """
     
         
             
-                        ✔️📂(`.wav` 📂) 📂 `dataset_raw/🗣️📛`
-            
-                        ✔️📂🆕🗣️📂✔️🛠️🆕🗣️
-            
-                        ✔️📂🔍:
-            
-                        ```
-                        dataset_raw/
-                        |-🗣️1/
-                        |  | 1.wav
-                        |  | 2.wav
-                        |  | 3.wav
-                        |  ...
-                        |-🗣️2/
-                        |  | 1.wav
-                        |  | 2.wav
-                        |  | 3.wav
-                        |  ...
-                        ```
-            
-                        ❓, ✔️🔘⬇️📄🔄🛠️
-            
-                        ✔️🔄✔️, ✔️🛠️🔧🔄🛠️
-                        
-                        **CPU 🔧✔️ FCPE F0 🔍/🔮**
+                
                     
+                        
+                            
+                                
+                                    
+                                        
+                                            
+                                                
+                                                    
+                                                        
+                                                            
+                                                                
+                                                                    
+                                                                                ✔️📂(`.wav` 📂) 📂 `dataset_raw/🗣️📛`
+                                                                    
+                                                                                ✔️📂🆕🗣️📂✔️🛠️🆕🗣️
+                                                                    
+                                                                                ✔️📂🔍:
+                                                                    
+                                                                                ```
+                                                                                dataset_raw/
+                                                                                |-🗣️1/
+                                                                                |  | 1.wav
+                                                                                |  | 2.wav
+                                                                                |  | 3.wav
+                                                                                |  ...
+                                                                                |-🗣️2/
+                                                                                |  | 1.wav
+                                                                                |  | 2.wav
+                                                                                |  | 3.wav
+                                                                                |  ...
+                                                                                ```
+                                                                    
+                                                                                ❓, ✔️🔘⬇️📄🔄🛠️
+                                                                    
+                                                                                ✔️🔄✔️, ✔️🛠️🔧🔄🛠️
+                                                                                
+                                                                                **CPU 🔧✔️ FCPE F0 🔍/🔮**
+                                                                            
+                                                                    
+                                                                
+                                                            
+                                                        
+                                                    
+                                                
+                                            
+                                        
+                                    
+                                
+                            
+                        
+                    
+                
             
         
     """
@@ -105,8 +162,36 @@ class _Locale(Locale):
     
         
             
-                        ## 💻❌🗄️ 6GB, ✔️🛠️ DDSP 🤖
+                
                     
+                        
+                            
+                                
+                                    
+                                        
+                                            
+                                                
+                                                    
+                                                        
+                                                            
+                                                                
+                                                                    
+                                                                                ## 💻❌🗄️ 6GB, ✔️🛠️ DDSP 🤖
+                                                                            
+                                                                    
+                                                                
+                                                            
+                                                        
+                                                    
+                                                
+                                            
+                                        
+                                    
+                                
+                            
+                        
+                    
+                
             
         
     """
@@ -152,8 +237,36 @@ class _Locale(Locale):
     
         
             
-                    ## ✔️⬆️ .sf_pkg/.h0_ddsp_pkg_model 📦
+                
                     
+                        
+                            
+                                
+                                    
+                                        
+                                            
+                                                
+                                                    
+                                                        
+                                                            
+                                                                
+                                                                    
+                                                                            ## ✔️⬆️ .sf_pkg/.h0_ddsp_pkg_model 📦
+                                                                            
+                                                                    
+                                                                
+                                                            
+                                                        
+                                                    
+                                                
+                                            
+                                        
+                                    
+                                
+                            
+                        
+                    
+                
             
         
     """
@@ -192,16 +305,19 @@ class _Locale(Locale):
         threshold_info = "🗣️✂️📉, ❗️📉🔊 ✔️ -40 🔄⬆️"
         use_harmony_remove_label = "去除和声"
         use_harmony_remove_info = "是否去除和声（必须先勾选移除伴奏）"
+        use_batch_label = "启用批量处理"
     
-    class diff_based_infer(Locale.diff_based_infer):
+    class ddsp_based_infer(Locale.ddsp_based_infer):
         method_label = "🔍"
         method_info = "🔄 reflow 🔍"
         infer_step_label = "🛠️⏳"
         infer_step_info = "🛠️📏, ✔️🔧"
         t_start_label = "T ⏳"
         t_start_info = "❓"
+        num_formant_shift_key_label = "共振峰偏移"
+        num_formant_shift_key_info = "值越大声音越细，值越小声音越粗"
     
-    class diff_based_preprocess(Locale.diff_based_preprocess):
+    class ddsp_based_preprocess(Locale.ddsp_based_preprocess):
         method_label = "f0 🔍"
         method_info = "🔄 reflow 🔍"
     
@@ -328,3 +444,46 @@ class _Locale(Locale):
     preprocess_desc = "🛠️🔍(📈🔍🖥️)"
     preprocess_finished = "✔️🔍"
     preprocess_failed_tip = "预处理失败！请截图控制台信息并加群反馈"
+    error_when_infer = """
+
+
+
+
+
+
+
+
+
+
+
+
+推理时遇到错误
+已跳过{1}文件
+错误是: {2}
+
+
+
+
+
+
+
+
+
+
+
+
+"""
+    class compatible_models(Locale.compatible_models):
+        compatible_sovits = "SoVITS 模型兼容"
+        sovits_main_model_label = "SoVITS 主模型"
+        sovits_diff_model_label = "SoVITS 浅扩散"
+        sovits_cluster_model_label = "SoVITS 聚类/检索"
+        sovits_main_model_config = "SoVITS 主模型配置"
+        sovits_diff_model_config = "SoVITS 浅扩散配置"
+        sovits_main_model_config_label = "SoVITS 主模型配置"
+        sovits_diff_model_config_label = "SoVITS 浅扩散配置"
+        upload_error = "上传错误，请检查文件是否完整"
+        model_name_label = "模型名称"
+        upload_success = "上传成功"
+        model_exists = "模型已存在"
+    

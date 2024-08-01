@@ -15,7 +15,12 @@ from package_utils.config import YAMLReader, applyChanges, system_config
 from package_utils.dataset_utils import DrawArgs, auto_normalize_dataset
 from package_utils.i18n import I
 from package_utils.model_utils import load_pretrained
-from .common import common_infer_form, diff_based_infer_form, common_preprocess_form
+from .common import (
+    common_infer_form,
+    ddsp_based_infer_form,
+    common_preprocess_form,
+    ddsp_based_preprocess_form,
+)
 from ddspsvc.reflow.vocoder import load_model_vocoder
 from ddspsvc.ddsp.vocoder import F0_Extractor, Volume_Extractor, Units_Encoder
 from ddspsvc.ddsp.core import upsample
@@ -201,7 +206,7 @@ class DDSPModel:
         progress: gr.Progress = None,
     ):
         sample_rate = 44100
-        num_formant_shift_key = 0
+        num_formant_shift_key = params["num_formant_shift_key"]
         f0_extractor = params["f0"]
         input_file = params["audio"]
         keychange = params["keychange"]
@@ -408,12 +413,12 @@ class DDSPModel:
                 current_length = current_length + silent_length + len(seg_output)
             gc.collect()
             torch.cuda.empty_cache()
-            sf.write("tmp.wav", result, sample_rate)
-            return "tmp.wav"
+            sf.write("tmp/infer_opt/" + params["hash"] + ".wav", result, sample_rate)
+            return "tmp/infer_opt/" + params["hash"] + ".wav"
 
     def __init__(self) -> None:
         self.infer_form.update(common_infer_form)
-        self.infer_form.update(diff_based_infer_form)
+        self.infer_form.update(ddsp_based_infer_form)
 
         self.train_form.update(
             {
@@ -523,6 +528,7 @@ class DDSPModel:
         )
 
         self.preprocess_form.update(common_preprocess_form)
+        self.preprocess_form.update(ddsp_based_preprocess_form)
 
         self.model = None
         self.vocoder = None

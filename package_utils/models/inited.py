@@ -1,4 +1,8 @@
-from package_utils.models.common import infer_fn_proxy, train_fn_proxy
+from package_utils.models.common import (
+    infer_fn_proxy,
+    preprocess_fn_proxy,
+    train_fn_proxy,
+)
 from package_utils.models.ddsp import DDSPModel
 from package_utils.models.sovits import SoVITSModel
 from package_utils.models.reflow import ReflowVAESVCModel
@@ -23,7 +27,7 @@ preprocess_form = {}
 for model in model_list:
     preprocess_form[model.model_name] = {
         "form": model.preprocess_form,
-        "callback": model.preprocess,
+        "callback": preprocess_fn_proxy(model.preprocess),
     }
 
 

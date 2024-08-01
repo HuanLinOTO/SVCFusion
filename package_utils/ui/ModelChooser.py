@@ -64,7 +64,7 @@ class ModelChooser:
 
     def get_models_from_search_path(self, search_path):
         # os 扫描目录 获取模型
-        model_type_index = detect_current_model_by_path(search_path)
+        model_type_index = detect_current_model_by_path(search_path, alert=True)
         result = {}
         for p in os.listdir(search_path):
             if os.path.isfile(os.path.join(search_path, p)):
@@ -146,7 +146,7 @@ class ModelChooser:
         for model in model_list:
             for type in model.model_types:
                 m: list = models.get(type, [I.model_chooser.no_model_value])
-                if I.model_chooser.unuse_value in m:
+                if I.model_chooser.unuse_value not in m:
                     m.append(I.model_chooser.unuse_value)
                 result.append(
                     gr.update(

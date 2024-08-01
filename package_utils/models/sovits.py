@@ -301,11 +301,12 @@ class SoVITSModel:
 
     def model_filter(self, filepath: str):
         if (
-            filepath.endswith(".pth")
-            and not filepath.startswith("D_")
-            and not filepath.startswith("G_0")
-            and filepath not in ["model_0.pt", "diffusion/model_0.pt"]
+            filepath in ["model_0.pt", "diffusion/model_0.pt"]
+            or filepath.startswith("D_")
+            or filepath.startswith("G_0")
         ):
+            return
+        if filepath.endswith(".pth"):
             return "main"
         if os.path.basename(filepath) in ["feature_and_index.pkl", "kmeans_10000.pt"]:
             return "cluster"
@@ -470,11 +471,11 @@ class SoVITSModel:
         audio = self.svc_model.slice_inference(**kwarg)
         gc.collect()
         torch.cuda.empty_cache()
-        sf.write("tmp.wav", audio, 44100)
+        sf.write("tmp/infer_opt/" + params["hash"] + ".wav", audio, 44100)
         # 删掉 filename
         os.remove(resampled_filename)
         print(params)
-        return "tmp.wav"
+        return "tmp/infer_opt/" + params["hash"] + ".wav"
 
     def __init__(self) -> None:
         self.infer_form = {}

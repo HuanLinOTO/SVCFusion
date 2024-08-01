@@ -1,5 +1,6 @@
 import gradio as gr
 import torch
+import cpuinfo
 
 from package_utils.device import get_cuda_devices
 from package_utils.i18n import I
@@ -8,9 +9,12 @@ from package_utils.i18n import I
 class DeviceChooser:
     def refresh(self):
         self.cuda_devices = get_cuda_devices()
+        cpu = cpuinfo.get_cpu_info()["brand_raw"]
         return gr.update(
-            choices=["cpu", *self.cuda_devices],
-            value="cpu" if not torch.cuda.is_available() else self.cuda_devices[0],
+            choices=[f"CPU: {cpu}", *self.cuda_devices],
+            value=f"CPU: {cpu}"
+            if not torch.cuda.is_available()
+            else self.cuda_devices[0],
         )
 
     def __init__(self, show=False) -> None:
