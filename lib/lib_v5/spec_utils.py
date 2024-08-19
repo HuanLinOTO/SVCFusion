@@ -419,7 +419,9 @@ def cmb_spectrogram_to_wave(spec_m, mp, extra_bins_h=None, extra_bins=None):
                     ),
                 )
                 # wave = librosa.core.resample(wave2, bp['sr'], sr, res_type="sinc_fastest")
-                wave = librosa.core.resample(wave2, orig_sr=bp["sr"], target_sr=sr, res_type="scipy")
+                wave = librosa.core.resample(
+                    wave2, orig_sr=bp["sr"], target_sr=sr, res_type="scipy"
+                )
 
     return wave.T
 
@@ -454,8 +456,7 @@ def mirroring(a, spec_m, input_high_end, mp):
                     :,
                     mp.param["pre_filter_start"]
                     - 10
-                    - input_high_end.shape[1] : mp.param["pre_filter_start"]
-                    - 10,
+                    - input_high_end.shape[1] : mp.param["pre_filter_start"] - 10,
                     :,
                 ]
             ),
@@ -474,8 +475,7 @@ def mirroring(a, spec_m, input_high_end, mp):
                     :,
                     mp.param["pre_filter_start"]
                     - 10
-                    - input_high_end.shape[1] : mp.param["pre_filter_start"]
-                    - 10,
+                    - input_high_end.shape[1] : mp.param["pre_filter_start"] - 10,
                     :,
                 ]
             ),
@@ -524,7 +524,6 @@ def istft(spec, hl):
 
 if __name__ == "__main__":
     import argparse
-    import sys
     import time
 
     import cv2

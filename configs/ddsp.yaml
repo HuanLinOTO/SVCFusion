@@ -15,7 +15,7 @@ data:
   sampling_rate: 44100
   train_path: data/train
   valid_path: data/val
-device: cuda
+device: cuda:0
 env:
   expdir: exp/workdir
   gpu_id: 0
@@ -31,12 +31,14 @@ model:
   use_pitch_aug: true
   win_length: 2048
 model_type_index: 0
+spk:
+  default: 0
 spks:
-- QQ1605560479
+- default
 train:
   amp_dtype: fp32
   batch_size: 60
-  cache_all_data: false
+  cache_all_data: true
   cache_device: cpu
   cache_fp16: true
   decay_step: 50000
@@ -51,6 +53,7 @@ train:
   save_opt: false
   val_workers: 10
   weight_decay: 0
+use_pretrain: true
 vocoder:
   ckpt: pretrain/nsf_hifigan/model
   type: nsf-hifigan

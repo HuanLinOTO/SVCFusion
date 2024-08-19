@@ -2,15 +2,15 @@ import gc
 import hashlib
 import os
 from pathlib import Path
-import time
 import traceback
 import gradio as gr
-import torchaudio
 
 from Music_Source_Separation_Training import inference as msst_inference
 
 from SoVITS import logger
 import torch
+from package_utils.config import system_config
+from package_utils.i18n import I
 from vr import AudioPre, AudioPreDeEcho
 
 os.environ["PATH"] += os.pathsep + os.getcwd()
@@ -106,29 +106,53 @@ class MSSTArgs:
         self.model_type = model_type
 
 
+model_type_to_info = {
+    "bs_roformer": {
+        "config": "Music_Source_Separation_Training/configs/model_bs_roformer_ep_368_sdr_12.9628.yaml",
+        "model": "other_weights/model_bs_roformer_ep_368_sdr_12.9628.ckpt",
+        "real_type": "bs_roformer",
+    },
+    "deverb_mel_band_roformer": {
+        "config": r"Music_Source_Separation_Training/configs/deverb_mel_band_roformer.yaml",
+        "model": "other_weights/deverb_mel_band_roformer_ep_27_sdr_10.4567.ckpt",
+        "real_type": "mel_band_roformer",
+    },
+    "deverb_bs_roformer": {
+        "config": r"Music_Source_Separation_Training/configs/deverb_bs_roformer_8_256dim_8depth.yaml",
+        "model": "other_weights/deverb_bs_roformer_8_256dim_8depth.ckpt",
+        "real_type": "bs_roformer",
+    },
+    "karaoke_mel_band_roformer": {
+        "config": r"Music_Source_Separation_Training/configs/config_mel_band_roformer_karaoke.yaml",
+        "model": "other_weights/mel_band_roformer_karaoke_aufr33_viperx_sdr_10.1956.ckpt",
+        "real_type": "mel_band_roformer",
+    },
+    "kim_vocals_mel_band_roformer": {
+        "config": r"Music_Source_Separation_Training/configs/kim_config_vocals_mel_band_roformer.yaml",
+        "model": "other_weights/KimMelBandRoformer.ckpt",
+        "real_type": "mel_band_roformer",
+    },
+}
+
+job_to_model_type = {
+    "vocal": "bs_roformer",
+    "kim_vocal": "kim_vocals_mel_band_roformer",
+    "deverb": "deverb_bs_roformer",
+    "karaoke": "karaoke_mel_band_roformer",
+}
+
+
 def run_msst(
     inp_path,
     inp_hash,
-    progress=gr.Progress(),
+    vocal_opt_path,
+    inst_opt_path,
+    progress=gr.Progress(track_tqdm=True),
+    real_type="bs_roformer",
     model_type="bs_roformer",
     progress_desc: str = "",
     save_inst=True,
 ):
-    model_type_to_info = {
-        "bs_roformer": {
-            "config": "Music_Source_Separation_Training/configs/model_bs_roformer_ep_368_sdr_12.9628.yaml",
-            "model": "other_weights/model_bs_roformer_ep_368_sdr_12.9628.ckpt",
-        },
-        "deverb_mel_band_roformer": {
-            "config": r"Music_Source_Separation_Training\configs\deverb_mel_band_roformer.yaml",
-            "model": "other_weights/deverb_mel_band_roformer_ep_27_sdr_10.4567.ckpt",
-        },
-        "deverb_bs_roformer": {
-            "config": r"Music_Source_Separation_Training\configs\deverb_bs_roformer_8_256dim_8depth.yaml",
-            "model": "other_weights/deverb_bs_roformer_8_256dim_8depth.ckpt",
-        },
-    }
-
     vocal_path = f"./tmp/msst_opt/{inp_hash}_Vocals.wav"
     inst_path = f"./tmp/msst_opt/{inp_hash}_Instrument.wav"
 
@@ -138,31 +162,35 @@ def run_msst(
         model_type="bs_roformer",
     )
     msst_model, bsroformer_config = msst_inference.get_model_from_config(
-        model_type if model_type != "deverb_bs_roformer" else "bs_roformer",
+        real_type,
         model_type_to_info[model_type]["config"],
     )
     model_path = model_type_to_info[model_type]["model"]
     print("Start from checkpoint: {}".format(model_path))
-    state_dict = torch.load(model_path)
+
+    if torch.cuda.is_available():
+        device = torch.device(system_config.infer.msst_device)
+    else:
+        logger.info(
+            "CUDA is not avilable. Run inference on CPU. It will be very slow..."
+        )
+        device = torch.device("cpu")
+
+    state_dict = torch.load(model_path, map_location=device)
     if args.model_type == "htdemucs":
         # Fix for htdemucs pround etrained models
         if "state" in state_dict:
             state_dict = state_dict["state"]
     msst_model.load_state_dict(state_dict)
-    if torch.cuda.is_available():
-        device = torch.device("cuda")
-        msst_model = msst_model.to(device)
-    else:
-        device = "cpu"
-        logger.info(
-            "CUDA is not avilable. Run inference on CPU. It will be very slow..."
-        )
-        msst_model = msst_model.to(device)
+    msst_model.to(device)
+
     msst_inference.run_folder(
-        msst_model,
-        args,
-        bsroformer_config,
-        device,
+        model=msst_model,
+        args=args,
+        vocal_opt_path=vocal_opt_path,
+        inst_opt_path=inst_opt_path,
+        config=bsroformer_config,
+        device=device,
         progress=progress,
         save_inst=save_inst,
         progress_desc=progress_desc,
@@ -174,34 +202,41 @@ def run_msst(
     return vocal_path, inst_path
 
 
-def getVocalAndInstrument(inp_path, progress=gr.Progress()):
-    # inp_path = 'C:\\Users\\Administrator\\AppData\\Local\\Temp\\gradio\\8318a6ff3ae407ac036a5d3c40b910e341ee768b\\AI Kikyou  名もない花.mp3'
-    if not inp_path:
-        gr.Error("Please upload an audio file")
-        return
+def getVocalAndInstrument(
+    inp_path,
+    use_vocal_fetch=True,
+    use_de_reverb=True,
+    use_harmonic_remove=True,
+    progress=gr.Progress(),
+):
     inp_hash = hashlib.md5(inp_path.encode()).hexdigest()
 
-    # uvr('karaoke_remove_inst', '', 'tmp/uvr5_opt', [inp_path], 'tmp/uvr5_opt', 10, 'wav', f'vocal_{inp_hash}.wav')
+    jobs = []
+    if use_vocal_fetch:
+        jobs.append("kim_vocal")
+    if use_de_reverb:
+        jobs.append("deverb")
+    if use_harmonic_remove:
+        jobs.append("karaoke")
 
-    vocal_path = f"./tmp/msst_opt/{inp_hash}_Vocals.wav"
-    inst_path = f"./tmp/msst_opt/{inp_hash}_Instrument.wav"
-
-    if not os.path.exists(vocal_path) and not os.path.exists(inst_path):
-        vocal_path, inst_path = run_msst(
-            inp_path,
-            inp_hash,
-            progress=progress,
-            progress_desc="去伴奏",
-        )
-    deecho_path = f"./tmp/msst_opt/{inp_hash}_noreverb.wav"
-    if os.path.exists(deecho_path):
-        return Path(deecho_path), Path(inst_path)
-    _, inst_path = run_msst(
-        vocal_path,
-        inp_hash,
-        progress=progress,
-        model_type="deverb_bs_roformer",
-        progress_desc="去混响",
-        save_inst=False,
-    )
-    return Path(deecho_path), Path(inst_path)
+    vocal_path = f"./tmp/msst_opt/vocal/{inp_hash}_Vocals.wav"
+    inst_path = f"./tmp/msst_opt/kim_vocal/{inp_hash}_Instrument.wav"
+    real_inst_path = inst_path
+    last_vocal = inp_path
+    for job in jobs:
+        vocal_path = f"./tmp/msst_opt/{job}/{inp_hash}_Vocals.wav"
+        inst_path = f"./tmp/msst_opt/{job}/{inp_hash}_Instrument.wav"
+        if not os.path.exists(vocal_path) and not os.path.exists(inst_path):
+            run_msst(
+                inp_path=last_vocal,
+                inp_hash=inp_hash,
+                vocal_opt_path=vocal_path,
+                inst_opt_path=inst_path,
+                progress=progress,
+                real_type=model_type_to_info[job_to_model_type[job]]["real_type"],
+                model_type=job_to_model_type[job],
+                progress_desc=I.vocal_separation.job_to_progress_desc[job],
+            )
+        last_vocal = vocal_path
+    print("result", vocal_path, real_inst_path)
+    return Path(vocal_path), Path(real_inst_path)

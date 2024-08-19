@@ -1,5 +1,8 @@
 import os
 from shutil import rmtree
+
+from package_utils.model_utils import detect_current_model_by_path
+from .exec import executable
 from loguru import logger
 import yaml
 
@@ -25,7 +28,7 @@ class PreprocessArgs:
 def resample(src, dst):
     assert (
         exec(
-            f".conda\\python fap/__main__.py resample {src} {dst} --mono",
+            f"{executable} fap/__main__.py resample {src} {dst} --mono",
         )
         == 0
     ), "重采样失败，请截图日志反馈，日志在上面 不在这里！！"
@@ -34,7 +37,7 @@ def resample(src, dst):
 def to_wav(src, dst):
     assert (
         exec(
-            f".conda\\python fap/__main__.py to-wav {src} {dst}",
+            f"{executable} fap/__main__.py to-wav {src} {dst}",
         )
         == 0
     ), "转 WAV 失败，请截图日志反馈，日志在上面 不在这里！！"
@@ -43,7 +46,7 @@ def to_wav(src, dst):
 def slice_audio(src, dst, max_duration):
     assert (
         exec(
-            f".conda\\python fap/__main__.py slice-audio-v2 {src} {dst} --max-duration {max_duration} --flat-layout --merge-short --clean"
+            f"{executable} fap/__main__.py slice-audio-v2 {src} {dst} --max-duration {max_duration} --flat-layout --merge-short --clean"
         )
         == 0
     ), "切割音频失败，请截图日志反馈，日志在上面 不在这里！！"
@@ -64,7 +67,9 @@ def auto_normalize_dataset(
     )
     rmtree("tmp/resampled")
     if rename_by_index:
-        for i, spk in enumerate(os.listdir(output_dir)):
+        for i, spk in enumerate(
+            [i for i in os.listdir(output_dir) if i != ".ipynb_checkpoints"]
+        ):
             os.rename(f"{output_dir}/{spk}", f"{output_dir}/{i + 1}")
 
 
@@ -74,6 +79,18 @@ def check_spks():
         if os.path.isdir(os.path.join("dataset_raw", f)):
             spks.append(f)
     return spks
+
+
+def get_spk_from_dir(search_path):
+    model_type_index = detect_current_model_by_path(search_path)
+    if model_type_index == 2:
+        with open(f"{search_path}/config.json", "r") as f:
+            config = yaml.safe_load(f)
+            return config["spks"].keys()
+    elif model_type_index in [0, 1]:
+        with open(f"{search_path}/config.yaml", "r") as f:
+            config = yaml.safe_load(f)
+            return config["spks"]
 
 
 def auto_preprocess(
@@ -150,20 +167,18 @@ def auto_preprocess(
     type_index = model_type_index
 
     if type_index == 0:
-        exec(
-            f".conda\\python -m ddspsvc.preprocess -c configs/{config_name} -d {device}"
-        )
+        exec(f"{executable} -m ddspsvc.preprocess -c configs/{config_name} -d {device}")
     elif type_index == 1:
         exec(
-            f".conda\\python -m ReFlowVaeSVC.preprocess -c configs/{config_name} -d {device}"
+            f"{executable} -m ReFlowVaeSVC.preprocess -c configs/{config_name} -d {device}"
         )
     elif type_index == 2:
         exec(
-            f".conda\\python -m SoVITS.preprocess_new -c configs/sovits.json -d {device}"
+            f"{executable} -m SoVITS.preprocess_new -c configs/sovits.json -d {device}"
         )
     elif type_index == 3:
         exec(
-            f".conda\\python -m SoVITS.preprocess_new -c configs/sovits_diff.yaml -d {device} --use_diff"
+            f"{executable} -m SoVITS.preprocess_new -c configs/sovits_diff.yaml -d {device} --use_diff"
         )
     logger.info("Preprocess finished")
 

@@ -1,3 +1,5 @@
+import os
+import sys
 import time
 
 import librosa
@@ -218,3 +220,12 @@ def train(
                 saver.log_value({"validation/loss": test_loss})
 
                 model.train()
+
+            # 如果存在 exp/workdir/stop.txt 则停止训练
+            if os.path.exists(os.path.join("exp/workdir", "stop.txt")):
+                saver.log_info("Stop.txt detected, stop training.")
+                optimizer_save = optimizer if args.train.save_opt else None
+
+                # save latest
+                saver.save_model(model, optimizer_save, postfix=f"{saver.global_step}")
+                sys.exit(0)

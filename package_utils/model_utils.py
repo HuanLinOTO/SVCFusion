@@ -1,10 +1,7 @@
 from datetime import datetime
-import json
 import os
 import shutil
-import subprocess
 import gradio as gr
-import yaml
 
 from package_utils.config import JSONReader, YAMLReader
 from package_utils.const_vars import (
@@ -87,21 +84,17 @@ def load_pretrained(model_name, extra):
 
 
 def tensorboard():
-    if os.name == "nt":
-        # cmd = ".conda\\Scripts\\tensorboard --logdir=exp/"
-        # subprocess.Popen(["cmd", "/c", "start", "cmd", "/k", cmd])
-        from tensorboard import program
+    # cmd = ".conda\\Scripts\\tensorboard --logdir=exp/"
+    # subprocess.Popen(["cmd", "/c", "start", "cmd", "/k", cmd])
+    from tensorboard import program
 
-        log_dir = "./exp"
+    log_dir = "./exp"
 
-        # 启动TensorBoard服务器
-        tb = program.TensorBoard()
-        tb.configure(argv=[None, "--logdir", log_dir])
-        url = tb.launch()
-        return url
-    else:
-        cmd = "tensorboard --logdir=exp/"
-        subprocess.Popen([cmd], shell=True)
+    # 启动TensorBoard服务器
+    tb = program.TensorBoard()
+    tb.configure(argv=[None, "--logdir", log_dir])
+    url = tb.launch()
+    return url
 
 
 def detect_current_model_by_path(model_path, alert=False):

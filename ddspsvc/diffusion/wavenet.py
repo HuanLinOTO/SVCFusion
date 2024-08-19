@@ -37,10 +37,12 @@ class ResidualBlock(nn.Module):
             2 * residual_channels,
             kernel_size=3,
             padding=dilation,
-            dilation=dilation
+            dilation=dilation,
         )
         self.diffusion_projection = nn.Linear(residual_channels, residual_channels)
-        self.conditioner_projection = nn.Conv1d(encoder_hidden, 2 * residual_channels, 1)
+        self.conditioner_projection = nn.Conv1d(
+            encoder_hidden, 2 * residual_channels, 1
+        )
         self.output_projection = nn.Conv1d(residual_channels, 2 * residual_channels, 1)
 
     def forward(self, x, conditioner, diffusion_step):
@@ -51,13 +53,17 @@ class ResidualBlock(nn.Module):
         y = self.dilated_conv(y) + conditioner
 
         # Using torch.split instead of torch.chunk to avoid using onnx::Slice
-        gate, filter = torch.split(y, [self.residual_channels, self.residual_channels], dim=1)
+        gate, filter = torch.split(
+            y, [self.residual_channels, self.residual_channels], dim=1
+        )
         y = torch.sigmoid(gate) * torch.tanh(filter)
 
         y = self.output_projection(y)
 
         # Using torch.split instead of torch.chunk to avoid using onnx::Slice
-        residual, skip = torch.split(y, [self.residual_channels, self.residual_channels], dim=1)
+        residual, skip = torch.split(
+            y, [self.residual_channels, self.residual_channels], dim=1
+        )
         return (x + residual) / math.sqrt(2.0), skip
 
 
@@ -67,18 +73,16 @@ class WaveNet(nn.Module):
         self.input_projection = Conv1d(in_dims, n_chans, 1)
         self.diffusion_embedding = SinusoidalPosEmb(n_chans)
         self.mlp = nn.Sequential(
-            nn.Linear(n_chans, n_chans * 4),
-            Mish(),
-            nn.Linear(n_chans * 4, n_chans)
+            nn.Linear(n_chans, n_chans * 4), Mish(), nn.Linear(n_chans * 4, n_chans)
         )
-        self.residual_layers = nn.ModuleList([
-            ResidualBlock(
-                encoder_hidden=n_hidden,
-                residual_channels=n_chans,
-                dilation=1
-            )
-            for i in range(n_layers)
-        ])
+        self.residual_layers = nn.ModuleList(
+            [
+                ResidualBlock(
+                    encoder_hidden=n_hidden, residual_channels=n_chans, dilation=1
+                )
+                for i in range(n_layers)
+            ]
+        )
         self.skip_projection = Conv1d(n_chans, n_chans, 1)
         self.output_projection = Conv1d(n_chans, in_dims, 1)
         nn.init.zeros_(self.output_projection.weight)

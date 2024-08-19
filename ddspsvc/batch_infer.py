@@ -8,21 +8,26 @@ import numpy as np
 import soundfile as sf
 import hashlib
 from ast import literal_eval
-from ddspsvc.ddsp.vocoder import load_model, F0_Extractor, Volume_Extractor, Units_Encoder
+from ddspsvc.ddsp.vocoder import (
+    load_model,
+    F0_Extractor,
+    Volume_Extractor,
+    Units_Encoder,
+)
 from ddspsvc.ddsp.core import upsample
 from ddspsvc.diffusion.vocoder import load_model_vocoder
 from tqdm import tqdm
 
 
 def traverse_dir(
-        root_dir,
-        extensions: list,
-        amount=None,
-        str_include=None,
-        str_exclude=None,
-        is_rel=False,
-        is_sort=False,
-        is_ext=True
+    root_dir,
+    extensions: list,
+    amount=None,
+    str_include=None,
+    str_exclude=None,
+    is_rel=False,
+    is_sort=False,
+    is_ext=True,
 ):
     """
     Iterate the files matching the given condition in the given directory and its subdirectories.
@@ -56,7 +61,7 @@ def traverse_dir(
             return file_list
 
         if not is_ext:
-            mix_path = mix_path.with_suffix('')
+            mix_path = mix_path.with_suffix("")
         file_list.append(mix_path)
         cnt += 1
 
@@ -102,7 +107,8 @@ def parse_args(args=None, namespace=None):
         type=str,
         default=None,
         required=False,
-        help="cpu or cuda, auto if not set")
+        help="cpu or cuda, auto if not set",
+    )
     parser.add_argument(
         "-i",
         "--input",
@@ -154,7 +160,7 @@ def parse_args(args=None, namespace=None):
         "--pitch_extractor",
         type=str,
         required=False,
-        default='rmvpe',
+        default="rmvpe",
         help="pitch extrator type: parselmouth, dio, harvest, crepe, fcpe, rmvpe (default)",
     )
     parser.add_argument(
@@ -186,7 +192,7 @@ def parse_args(args=None, namespace=None):
         "--diff_spk_id",
         type=str,
         required=False,
-        default='auto',
+        default="auto",
         help="diffusion speaker id (for multi-speaker model) | default: auto",
     )
     parser.add_argument(
@@ -194,7 +200,7 @@ def parse_args(args=None, namespace=None):
         "--speedup",
         type=str,
         required=False,
-        default='auto',
+        default="auto",
         help="speed up | default: auto",
     )
     parser.add_argument(
@@ -202,7 +208,7 @@ def parse_args(args=None, namespace=None):
         "--method",
         type=str,
         required=False,
-        default='auto',
+        default="auto",
         help="ddim, pndm, dpm-solver or unipc | default: auto",
     )
     parser.add_argument(
@@ -220,12 +226,14 @@ def parse_args(args=None, namespace=None):
         required=False,
         nargs="*",
         default=["wav", "flac"],
-        help="list of using file extensions, e.g.) -f wav flac ... | default: wav flac"
+        help="list of using file extensions, e.g.) -f wav flac ... | default: wav flac",
     )
     return parser.parse_args(args=args, namespace=namespace)
 
 
-def infer(input_path, output_path, cmd, device, model, vocoder, args, ddsp, units_encoder):
+def infer(
+    input_path, output_path, cmd, device, model, vocoder, args, ddsp, units_encoder
+):
     # load input
     audio, sample_rate = librosa.load(input_path, sr=None)
     if len(audio.shape) > 1:
@@ -234,30 +242,33 @@ def infer(input_path, output_path, cmd, device, model, vocoder, args, ddsp, unit
 
     # get MD5 hash from wav file
     md5_hash = ""
-    with open(input_path, 'rb') as f:
+    with open(input_path, "rb") as f:
         data = f.read()
         md5_hash = hashlib.md5(data).hexdigest()
         print("MD5: " + md5_hash)
 
     cache_dir_path = os.path.join(os.path.dirname(__file__), "cache")
-    cache_file_path = os.path.join(cache_dir_path,
-                                   f"{cmd.pitch_extractor}_{hop_size}_{cmd.f0_min}_{cmd.f0_max}_{md5_hash}.npy")
+    cache_file_path = os.path.join(
+        cache_dir_path,
+        f"{cmd.pitch_extractor}_{hop_size}_{cmd.f0_min}_{cmd.f0_max}_{md5_hash}.npy",
+    )
 
     is_cache_available = os.path.exists(cache_file_path)
     if is_cache_available:
         # f0 cache load
-        print('Loading pitch curves for input audio from cache directory...')
+        print("Loading pitch curves for input audio from cache directory...")
         f0 = np.load(cache_file_path, allow_pickle=False)
     else:
         # extract f0
-        print('Pitch extractor type: ' + cmd.pitch_extractor)
+        print("Pitch extractor type: " + cmd.pitch_extractor)
         pitch_extractor = F0_Extractor(
             cmd.pitch_extractor,
             sample_rate,
             hop_size,
             float(cmd.f0_min),
-            float(cmd.f0_max))
-        print('Extracting the pitch curve of the input audio...')
+            float(cmd.f0_max),
+        )
+        print("Extracting the pitch curve of the input audio...")
         f0 = pitch_extractor.extract(audio, uv_interp=True, device=device)
 
         # f0 cache save
@@ -270,15 +281,17 @@ def infer(input_path, output_path, cmd, device, model, vocoder, args, ddsp, unit
     f0 = f0 * 2 ** (float(cmd.key) / 12)
 
     # formant change
-    formant_shift_key = torch.from_numpy(np.array([[float(cmd.formant_shift_key)]])).float().to(device)
+    formant_shift_key = (
+        torch.from_numpy(np.array([[float(cmd.formant_shift_key)]])).float().to(device)
+    )
 
     # extract volume
-    print('Extracting the volume envelope of the input audio...')
+    print("Extracting the volume envelope of the input audio...")
     volume_extractor = Volume_Extractor(hop_size)
     volume = volume_extractor.extract(audio)
-    mask = (volume > 10 ** (float(cmd.threhold) / 20)).astype('float')
+    mask = (volume > 10 ** (float(cmd.threhold) / 20)).astype("float")
     mask = np.pad(mask, (4, 4), constant_values=(mask[0], mask[-1]))
-    mask = np.array([np.max(mask[n: n + 9]) for n in range(len(mask) - 8)])
+    mask = np.array([np.max(mask[n : n + 9]) for n in range(len(mask) - 8)])
     mask = torch.from_numpy(mask).float().to(device).unsqueeze(-1).unsqueeze(0)
     mask = upsample(mask, args.data.block_size).squeeze(-1)
     volume = torch.from_numpy(volume).float().to(device).unsqueeze(-1).unsqueeze(0)
@@ -289,59 +302,69 @@ def infer(input_path, output_path, cmd, device, model, vocoder, args, ddsp, unit
     # speaker id or mix-speaker dictionary
     spk_mix_dict = literal_eval(cmd.spk_mix_dict)
     spk_id = torch.LongTensor(np.array([[int(cmd.spk_id)]])).to(device)
-    if cmd.diff_spk_id == 'auto':
+    if cmd.diff_spk_id == "auto":
         diff_spk_id = spk_id
     else:
         diff_spk_id = torch.LongTensor(np.array([[int(cmd.diff_spk_id)]])).to(device)
     if spk_mix_dict is not None:
-        print('Mix-speaker mode')
+        print("Mix-speaker mode")
     else:
-        print('DDSP Speaker ID: '+ str(int(cmd.spk_id)))
-        print('Diffusion Speaker ID: '+ str(cmd.diff_spk_id))
+        print("DDSP Speaker ID: " + str(int(cmd.spk_id)))
+        print("Diffusion Speaker ID: " + str(cmd.diff_spk_id))
 
     # speed up
-    if cmd.speedup == 'auto':
+    if cmd.speedup == "auto":
         infer_speedup = args.infer.speedup
     else:
         infer_speedup = int(cmd.speedup)
-    if cmd.method == 'auto':
+    if cmd.method == "auto":
         method = args.infer.method
     else:
         method = cmd.method
     if infer_speedup > 1:
-        print('Sampling method: '+ method)
-        print('Speed up: '+ str(infer_speedup))
+        print("Sampling method: " + method)
+        print("Speed up: " + str(infer_speedup))
     else:
-        print('Sampling method: DDPM')
+        print("Sampling method: DDPM")
 
     input_mel = None
     k_step = None
-    if args.model.type == 'DiffusionNew' or args.model.type == 'DiffusionFast':
+    if args.model.type == "DiffusionNew" or args.model.type == "DiffusionFast":
         if cmd.k_step is not None:
             k_step = int(cmd.k_step)
             if k_step > args.model.k_step_max:
                 k_step = args.model.k_step_max
         else:
             k_step = args.model.k_step_max
-        print('Shallow diffusion step: ' + str(k_step))
+        print("Shallow diffusion step: " + str(k_step))
     else:
         if cmd.k_step is not None:
             k_step = int(cmd.k_step)
-            print('Shallow diffusion step: ' + str(k_step))
+            print("Shallow diffusion step: " + str(k_step))
             if ddsp is None:
-                print('DDSP model is not identified!')
-                print('Extracting the mel spectrum of the input audio for shallow diffusion...')
+                print("DDSP model is not identified!")
+                print(
+                    "Extracting the mel spectrum of the input audio for shallow diffusion..."
+                )
                 audio_t = torch.from_numpy(audio).float().unsqueeze(0).to(device)
                 input_mel = vocoder.extract(audio_t, sample_rate)
                 input_mel = torch.cat((input_mel, input_mel[:, -1:, :]), 1)
         else:
-            print('Shallow diffusion step is not identified, gaussian diffusion will be used!')
+            print(
+                "Shallow diffusion step is not identified, gaussian diffusion will be used!"
+            )
 
     with torch.no_grad():
         if ddsp is not None:
             ddsp_f0 = 2 ** (-float(cmd.formant_shift_key) / 12) * f0
-            ddsp_output, _, (_, _) = ddsp(units, ddsp_f0, volume, spk_id=spk_id, spk_mix_dict=spk_mix_dict)
-            input_mel = vocoder.extract(ddsp_output, args.data.sampling_rate, keyshift=float(cmd.formant_shift_key))
+            ddsp_output, _, (_, _) = ddsp(
+                units, ddsp_f0, volume, spk_id=spk_id, spk_mix_dict=spk_mix_dict
+            )
+            input_mel = vocoder.extract(
+                ddsp_output,
+                args.data.sampling_rate,
+                keyshift=float(cmd.formant_shift_key),
+            )
         mel = model(
             units,
             f0,
@@ -350,25 +373,26 @@ def infer(input_path, output_path, cmd, device, model, vocoder, args, ddsp, unit
             spk_mix_dict=spk_mix_dict,
             aug_shift=formant_shift_key,
             vocoder=vocoder,
-            gt_spec=input_mel[:, :units.size(1)] if input_mel is not None else None,
+            gt_spec=input_mel[:, : units.size(1)] if input_mel is not None else None,
             infer=True,
             infer_speedup=infer_speedup,
             method=method,
-            k_step=k_step)
+            k_step=k_step,
+        )
         output = vocoder.infer(mel, f0)
         output *= mask
         output = output.squeeze().cpu().numpy()
         sf.write(output_path, output, args.data.sampling_rate)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # parse commands
     cmd = parse_args()
 
     # device
     device = cmd.device
     if device is None:
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        device = "cuda" if torch.cuda.is_available() else "cpu"
 
     extensions = cmd.extensions
 
@@ -376,12 +400,14 @@ if __name__ == '__main__':
     model, vocoder, args = load_model_vocoder(cmd.diff_ckpt, device=device)
 
     ddsp = None
-    if args.model.type == 'DiffusionNew':
+    if args.model.type == "DiffusionNew":
         if cmd.ddsp_ckpt is not None:
             # load ddsp model
             ddsp, ddsp_args = load_model(cmd.ddsp_ckpt, device=device)
             if not check_args(ddsp_args, args):
-                print("Cannot use this DDSP model for shallow diffusion, the built-in DDSP model will be used!")
+                print(
+                    "Cannot use this DDSP model for shallow diffusion, the built-in DDSP model will be used!"
+                )
                 ddsp = None
         else:
             print("DDSP model is not identified, the built-in DDSP model will be used!")
@@ -391,11 +417,13 @@ if __name__ == '__main__':
             # load ddsp model
             ddsp, ddsp_args = load_model(cmd.ddsp_ckpt, device=device)
             if not check_args(ddsp_args, args):
-                print("Cannot use this DDSP model for shallow diffusion, gaussian diffusion will be used!")
+                print(
+                    "Cannot use this DDSP model for shallow diffusion, gaussian diffusion will be used!"
+                )
                 ddsp = None
 
     # load units encoder
-    if args.data.encoder == 'cnhubertsoftfish':
+    if args.data.encoder == "cnhubertsoftfish":
         cnhubertsoft_gate = args.data.cnhubertsoft_gate
     else:
         cnhubertsoft_gate = 10
@@ -405,17 +433,24 @@ if __name__ == '__main__':
         args.data.encoder_sample_rate,
         args.data.encoder_hop_size,
         cnhubertsoft_gate=cnhubertsoft_gate,
-        device=device)
+        device=device,
+    )
     wav_paths = traverse_dir(
-        cmd.input,
-        extensions=extensions,
-        is_rel=True,
-        is_sort=True,
-        is_ext=True
+        cmd.input, extensions=extensions, is_rel=True, is_sort=True, is_ext=True
     )
     for rel_path in tqdm(wav_paths):
         input_path = pathlib.Path(cmd.input) / rel_path
-        output_path = (pathlib.Path(cmd.output) / rel_path).with_suffix('.wav')
-        print('_______________________________')
-        print('Input: ' + str(input_path))
-        infer(input_path, output_path, cmd, device, model, vocoder, args, ddsp, units_encoder)
+        output_path = (pathlib.Path(cmd.output) / rel_path).with_suffix(".wav")
+        print("_______________________________")
+        print("Input: " + str(input_path))
+        infer(
+            input_path,
+            output_path,
+            cmd,
+            device,
+            model,
+            vocoder,
+            args,
+            ddsp,
+            units_encoder,
+        )

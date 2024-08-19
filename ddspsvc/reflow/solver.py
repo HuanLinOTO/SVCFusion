@@ -152,7 +152,7 @@ def train(
                     t_start=args.model.t_start,
                 )
             else:
-                with autocast(device_type=args.device, dtype=dtype):
+                with autocast(device_type=torch.device(args.device).type, dtype=dtype):
                     ddsp_loss, reflow_loss = model(
                         data["units"],
                         data["f0"],

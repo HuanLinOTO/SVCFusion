@@ -63,8 +63,14 @@ def preprocess(
         path_srcdir, extensions=extensions, is_pure=True, is_sort=True, is_ext=True
     )
 
+    path_pitchaugdict = os.path.join(path, "pitch_aug_dict.npy")
+
     # pitch augmentation dictionary
     pitch_aug_dict = {}
+
+    if os.path.exists(path_pitchaugdict):
+        print("Load pitch augmentation dictionary from:", path_pitchaugdict)
+        pitch_aug_dict = np.load(path_pitchaugdict, allow_pickle=True).item()
 
     # run
     def process(file):
@@ -82,37 +88,60 @@ def preprocess(
         audio, _ = librosa.load(path_srcfile, sr=sample_rate)
         if len(audio.shape) > 1:
             audio = librosa.to_mono(audio)
+
         audio_t = torch.from_numpy(audio).float().to(device)
         audio_t = audio_t.unsqueeze(0)
 
-        # extract volume
-        volume = volume_extractor.extract(audio)
+        if not os.path.exists(path_f0file):
+            # extract volume
+            volume = volume_extractor.extract(audio)
+        else:
+            volume = np.load(path_volumefile)
 
         # extract mel and volume augmentaion
         if mel_extractor is not None:
-            mel_t = mel_extractor.extract(audio_t, sample_rate)
-            mel = mel_t.squeeze().to("cpu").numpy()
+            if not os.path.exists(path_melfile):
+                mel_t = mel_extractor.extract(audio_t, sample_rate)
+                mel = mel_t.squeeze().to("cpu").numpy()
+            else:
+                mel = np.load(path_melfile)
 
             max_amp = float(torch.max(torch.abs(audio_t))) + 1e-5
             max_shift = min(1, np.log10(1 / max_amp))
             log10_vol_shift = random.uniform(-1, max_shift)
             if use_pitch_aug:
-                keyshift = random.uniform(-5, 5)
+                if file in pitch_aug_dict:
+                    keyshift = pitch_aug_dict[file]
+                else:
+                    keyshift = random.uniform(-5, 5)
             else:
                 keyshift = 0
 
-            aug_mel_t = mel_extractor.extract(
-                audio_t * (10**log10_vol_shift), sample_rate, keyshift=keyshift
-            )
-            aug_mel = aug_mel_t.squeeze().to("cpu").numpy()
-            aug_vol = volume_extractor.extract(audio * (10**log10_vol_shift))
+            if not os.path.exists(path_augmelfile):
+                aug_mel_t = mel_extractor.extract(
+                    audio_t * (10**log10_vol_shift), sample_rate, keyshift=keyshift
+                )
+                aug_mel = aug_mel_t.squeeze().to("cpu").numpy()
+            else:
+                aug_mel = np.load(path_augmelfile)
 
-        # units encode
-        units_t = units_encoder.encode(audio_t, sample_rate, hop_size)
-        units = units_t.squeeze().to("cpu").numpy()
+            if not os.path.exists(path_augvolfile):
+                aug_vol = volume_extractor.extract(audio * (10**log10_vol_shift))
+            else:
+                aug_vol = np.load(path_augvolfile)
 
-        # extract f0
-        f0 = f0_extractor.extract(audio, uv_interp=False)
+        if not os.path.exists(path_unitsfile):
+            # units encode
+            units_t = units_encoder.encode(audio_t, sample_rate, hop_size)
+            units = units_t.squeeze().to("cpu").numpy()
+        else:
+            units = np.load(path_unitsfile)
+
+        if not os.path.exists(path_f0file):
+            # extract f0
+            f0 = f0_extractor.extract(audio, uv_interp=False)
+        else:
+            f0 = np.load(path_f0file)
 
         uv = f0 == 0
         if len(f0[~uv]) > 0:
@@ -147,7 +176,6 @@ def preprocess(
         process(file)
 
     if mel_extractor is not None:
-        path_pitchaugdict = os.path.join(path, "pitch_aug_dict.npy")
         np.save(path_pitchaugdict, pitch_aug_dict)
     # multi-process (have bugs)
     """

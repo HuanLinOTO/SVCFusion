@@ -2,8 +2,10 @@ import os
 import json
 import numpy as np
 import torch
+
 try:
     import torch_musa
+
     use_torch_musa = True
 except ImportError:
     use_torch_musa = False
@@ -19,6 +21,7 @@ try:
 except ImportError:
     from torch.nn.utils import weight_norm
     from torch.nn.utils import remove_weight_norm
+
     _OLD_WEIGHT_NORM = True
 
 try:
@@ -32,27 +35,30 @@ class AttrDict(dict):
         super(AttrDict, self).__init__(*args, **kwargs)
         self.__dict__ = self
 
-def load_model(model_path, device='cuda'):
+
+def load_model(model_path, device="cuda"):
     h = load_config(model_path)
 
     generator = Generator(h).to(device)
 
     cp_dict = torch.load(model_path, map_location=device)
-    generator.load_state_dict(cp_dict['generator'])
+    generator.load_state_dict(cp_dict["generator"])
     generator.eval()
     generator.remove_weight_norm()
     del cp_dict
     return generator, h
 
+
 def load_config(model_path):
-    config_file = os.path.join(os.path.split(model_path)[0], 'config.json')
+    config_file = os.path.join(os.path.split(model_path)[0], "config.json")
     with open(config_file) as f:
         data = f.read()
 
     json_config = json.loads(data)
     h = AttrDict(json_config)
     return h
-    
+
+
 def init_weights(m, mean=0.0, std=0.01):
     classname = m.__class__.__name__
     if classname.find("Conv") != -1:
@@ -62,28 +68,81 @@ def init_weights(m, mean=0.0, std=0.01):
 def get_padding(kernel_size, dilation=1):
     return int((kernel_size * dilation - dilation) / 2)
 
+
 class ResBlock1(torch.nn.Module):
     def __init__(self, h, channels, kernel_size=3, dilation=(1, 3, 5)):
         super(ResBlock1, self).__init__()
         self.h = h
-        self.convs1 = nn.ModuleList([
-            weight_norm(Conv1d(channels, channels, kernel_size, 1, dilation=dilation[0],
-                               padding=get_padding(kernel_size, dilation[0]))),
-            weight_norm(Conv1d(channels, channels, kernel_size, 1, dilation=dilation[1],
-                               padding=get_padding(kernel_size, dilation[1]))),
-            weight_norm(Conv1d(channels, channels, kernel_size, 1, dilation=dilation[2],
-                               padding=get_padding(kernel_size, dilation[2])))
-        ])
+        self.convs1 = nn.ModuleList(
+            [
+                weight_norm(
+                    Conv1d(
+                        channels,
+                        channels,
+                        kernel_size,
+                        1,
+                        dilation=dilation[0],
+                        padding=get_padding(kernel_size, dilation[0]),
+                    )
+                ),
+                weight_norm(
+                    Conv1d(
+                        channels,
+                        channels,
+                        kernel_size,
+                        1,
+                        dilation=dilation[1],
+                        padding=get_padding(kernel_size, dilation[1]),
+                    )
+                ),
+                weight_norm(
+                    Conv1d(
+                        channels,
+                        channels,
+                        kernel_size,
+                        1,
+                        dilation=dilation[2],
+                        padding=get_padding(kernel_size, dilation[2]),
+                    )
+                ),
+            ]
+        )
         self.convs1.apply(init_weights)
 
-        self.convs2 = nn.ModuleList([
-            weight_norm(Conv1d(channels, channels, kernel_size, 1, dilation=1,
-                               padding=get_padding(kernel_size, 1))),
-            weight_norm(Conv1d(channels, channels, kernel_size, 1, dilation=1,
-                               padding=get_padding(kernel_size, 1))),
-            weight_norm(Conv1d(channels, channels, kernel_size, 1, dilation=1,
-                               padding=get_padding(kernel_size, 1)))
-        ])
+        self.convs2 = nn.ModuleList(
+            [
+                weight_norm(
+                    Conv1d(
+                        channels,
+                        channels,
+                        kernel_size,
+                        1,
+                        dilation=1,
+                        padding=get_padding(kernel_size, 1),
+                    )
+                ),
+                weight_norm(
+                    Conv1d(
+                        channels,
+                        channels,
+                        kernel_size,
+                        1,
+                        dilation=1,
+                        padding=get_padding(kernel_size, 1),
+                    )
+                ),
+                weight_norm(
+                    Conv1d(
+                        channels,
+                        channels,
+                        kernel_size,
+                        1,
+                        dilation=1,
+                        padding=get_padding(kernel_size, 1),
+                    )
+                ),
+            ]
+        )
         self.convs2.apply(init_weights)
 
     def forward(self, x):
@@ -109,17 +168,34 @@ class ResBlock1(torch.nn.Module):
                 torch.nn.utils.parametrize.remove_parametrizations(l)
 
 
-
 class ResBlock2(torch.nn.Module):
     def __init__(self, h, channels, kernel_size=3, dilation=(1, 3)):
         super(ResBlock2, self).__init__()
         self.h = h
-        self.convs = nn.ModuleList([
-            weight_norm(Conv1d(channels, channels, kernel_size, 1, dilation=dilation[0],
-                               padding=get_padding(kernel_size, dilation[0]))),
-            weight_norm(Conv1d(channels, channels, kernel_size, 1, dilation=dilation[1],
-                               padding=get_padding(kernel_size, dilation[1])))
-        ])
+        self.convs = nn.ModuleList(
+            [
+                weight_norm(
+                    Conv1d(
+                        channels,
+                        channels,
+                        kernel_size,
+                        1,
+                        dilation=dilation[0],
+                        padding=get_padding(kernel_size, dilation[0]),
+                    )
+                ),
+                weight_norm(
+                    Conv1d(
+                        channels,
+                        channels,
+                        kernel_size,
+                        1,
+                        dilation=dilation[1],
+                        padding=get_padding(kernel_size, dilation[1]),
+                    )
+                ),
+            ]
+        )
         self.convs.apply(init_weights)
 
     def forward(self, x):
@@ -130,20 +206,18 @@ class ResBlock2(torch.nn.Module):
         return x
 
     def remove_weight_norm(self):
-    
         global _OLD_WEIGHT_NORM
         if _OLD_WEIGHT_NORM:
             for l in self.convs:
                 remove_weight_norm(l)
-    
+
         else:
-             for l in self.convs:
+            for l in self.convs:
                 torch.nn.utils.parametrize.remove_parametrizations(l)
 
 
-
 class SineGen(torch.nn.Module):
-    """ Definition of sine generator
+    """Definition of sine generator
     SineGen(samp_rate, harmonic_num = 0,
             sine_amp = 0.1, noise_std = 0.003,
             voiced_threshold = 0,
@@ -158,9 +232,14 @@ class SineGen(torch.nn.Module):
         segment is always sin(np.pi) or cos(0)
     """
 
-    def __init__(self, samp_rate, harmonic_num=0,
-                 sine_amp=0.1, noise_std=0.003,
-                 voiced_threshold=0):
+    def __init__(
+        self,
+        samp_rate,
+        harmonic_num=0,
+        sine_amp=0.1,
+        noise_std=0.003,
+        voiced_threshold=0,
+    ):
         super(SineGen, self).__init__()
         self.sine_amp = sine_amp
         self.noise_std = noise_std
@@ -175,74 +254,38 @@ class SineGen(torch.nn.Module):
         uv = uv * (f0 > self.voiced_threshold)
         return uv
 
-    def _f02sine(self, f0_values, upp):
-        """ f0_values: (batchsize, length, dim)
-            where dim indicates fundamental tone and overtones
+    def _f02sine(self, f0, upp):
+        """f0: (batchsize, length, dim)
+        where dim indicates fundamental tone and overtones
         """
-        if use_torch_musa:
-            rad_values = (f0_values / self.sampling_rate) % 1
-        else:
-            rad_values = (f0_values / self.sampling_rate).fmod(1.)  # %1意味着n_har的乘积无法后处理优化
-        rand_ini = torch.rand(1, self.dim, device=f0_values.device)
-        rand_ini[:, 0] = 0
-        rad_values[:, 0, :] += rand_ini
-        is_half = rad_values.dtype is not torch.float32
-        if use_torch_musa:
-            rad_values_cpu = rad_values.cpu()
-            tmp_over_one_cpu = torch.cumsum(rad_values_cpu.double(), 1)
-            tmp_over_one = tmp_over_one_cpu.to(rad_values.device)
-        else:
-            tmp_over_one = torch.cumsum(rad_values.double(), 1)  # % 1  #####%1意味着后面的cumsum无法再优化
-        if is_half:
-            tmp_over_one = tmp_over_one.half()
-        else:
-            tmp_over_one = tmp_over_one.float()
-        tmp_over_one *= upp
-        tmp_over_one = F.interpolate(
-            tmp_over_one.transpose(2, 1), scale_factor=upp,
-            mode='linear', align_corners=True
-        ).transpose(2, 1)
-        rad_values = F.interpolate(rad_values.transpose(2, 1), scale_factor=upp, mode='nearest').transpose(2, 1)
-        if use_torch_musa:
-            tmp_over_one = tmp_over_one % 1
-        else:
-            tmp_over_one = tmp_over_one.fmod(1.)
-        diff = F.conv2d(
-            tmp_over_one.unsqueeze(1), torch.FloatTensor([[[[-1.], [1.]]]]).to(tmp_over_one.device),
-            stride=(1, 1), padding=0, dilation=(1, 1)
-        ).squeeze(1)  # Equivalent to torch.diff, but able to export ONNX
-        cumsum_shift = (diff < 0).double()
-        cumsum_shift = torch.cat((
-            torch.zeros((f0_values.size()[0], 1, self.dim), dtype=torch.double).to(f0_values.device),
-            cumsum_shift
-        ), dim=1)
-        if use_torch_musa:
-            rad_values_cpu = rad_values.cpu()
-            cumsum_shift_cpu = cumsum_shift.cpu()
-            cumsum_result_cpu = torch.cumsum(rad_values_cpu.double() + cumsum_shift_cpu, dim=1)
-            sines_cpu = torch.sin(cumsum_result_cpu * 2 * np.pi)
-            sines = sines_cpu.to(rad_values.device)
-        else:
-            sines = torch.sin(torch.cumsum(rad_values.double() + cumsum_shift, dim=1) * 2 * np.pi)
-        if is_half:
-            sines = sines.half()
-        else:
-            sines = sines.float()
+        rad = f0 / self.sampling_rate * torch.arange(1, upp + 1, device=f0.device)
+        rad2 = torch.fmod(rad[..., -1:].float() + 0.5, 1.0) - 0.5
+        rad_acc = rad2.cumsum(dim=1).fmod(1.0).to(f0)
+        rad += F.pad(rad_acc, (0, 0, 1, -1))
+        rad = rad.reshape(f0.shape[0], -1, 1)
+        rad = torch.multiply(
+            rad, torch.arange(1, self.dim + 1, device=f0.device).reshape(1, 1, -1)
+        )
+        rand_ini = torch.rand(1, 1, self.dim, device=f0.device)
+        rand_ini[..., 0] = 0
+        rad += rand_ini
+        sines = torch.sin(2 * np.pi * rad)
         return sines
 
     @torch.no_grad()
     def forward(self, f0, upp):
-        """ sine_tensor, uv = forward(f0)
+        """sine_tensor, uv = forward(f0)
         input F0: tensor(batchsize=1, length, dim=1)
                   f0 for unvoiced steps should be 0
         output sine_tensor: tensor(batchsize=1, length, dim)
         output uv: tensor(batchsize=1, length, 1)
         """
         f0 = f0.unsqueeze(-1)
-        fn = torch.multiply(f0, torch.arange(1, self.dim + 1, device=f0.device).reshape((1, 1, -1)))
-        sine_waves = self._f02sine(fn, upp) * self.sine_amp
+        sine_waves = self._f02sine(f0, upp) * self.sine_amp
         uv = (f0 > self.voiced_threshold).float()
-        uv = F.interpolate(uv.transpose(2, 1), scale_factor=upp, mode='nearest').transpose(2, 1)
+        uv = F.interpolate(
+            uv.transpose(2, 1), scale_factor=upp, mode="nearest"
+        ).transpose(2, 1)
         noise_amp = uv * self.noise_std + (1 - uv) * self.sine_amp / 3
         noise = noise_amp * torch.randn_like(sine_waves)
         sine_waves = sine_waves * uv + noise
@@ -250,7 +293,7 @@ class SineGen(torch.nn.Module):
 
 
 class SourceModuleHnNSF(torch.nn.Module):
-    """ SourceModule for hn-nsf
+    """SourceModule for hn-nsf
     SourceModule(sampling_rate, harmonic_num=0, sine_amp=0.1,
                  add_noise_std=0.003, voiced_threshod=0)
     sampling_rate: sampling_rate in Hz
@@ -267,16 +310,23 @@ class SourceModuleHnNSF(torch.nn.Module):
     uv (batchsize, length, 1)
     """
 
-    def __init__(self, sampling_rate, harmonic_num=0, sine_amp=0.1,
-                 add_noise_std=0.003, voiced_threshold=0):
+    def __init__(
+        self,
+        sampling_rate,
+        harmonic_num=0,
+        sine_amp=0.1,
+        add_noise_std=0.003,
+        voiced_threshold=0,
+    ):
         super(SourceModuleHnNSF, self).__init__()
 
         self.sine_amp = sine_amp
         self.noise_std = add_noise_std
 
         # to produce sine waveforms
-        self.l_sin_gen = SineGen(sampling_rate, harmonic_num,
-                                 sine_amp, add_noise_std, voiced_threshold)
+        self.l_sin_gen = SineGen(
+            sampling_rate, harmonic_num, sine_amp, add_noise_std, voiced_threshold
+        )
 
         # to merge source harmonics into a single excitation
         self.l_linear = torch.nn.Linear(harmonic_num + 1, 1)
@@ -294,31 +344,47 @@ class Generator(torch.nn.Module):
         self.h = h
         self.num_kernels = len(h.resblock_kernel_sizes)
         self.num_upsamples = len(h.upsample_rates)
-        self.m_source = SourceModuleHnNSF(
-            sampling_rate=h.sampling_rate,
-            harmonic_num=8
-        )
+        self.m_source = SourceModuleHnNSF(sampling_rate=h.sampling_rate, harmonic_num=8)
         self.noise_convs = nn.ModuleList()
-        self.conv_pre = weight_norm(Conv1d(h.num_mels, h.upsample_initial_channel, 7, 1, padding=3))
-        resblock = ResBlock1 if h.resblock == '1' else ResBlock2
+        self.conv_pre = weight_norm(
+            Conv1d(h.num_mels, h.upsample_initial_channel, 7, 1, padding=3)
+        )
+        resblock = ResBlock1 if h.resblock == "1" else ResBlock2
 
         self.ups = nn.ModuleList()
         for i, (u, k) in enumerate(zip(h.upsample_rates, h.upsample_kernel_sizes)):
             c_cur = h.upsample_initial_channel // (2 ** (i + 1))
-            self.ups.append(weight_norm(
-                ConvTranspose1d(h.upsample_initial_channel // (2 ** i), h.upsample_initial_channel // (2 ** (i + 1)),
-                                k, u, padding=(k - u) // 2)))
+            self.ups.append(
+                weight_norm(
+                    ConvTranspose1d(
+                        h.upsample_initial_channel // (2**i),
+                        h.upsample_initial_channel // (2 ** (i + 1)),
+                        k,
+                        u,
+                        padding=(k - u) // 2,
+                    )
+                )
+            )
             if i + 1 < len(h.upsample_rates):  #
-                stride_f0 = int(np.prod(h.upsample_rates[i + 1:]))
-                self.noise_convs.append(Conv1d(
-                    1, c_cur, kernel_size=stride_f0 * 2, stride=stride_f0, padding=stride_f0 // 2))
+                stride_f0 = int(np.prod(h.upsample_rates[i + 1 :]))
+                self.noise_convs.append(
+                    Conv1d(
+                        1,
+                        c_cur,
+                        kernel_size=stride_f0 * 2,
+                        stride=stride_f0,
+                        padding=stride_f0 // 2,
+                    )
+                )
             else:
                 self.noise_convs.append(Conv1d(1, c_cur, kernel_size=1))
         self.resblocks = nn.ModuleList()
         ch = h.upsample_initial_channel
         for i in range(len(self.ups)):
             ch //= 2
-            for j, (k, d) in enumerate(zip(h.resblock_kernel_sizes, h.resblock_dilation_sizes)):
+            for j, (k, d) in enumerate(
+                zip(h.resblock_kernel_sizes, h.resblock_dilation_sizes)
+            ):
                 self.resblocks.append(resblock(h, ch, k, d))
 
         self.conv_post = weight_norm(Conv1d(ch, 1, 7, 1, padding=3))
@@ -349,7 +415,7 @@ class Generator(torch.nn.Module):
 
     def remove_weight_norm(self):
         # rank_zero_info('Removing weight norm...')
-        print('Removing weight norm...')
+        print("Removing weight norm...")
         global _OLD_WEIGHT_NORM
         if _OLD_WEIGHT_NORM:
             for l in self.ups:
@@ -359,7 +425,7 @@ class Generator(torch.nn.Module):
 
             remove_weight_norm(self.conv_pre)
             remove_weight_norm(self.conv_post)
-        #else:
+        # else:
         #    for l in self.ups:
         #        torch.nn.utils.parametrize.remove_parametrizations(l)
         #    for l in self.resblocks:
@@ -367,7 +433,6 @@ class Generator(torch.nn.Module):
         #
         #    torch.nn.utils.parametrize.remove_parametrizations(self.conv_pre)
         #    torch.nn.utils.parametrize.remove_parametrizations(self.conv_post)
-
 
 
 class DiscriminatorP(torch.nn.Module):
@@ -457,15 +522,16 @@ class MultiPeriodDiscriminator(torch.nn.Module):
 
         fmap_rs = []
 
-
         for i, d in enumerate(self.discriminators):
             y_d_r, fmap_r = d(y)
 
             y_d_rs.append(y_d_r)
             fmap_rs.append(fmap_r)
 
-
-        return y_d_rs, fmap_rs,
+        return (
+            y_d_rs,
+            fmap_rs,
+        )
 
 
 class DiscriminatorS(torch.nn.Module):
@@ -529,8 +595,10 @@ class MultiScaleDiscriminator(torch.nn.Module):
             y_d_rs.append(y_d_r)
             fmap_rs.append(fmap_r)
 
-
-        return y_d_rs, fmap_rs,
+        return (
+            y_d_rs,
+            fmap_rs,
+        )
 
 
 def feature_loss(fmap_r, fmap_g):

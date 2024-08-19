@@ -131,8 +131,10 @@ class ReflowVAESVCModel:
 
     def train(self, params, progress: gr.Progress):
         # print(params)
+        del params["_model_name"]
+
         working_config_path = "configs/reflow.yaml"
-        config = applyChanges(working_config_path, params)
+        config = applyChanges(working_config_path, params, True)
 
         load_pretrained("reflow", config["data"]["encoder"])
 
@@ -419,6 +421,10 @@ class ReflowVAESVCModel:
         self.train_form.update(
             {
                 "cascade": {
+                    "device": {
+                        "type": "device_chooser",
+                        "individual": True,
+                    },
                     "train.batch_size": {
                         "type": "slider",
                         "default": lambda: self.get_config()["train"]["batch_size"],

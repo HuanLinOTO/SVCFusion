@@ -1,12 +1,13 @@
 import os
 import shutil
-import time
 from traceback import print_exception
 
 import torch
 import yaml
 from fap.utils.file import make_dirs
 from package_utils.config import JSONReader, YAMLReader
+from package_utils.const_vars import WORK_DIR_PATH
+from package_utils.dataset_utils import get_spk_from_dir
 from package_utils.i18n import I
 from package_utils.ui.ModelChooser import ModelChooser
 from package_utils.models.inited import (
@@ -18,6 +19,7 @@ import gradio as gr
 
 class ModelManager:
     def pack(self):
+        search_path = self.model_chooser.selected_search_path
         model_type_index = self.model_chooser.seleted_model_type_index
         result = self.model_chooser.selected_parameters
         if hasattr(model_list[model_type_index], "pack_model"):
@@ -26,8 +28,8 @@ class ModelManager:
             packed_model["model_type_index"] = model_type_index
             make_dirs("tmp/packed_models")
             # yymmdd_HHMMSS
-            name = time.strftime("%y-%m-%d_%H-%M-%S", time.localtime())
-            output_path = f"tmp/packed_models/{name}.{model_list[model_type_index].model_name}.sf_pkg"
+            # name = time.strftime("%y%m%d_%H-%M-%S", time.localtime())
+            output_path = f"tmp/packed_models/{self.get_dst_name(search_path)}.sf_pkg"
             torch.save(packed_model, output_path)
             return gr.update(
                 value=output_path,
@@ -70,11 +72,47 @@ class ModelManager:
             gr.Info(I.model_manager.change_fail_tip)
             print_exception(e)
 
+    def move_folder(self, dst_name):
+        gr.Info(I.model_manager.moving_tip)
+        search_path = self.model_chooser.selected_search_path
+
+        shutil.move(search_path, "models/" + dst_name)
+
+        if search_path == WORK_DIR_PATH:
+            os.makedirs(search_path)
+
+        gr.Info(I.model_manager.moved_tip.replace("{1}", "models/" + dst_name))
+
+    def get_dst_name(self):
+        search_path = self.model_chooser.selected_search_path
+
+        spks = get_spk_from_dir(search_path)
+        model_type = model_name_list[self.model_chooser.seleted_model_type_index]
+
+        result: str = model_type
+
+        if len(spks) == 1:
+            result += f"_{spks[0]}"
+            return gr.update(value=result.replace(" ", "_"))
+
+        for spk in spks:
+            tmp = result + f"_{spk}"
+
+            if len(tmp + I.model_manager.other_text) > 10:
+                result = tmp + I.model_manager.other_text
+                break
+            else:
+                result = tmp
+
+        return gr.update(value=result.replace(" ", "_"))
+
     def __init__(self) -> None:
+        gr.Markdown("## " + I.model_manager.choose_model_title)
         self.model_chooser = ModelChooser(
             show_options=False,
             show_submit_button=False,
         )
+        gr.Markdown("## " + I.model_manager.action_title)
         self.pack_btn = gr.Button(
             I.model_manager.pack_btn_value,
             variant="primary",
@@ -86,7 +124,7 @@ class ModelManager:
         )
         self.clear_log_btn = gr.Button(
             I.model_manager.clean_log_btn_value,
-            variant="primary",
+            variant="stop",
         )
 
         gr.Markdown(I.model_manager.change_model_type_info)
@@ -98,6 +136,18 @@ class ModelManager:
         )
         self.change_model_type_btn = gr.Button(
             I.model_manager.change_model_type_btn_value,
+            variant="primary",
+        )
+        gr.HTML('<div style="height: 20px;"></div>')
+        gr.Markdown(I.model_manager.move_folder_tip)
+        self.move_folder_dst_name = gr.Textbox(
+            label=I.model_manager.move_folder_name,
+        )
+        self.move_folder_dst_name_auto_get_btn = gr.Button(
+            I.model_manager.move_folder_name_auto_get,
+        )
+        self.move_folder_btn = gr.Button(
+            I.model_manager.move_folder_btn_value,
             variant="primary",
         )
 
@@ -117,4 +167,13 @@ class ModelManager:
             inputs=[
                 self.model_type_dropdown,
             ],
+        )
+
+        self.move_folder_dst_name_auto_get_btn.click(
+            self.get_dst_name, outputs=[self.move_folder_dst_name]
+        )
+
+        self.move_folder_btn.click(
+            self.move_folder,
+            inputs=[self.move_folder_dst_name],
         )

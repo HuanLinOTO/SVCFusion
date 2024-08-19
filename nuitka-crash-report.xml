@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='utf8'?>
+<nuitka-compilation-report nuitka_version="2.3" nuitka_commercial_version="not installed" completion="error exit message (1)" exit_message="Failed unexpectedly in Scons C backend compilation.">
+  <module name="dist" kind="CompiledPythonModule" usage="root_module" reason="Root module" source_path="${cwd}\dist.py">
+    <optimization-time pass="1" time="0.87" />
+    <optimization-time pass="2" time="0.10" />
+    <module_usages>
+      <module_usage name="gc" finding="absolute" line="3" />
+      <module_usage name="logging" finding="excluded" line="4" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
+      <module_usage name="os" finding="excluded" line="5" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
+      <module_usage name="sys" finding="absolute" line="6" />
+      <module_usage name="gradio" finding="absolute" line="7" />
+      <module_usage name="torch" finding="absolute" line="8" />
+      <module_usage name="package_utils.config" finding="absolute" line="10" />
+      <module_usage name="package_utils.const_vars" finding="absolute" line="11" />
+      <module_usage name="package_utils.dataset_utils" finding="absolute" line="12" />
+      <module_usage name="package_utils.i18n" finding="absolute" line="13" />
+      <module_usage name="package_utils.model_utils" finding="absolute" line="14" />
+      <module_usage name="package_utils.ui.ModelChooser" finding="absolute" line="17" />
+      <module_usage name="package_utils.ui.Form" finding="absolute" line="18" />
+      <module_usage name="package_utils.models.inited" finding="absolute" line="19" />
+      <module_usage name="package_utils.ui.Settings" finding="absolute" line="26" />
+      <module_usage name="package_utils.ui.Train" finding="absolute" line="27" />
+      <module_usage name="package_utils.ui.tools.Compatible" finding="absolute" line="28" />
+      <module_usage name="package_utils.ui.tools.FishAudioPreprocess" finding="absolute" line="29" />
+      <module_usage name="package_utils.ui.tools.InstallModel" finding="absolute" line="30" />
+      <module_usage name="package_utils.ui.tools.ModelManager" finding="absolute" line="31" />
+      <module_usage name="package_utils.ui.tools.VocalSeparation" finding="absolute" line="32" />
+      <module_usage name="package_utils.exec" finding="absolute" line="34" />
+      <module_usage name="rich.traceback" finding="absolute" line="35" />
+      <module_usage name="json" finding="excluded" line="303" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
+      <module_usage name="os" finding="excluded" line="304" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
+      <module_usage name="math" finding="absolute" line="305" />
+      <module_usage name="base64" finding="excluded" line="306" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
+      <module_usage name="platform" finding="excluded" line="307" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
+      <module_usage name="ctypes" finding="excluded" line="308" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
+      <module_usage name="binascii" finding="absolute" line="309" />
+      <module_usage name="random" finding="excluded" line="310" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
+      <module_usage name="shutil" finding="excluded" line="311" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
+      <module_usage name="string" finding="excluded" line="312" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
+      <module_usage name="subprocess" finding="excluded" line="313" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
+      <module_usage name="ctypes" finding="excluded" line="314" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
+      <module_usage name="ctypes.wintypes" finding="absolute" line="314" />
+      <module_usage name="time" finding="absolute" line="315" />
+      <module_usage name="win32com.client" finding="absolute" line="316" />
+      <module_usage name="win32com.client.GetObject" finding="not-found" line="316" />
+      <module_usage name="tkinter" finding="excluded" line="318" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
+      <module_usage name="tkinter" finding="excluded" line="319" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
+      <module_usage name="tkinter.font" finding="relative" line="319" />
+      <module_usage name="tkinter" finding="excluded" line="320" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
+      <module_usage name="tkinter.messagebox" finding="relative" line="320" />
+    </module_usages>
+  </module>
+  <performance>
+    <memory_usage name="after_launch" value="38424576" />
+    <memory_usage name="before_c_code_generation" value="43552768" />
+    <memory_usage name="before_running_scons" value="47140864" />
+  </performance>
+  <data_composer blob_size="9685" total="438">
+    <module_data filename="__bytecode.const" input_size="0" blob_name=".bytecode" blob_size="3" />
+    <module_data filename="__constants.const" input_size="1890" blob_name="" blob_size="770" />
+    <module_data filename="module.dist.const" input_size="11841" blob_name="dist" blob_size="8876" />
+  </data_composer>
+  <command_line>
+    <option value=".\dist.py" />
+    <option value="--module" />
+  </command_line>
+  <plugins>
+    <plugin name="anti-bloat" user_enabled="no" />
+    <plugin name="eventlet" user_enabled="no" />
+    <plugin name="gi" user_enabled="no" />
+    <plugin name="implicit-imports" user_enabled="no" />
+    <plugin name="options-nanny" user_enabled="no" />
+    <plugin name="pkg-resources" user_enabled="no" />
+    <plugin name="transformers" user_enabled="no" />
+  </plugins>
+  <distributions />
+  <python python_exe="..\SVCFusion\.conda\python.exe" python_flavor="Anaconda Python" python_version="3.10.13" os_name="Windows" os_release="11" arch_name="x86_64">
+    <search_path>
+      <path value="${cwd}" />
+      <path value="..\SVCFusion\.conda\DLLs" />
+      <path value="..\SVCFusion\.conda\lib" />
+      <path value="..\SVCFusion\.conda" />
+      <path value="..\SVCFusion\.conda\lib\site-packages" />
+      <path value="..\SVCFusion\.conda\lib\site-packages\win32" />
+      <path value="..\SVCFusion\.conda\lib\site-packages\win32\lib" />
+      <path value="..\SVCFusion\.conda\lib\site-packages\Pythonwin" />
+    </search_path>
+  </python>
+  <output run_filename="${cwd}\dist.cp310-win_amd64.pyd" />
+</nuitka-compilation-report>

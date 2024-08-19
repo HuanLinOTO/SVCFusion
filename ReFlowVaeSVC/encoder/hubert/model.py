@@ -5,6 +5,7 @@ import random
 from sklearn.cluster import KMeans
 
 import torch
+
 try:
     import torch_musa
 except ImportError:

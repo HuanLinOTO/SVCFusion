@@ -9,10 +9,8 @@ import torch
 import torchaudio
 from package_utils.const_vars import EMPTY_WAV_PATH
 from package_utils.i18n import I
-from package_utils.mixing import mixAudio
 from package_utils.uvr import getVocalAndInstrument
 import gradio as gr
-import random
 
 common_infer_form = {
     "audio": {
@@ -34,18 +32,25 @@ common_infer_form = {
         "default_show": ["audio"],
         "other_show": ["audio_batch"],
     },
-    "use_vocal_remove": {
+    "use_vocal_separation": {
         "type": "checkbox",
-        "info": I.common_infer.use_vocal_remove_info,
+        "info": I.common_infer.use_vocal_separation_info,
         "default": False,
-        "label": I.common_infer.use_vocal_remove_label,
+        "label": I.common_infer.use_vocal_separation_label,
         "individual": True,
     },
-    "use_remove_harmony": {
+    "use_de_reverb": {
         "type": "checkbox",
-        "info": I.common_infer.use_harmony_remove_info,
+        "info": I.common_infer.use_de_reverb_info,
         "default": False,
-        "label": I.common_infer.use_harmony_remove_label,
+        "label": I.common_infer.use_de_reverb_label,
+        "individual": True,
+    },
+    "use_harmonic_remove": {
+        "type": "checkbox",
+        "info": I.common_infer.use_harmonic_remove_info,
+        "default": False,
+        "label": I.common_infer.use_harmonic_remove_label,
         "individual": True,
     },
     "f0": {
@@ -174,6 +179,9 @@ def infer_fn_proxy(fn):
         result = []
         inst_list = []
         for audio in params["audio"]:
+            processed_vocal = False
+            processed_inst = False
+
             try:
                 wf, sr = torchaudio.load(audio)
                 # 重采样到 44100,单声道
@@ -183,13 +191,21 @@ def infer_fn_proxy(fn):
                     wf = torchaudio.transforms.Resample(sr, 44100)(wf)
                 torchaudio.save(audio, wf, 44100)
 
-                if params["use_vocal_remove"]:
-                    vocal, inst = getVocalAndInstrument(audio, progress=progress)
-                    audio = str(vocal)
-                    if params["use_remove_harmony"]:
-                        pass
-                    inst = str(inst)
+                if (
+                    params["use_vocal_separation"]
+                    or params["use_de_reverb"]
+                    or params["use_harmonic_remove"]
+                ):
+                    vocal, inst = getVocalAndInstrument(
+                        audio,
+                        use_vocal_fetch=params["use_vocal_separation"],
+                        use_de_reverb=params["use_de_reverb"],
+                        use_harmonic_remove=params["use_harmonic_remove"],
+                        progress=progress,
+                    )
+                    audio = vocal
                     inst_list.append(inst)
+                    processed_inst = True
 
                 new_params = {}
                 new_params.update(params)
@@ -201,69 +217,80 @@ def infer_fn_proxy(fn):
                 res = fn(new_params, progress=progress)
 
                 result.append(res)
-
+                processed_vocal = True
                 if not os.path.exists(EMPTY_WAV_PATH):
                     torchaudio.save(EMPTY_WAV_PATH, torch.zeros(1, 1), 44100)
             except Exception as e:
                 gr.Info(I.error_when_infer.replace("{1}", audio).replace("{2}", str(e)))
                 print_exception(e)
+                if not processed_inst:
+                    inst_list.append(EMPTY_WAV_PATH)
+                if not processed_vocal:
+                    result.append(EMPTY_WAV_PATH)
 
-        # NOTE 记得删
-        if params["use_vocal_remove"]:
-            for index in range(len(params["audio"])):
+        moved_vocal = []
+        moved_inst = []
+
+        for index in range(len(params["audio"])):
+            vocal = result[index]
+            raw = params["audio"][index]
+            filename = os.path.basename(raw)
+            filename = filename[: filename.rfind(".")]
+            # mixed_file = mixAudio(
+            #     vocal=vocal,
+            #     inst=inst,
+            #     room_length=1,
+            #     room_width=1,
+            #     room_height=1,
+            #     vocal_db=13,
+            # )
+
+            vocal_dst = f"tmp/total_opt/inst/{filename}.wav"
+            shutil.copy(vocal, vocal_dst)
+            moved_vocal.append(vocal_dst)
+
+            if params["use_vocal_separation"]:
                 inst = inst_list[index]
-                vocal = result[index]
-                raw = params["audio"][index]
-                filename = os.path.basename(raw)
-                filename = filename[: filename.rfind(".")]
-                mixed_file = mixAudio(
-                    vocal=vocal,
-                    inst=inst,
-                    room_length=1,
-                    room_width=1,
-                    room_height=1,
-                    vocal_db=13,
-                )
+                inst_dst = f"tmp/total_opt/vocal/{filename}.wav"
+                shutil.copy(inst, inst_dst)
+                moved_inst.append(inst_dst)
 
-                shutil.copy(inst, f"tmp/total_opt/inst/{filename}.wav")
-                shutil.copy(vocal, f"tmp/total_opt/vocal/{filename}.wav")
+            # wf, sr = torchaudio.load(mixed_file)
 
-                wf, sr = torchaudio.load(mixed_file)
-
-                wf = (
-                    (wf + torch.randn(wf.size()) * random.uniform(0, 0.01))
-                    if random.random() > 0.5
-                    else wf
-                )
-                torchaudio.save(f"tmp/total_opt/{filename}.wav", wf, sr)
+            # wf = (
+            #     (wf + torch.randn(wf.size()) * random.uniform(0, 0.01))
+            #     if random.random() > 0.5
+            #     else wf
+            # )
+            # torchaudio.save(f"tmp/total_opt/{filename}.wav", wf, sr)
 
         gc.collect()
         torch.cuda.empty_cache()
 
         return (
             gr.update(
-                value=EMPTY_WAV_PATH if params["use_batch"] else result[0],
+                value=EMPTY_WAV_PATH if params["use_batch"] else moved_vocal[0],
                 visible=not params["use_batch"],
             ),
             gr.update(
-                visible=params["use_vocal_remove"] and not params["use_batch"],
+                visible=params["use_vocal_separation"] and not params["use_batch"],
                 value=(
                     EMPTY_WAV_PATH
-                    if params["use_batch"] or not params["use_vocal_remove"]
-                    else inst_list[0]
+                    if params["use_batch"] or not params["use_vocal_separation"]
+                    else moved_inst[0]
                 ),
             ),
             gr.update(
-                value=(result if params["use_batch"] else EMPTY_WAV_PATH),
+                value=(moved_vocal if params["use_batch"] else EMPTY_WAV_PATH),
                 visible=params["use_batch"],
             ),
             gr.update(
                 value=(
-                    inst_list
-                    if params["use_batch"] and params["use_vocal_remove"]
+                    moved_inst
+                    if params["use_batch"] and params["use_vocal_separation"]
                     else EMPTY_WAV_PATH
                 ),
-                visible=params["use_vocal_remove"] and params["use_batch"],
+                visible=params["use_vocal_separation"] and params["use_batch"],
             ),
         )
 

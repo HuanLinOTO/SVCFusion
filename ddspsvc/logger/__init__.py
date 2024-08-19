@@ -11,6 +11,8 @@ from rich.progress import (
 )
 
 console = Console(stderr=None)
+
+
 def addLogger(path):
     logger.add(
         path,
@@ -27,8 +29,10 @@ warning = logger.warning
 warn = logger.warning
 debug = logger.debug
 
+
 def hps(hps):
     console.print(hps)
+
 
 def Progress():
     return _Progress(

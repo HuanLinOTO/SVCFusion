@@ -53,5 +53,9 @@ webui*
 
 ACE*
 
+*tmp
+
 scripts/buildtools*
 scripts/build*
+
+translate_tmp/

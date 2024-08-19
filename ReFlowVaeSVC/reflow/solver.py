@@ -184,7 +184,9 @@ def train(
                             infer=False,
                         )
                 else:
-                    with autocast(device_type=args.device, dtype=dtype):
+                    with autocast(
+                        device_type=torch.device(args.device).type, dtype=dtype
+                    ):
                         loss = model(
                             data["units"],
                             data["f0"],

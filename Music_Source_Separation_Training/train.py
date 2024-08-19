@@ -1,13 +1,11 @@
 # coding: utf-8
-__author__ = 'Roman Solovyev (ZFTurbo): https://github.com/ZFTurbo/'
-__version__ = '1.0.2'
+__author__ = "Roman Solovyev (ZFTurbo): https://github.com/ZFTurbo/"
+__version__ = "1.0.2"
 
 import random
 import argparse
 import time
-import copy
 from tqdm import tqdm
-import sys
 import os
 import glob
 import torch
@@ -31,12 +29,12 @@ warnings.filterwarnings("ignore")
 
 def masked_loss(y_, y, q, coarse=True):
     # shape = [num_sources, batch_size, num_channels, chunk_size]
-    loss = torch.nn.MSELoss(reduction='none')(y_, y).transpose(0, 1)
+    loss = torch.nn.MSELoss(reduction="none")(y_, y).transpose(0, 1)
     if coarse:
         loss = torch.mean(loss, dim=(-1, -2))
     loss = loss.reshape(loss.shape[0], -1)
     L = loss.detach()
-    quantile = torch.quantile(L, q, interpolation='linear', dim=1, keepdim=True)
+    quantile = torch.quantile(L, q, interpolation="linear", dim=1, keepdim=True)
     mask = L < quantile
     return (loss * mask).mean()
 
@@ -54,31 +52,39 @@ def manual_seed(seed):
 def load_not_compatible_weights(model, weights, verbose=False):
     new_model = model.state_dict()
     old_model = torch.load(weights)
-    if 'state' in old_model:
+    if "state" in old_model:
         # Fix for htdemucs weights loading
-        old_model = old_model['state']
+        old_model = old_model["state"]
 
     for el in new_model:
         if el in old_model:
             if verbose:
-                print('Match found for {}!'.format(el))
+                print("Match found for {}!".format(el))
             if new_model[el].shape == old_model[el].shape:
                 if verbose:
-                    print('Action: Just copy weights!')
+                    print("Action: Just copy weights!")
                 new_model[el] = old_model[el]
             else:
                 if len(new_model[el].shape) != len(old_model[el].shape):
                     if verbose:
-                        print('Action: Different dimension! Too lazy to write the code... Skip it')
+                        print(
+                            "Action: Different dimension! Too lazy to write the code... Skip it"
+                        )
                 else:
                     if verbose:
-                        print('Shape is different: {} != {}'.format(tuple(new_model[el].shape), tuple(old_model[el].shape)))
+                        print(
+                            "Shape is different: {} != {}".format(
+                                tuple(new_model[el].shape), tuple(old_model[el].shape)
+                            )
+                        )
                     ln = len(new_model[el].shape)
                     max_shape = []
                     slices_old = []
                     slices_new = []
                     for i in range(ln):
-                        max_shape.append(max(new_model[el].shape[i], old_model[el].shape[i]))
+                        max_shape.append(
+                            max(new_model[el].shape[i], old_model[el].shape[i])
+                        )
                         slices_old.append(slice(0, old_model[el].shape[i]))
                         slices_new.append(slice(0, new_model[el].shape[i]))
                     # print(max_shape)
@@ -92,10 +98,9 @@ def load_not_compatible_weights(model, weights, verbose=False):
                     new_model[el] = max_matrix[slices_new]
         else:
             if verbose:
-                print('Match not found for {}!'.format(el))
-    model.load_state_dict(
-        new_model
-    )
+                print("Match not found for {}!".format(el))
+    model.load_state_dict(new_model)
+
 
 def valid(model, args, config, device, verbose=False):
     # For multiGPU extract single model
@@ -105,12 +110,12 @@ def valid(model, args, config, device, verbose=False):
     model.eval()
     all_mixtures_path = []
     for valid_path in args.valid_path:
-        part = sorted(glob.glob(valid_path + '/*/mixture.wav'))
+        part = sorted(glob.glob(valid_path + "/*/mixture.wav"))
         if len(part) == 0:
-            print('No validation data found in: {}'.format(valid_path))
+            print("No validation data found in: {}".format(valid_path))
         all_mixtures_path += part
     if verbose:
-        print('Total mixtures: {}'.format(len(all_mixtures_path)))
+        print("Total mixtures: {}".format(len(all_mixtures_path)))
 
     instruments = config.training.instruments
     if config.training.target_instrument is not None:
@@ -128,18 +133,18 @@ def valid(model, args, config, device, verbose=False):
         mix, sr = sf.read(path)
         folder = os.path.dirname(path)
         if verbose:
-            print('Song: {}'.format(os.path.basename(folder)))
+            print("Song: {}".format(os.path.basename(folder)))
         mixture = torch.tensor(mix.T, dtype=torch.float32)
-        if args.model_type == 'htdemucs':
+        if args.model_type == "htdemucs":
             res = demix_track_demucs(config, model, mixture, device)
         else:
             res = demix_track(config, model, mixture, device)
         for instr in instruments:
-            if instr != 'other' or config.training.other_fix is False:
-                track, sr1 = sf.read(folder + '/{}.wav'.format(instr))
+            if instr != "other" or config.training.other_fix is False:
+                track, sr1 = sf.read(folder + "/{}.wav".format(instr))
             else:
                 # other is actually instrumental
-                track, sr1 = sf.read(folder + '/{}.wav'.format('vocals'))
+                track, sr1 = sf.read(folder + "/{}.wav".format("vocals"))
                 track = mix - track
             # sf.write("{}.wav".format(instr), res[instr].T, sr, subtype='FLOAT')
             references = np.expand_dims(track, axis=0)
@@ -148,7 +153,7 @@ def valid(model, args, config, device, verbose=False):
             if verbose:
                 print(instr, res[instr].shape, sdr_val)
             all_sdr[instr].append(sdr_val)
-            pbar_dict['sdr_{}'.format(instr)] = sdr_val
+            pbar_dict["sdr_{}".format(instr)] = sdr_val
         if not verbose:
             all_mixtures_path.set_postfix(pbar_dict)
 
@@ -159,7 +164,7 @@ def valid(model, args, config, device, verbose=False):
         sdr_avg += sdr_val
     sdr_avg /= len(instruments)
     if len(instruments) > 1:
-        print('SDR Avg: {:.4f}'.format(sdr_avg))
+        print("SDR Avg: {:.4f}".format(sdr_avg))
     return sdr_avg
 
 
@@ -184,24 +189,24 @@ def proc_list_of_files(
         folder = os.path.dirname(path)
         folder_name = os.path.abspath(folder)
         if verbose:
-            print('Song: {}'.format(folder_name))
+            print("Song: {}".format(folder_name))
         mixture = torch.tensor(mix.T, dtype=torch.float32)
-        if args.model_type == 'htdemucs':
+        if args.model_type == "htdemucs":
             res = demix_track_demucs(config, model, mixture, device)
         else:
             res = demix_track(config, model, mixture, device)
         if 1:
             pbar_dict = {}
             for instr in instruments:
-                if instr != 'other' or config.training.other_fix is False:
+                if instr != "other" or config.training.other_fix is False:
                     try:
-                        track, sr1 = sf.read(folder + '/{}.wav'.format(instr))
-                    except Exception as e:
+                        track, sr1 = sf.read(folder + "/{}.wav".format(instr))
+                    except Exception:
                         # print('No data for stem: {}. Skip!'.format(instr))
                         continue
                 else:
                     # other is actually instrumental
-                    track, sr1 = sf.read(folder + '/{}.wav'.format('vocals'))
+                    track, sr1 = sf.read(folder + "/{}.wav".format("vocals"))
                     track = mix - track
 
                 references = np.expand_dims(track, axis=0)
@@ -210,17 +215,19 @@ def proc_list_of_files(
                 if verbose:
                     print(instr, res[instr].shape, sdr_val)
                 all_sdr[instr].append(sdr_val)
-                pbar_dict['sdr_{}'.format(instr)] = sdr_val
+                pbar_dict["sdr_{}".format(instr)] = sdr_val
 
             try:
                 mixture_paths.set_postfix(pbar_dict)
-            except Exception as e:
+            except Exception:
                 pass
 
     return all_sdr
 
 
-def valid_mp(proc_id, queue, all_mixtures_path, model, args, config, device, return_dict):
+def valid_mp(
+    proc_id, queue, all_mixtures_path, model, args, config, device, return_dict
+):
     m1 = model
     # m1 = copy.deepcopy(m1)
     m1 = m1.eval().to(device)
@@ -238,7 +245,9 @@ def valid_mp(proc_id, queue, all_mixtures_path, model, args, config, device, ret
         for instr in config.training.instruments:
             all_sdr[instr] += sdr_single[instr]
             if len(sdr_single[instr]) > 0:
-                pbar_dict['sdr_{}'.format(instr)] = "{:.4f}".format(sdr_single[instr][0])
+                pbar_dict["sdr_{}".format(instr)] = "{:.4f}".format(
+                    sdr_single[instr][0]
+                )
         if proc_id == 0:
             progress_bar.update(current_step - progress_bar.n)
             progress_bar.set_postfix(pbar_dict)
@@ -249,7 +258,7 @@ def valid_mp(proc_id, queue, all_mixtures_path, model, args, config, device, ret
 
 def valid_multi_gpu(model, args, config, verbose=False):
     device_ids = args.device_ids
-    model = model.to('cpu')
+    model = model.to("cpu")
 
     # For multiGPU extract single model
     if len(device_ids) > 1:
@@ -257,22 +266,34 @@ def valid_multi_gpu(model, args, config, verbose=False):
 
     all_mixtures_path = []
     for valid_path in args.valid_path:
-        part = sorted(glob.glob(valid_path + '/*/mixture.wav'))
+        part = sorted(glob.glob(valid_path + "/*/mixture.wav"))
         if len(part) == 0:
-            print('No validation data found in: {}'.format(valid_path))
+            print("No validation data found in: {}".format(valid_path))
         all_mixtures_path += part
 
-    model = model.to('cpu')
+    model = model.to("cpu")
     torch.cuda.empty_cache()
     queue = torch.multiprocessing.Queue()
     processes = []
     return_dict = torch.multiprocessing.Manager().dict()
     for i, device in enumerate(device_ids):
         if torch.cuda.is_available():
-            device = 'cuda:{}'.format(device)
+            device = "cuda:{}".format(device)
         else:
-            device = 'cpu'
-        p = torch.multiprocessing.Process(target=valid_mp, args=(i, queue, all_mixtures_path, model, args, config, device, return_dict))
+            device = "cpu"
+        p = torch.multiprocessing.Process(
+            target=valid_mp,
+            args=(
+                i,
+                queue,
+                all_mixtures_path,
+                model,
+                args,
+                config,
+                device,
+                return_dict,
+            ),
+        )
         p.start()
         processes.append(p)
     for i, path in enumerate(all_mixtures_path):
@@ -299,26 +320,67 @@ def valid_multi_gpu(model, args, config, verbose=False):
         sdr_avg += sdr_val
     sdr_avg /= len(instruments)
     if len(instruments) > 1:
-        print('SDR Avg: {:.4f}'.format(sdr_avg))
+        print("SDR Avg: {:.4f}".format(sdr_avg))
     return sdr_avg
 
 
 def train_model(args):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model_type", type=str, default='mdx23c', help="One of mdx23c, htdemucs, segm_models, mel_band_roformer, bs_roformer, swin_upernet, bandit")
+    parser.add_argument(
+        "--model_type",
+        type=str,
+        default="mdx23c",
+        help="One of mdx23c, htdemucs, segm_models, mel_band_roformer, bs_roformer, swin_upernet, bandit",
+    )
     parser.add_argument("--config_path", type=str, help="path to config file")
-    parser.add_argument("--start_check_point", type=str, default='', help="Initial checkpoint to start training")
-    parser.add_argument("--results_path", type=str, help="path to folder where results will be stored (weights, metadata)")
-    parser.add_argument("--data_path", nargs="+", type=str, help="Dataset data paths. You can provide several folders.")
-    parser.add_argument("--dataset_type", type=int, default=1, help="Dataset type. Must be one of: 1, 2, 3 or 4. Details here: https://github.com/ZFTurbo/Music-Source-Separation-Training/blob/main/docs/dataset_types.md")
-    parser.add_argument("--valid_path", nargs="+", type=str, help="validation data paths. You can provide several folders.")
-    parser.add_argument("--num_workers", type=int, default=0, help="dataloader num_workers")
-    parser.add_argument("--pin_memory", type=bool, default=False, help="dataloader pin_memory")
+    parser.add_argument(
+        "--start_check_point",
+        type=str,
+        default="",
+        help="Initial checkpoint to start training",
+    )
+    parser.add_argument(
+        "--results_path",
+        type=str,
+        help="path to folder where results will be stored (weights, metadata)",
+    )
+    parser.add_argument(
+        "--data_path",
+        nargs="+",
+        type=str,
+        help="Dataset data paths. You can provide several folders.",
+    )
+    parser.add_argument(
+        "--dataset_type",
+        type=int,
+        default=1,
+        help="Dataset type. Must be one of: 1, 2, 3 or 4. Details here: https://github.com/ZFTurbo/Music-Source-Separation-Training/blob/main/docs/dataset_types.md",
+    )
+    parser.add_argument(
+        "--valid_path",
+        nargs="+",
+        type=str,
+        help="validation data paths. You can provide several folders.",
+    )
+    parser.add_argument(
+        "--num_workers", type=int, default=0, help="dataloader num_workers"
+    )
+    parser.add_argument(
+        "--pin_memory", type=bool, default=False, help="dataloader pin_memory"
+    )
     parser.add_argument("--seed", type=int, default=0, help="random seed")
-    parser.add_argument("--device_ids", nargs='+', type=int, default=[0], help='list of gpu ids')
-    parser.add_argument("--use_multistft_loss", action='store_true', help="Use MultiSTFT Loss (from auraloss package)")
-    parser.add_argument("--use_mse_loss", action='store_true', help="Use default MSE loss")
-    parser.add_argument("--use_l1_loss", action='store_true', help="Use L1 loss")
+    parser.add_argument(
+        "--device_ids", nargs="+", type=int, default=[0], help="list of gpu ids"
+    )
+    parser.add_argument(
+        "--use_multistft_loss",
+        action="store_true",
+        help="Use MultiSTFT Loss (from auraloss package)",
+    )
+    parser.add_argument(
+        "--use_mse_loss", action="store_true", help="Use default MSE loss"
+    )
+    parser.add_argument("--use_l1_loss", action="store_true", help="Use L1 loss")
     if args is None:
         args = parser.parse_args()
     else:
@@ -326,8 +388,10 @@ def train_model(args):
 
     manual_seed(args.seed + int(time.time()))
     torch.backends.cudnn.benchmark = True
-    torch.backends.cudnn.deterministic = False # Fix possible slow down with dilation convolutions
-    torch.multiprocessing.set_start_method('spawn')
+    torch.backends.cudnn.deterministic = (
+        False  # Fix possible slow down with dilation convolutions
+    )
+    torch.multiprocessing.set_start_method("spawn")
 
     model, config = get_model_from_config(args.model_type, args.config_path)
     print("Instruments: {}".format(config.training.instruments))
@@ -348,7 +412,9 @@ def train_model(args):
         config,
         args.data_path,
         batch_size=batch_size,
-        metadata_path=os.path.join(args.results_path, 'metadata_{}.pkl'.format(args.dataset_type)),
+        metadata_path=os.path.join(
+            args.results_path, "metadata_{}.pkl".format(args.dataset_type)
+        ),
         dataset_type=args.dataset_type,
     )
 
@@ -357,44 +423,42 @@ def train_model(args):
         batch_size=batch_size,
         shuffle=True,
         num_workers=args.num_workers,
-        pin_memory=args.pin_memory
+        pin_memory=args.pin_memory,
     )
 
-    if args.start_check_point != '':
-        print('Start from checkpoint: {}'.format(args.start_check_point))
+    if args.start_check_point != "":
+        print("Start from checkpoint: {}".format(args.start_check_point))
         if 1:
             load_not_compatible_weights(model, args.start_check_point, verbose=False)
         else:
-            model.load_state_dict(
-                torch.load(args.start_check_point)
-            )
+            model.load_state_dict(torch.load(args.start_check_point))
 
     if torch.cuda.is_available():
         if len(device_ids) <= 1:
-            print('Use single GPU: {}'.format(device_ids))
-            device = torch.device(f'cuda:{device_ids[0]}')
+            print("Use single GPU: {}".format(device_ids))
+            device = torch.device(f"cuda:{device_ids[0]}")
             model = model.to(device)
         else:
-            print('Use multi GPU: {}'.format(device_ids))
-            device = torch.device(f'cuda:{device_ids[0]}')
+            print("Use multi GPU: {}".format(device_ids))
+            device = torch.device(f"cuda:{device_ids[0]}")
             model = nn.DataParallel(model, device_ids=device_ids).to(device)
     else:
-        device = 'cpu'
-        print('CUDA is not avilable. Run training on CPU. It will be very slow...')
+        device = "cpu"
+        print("CUDA is not avilable. Run training on CPU. It will be very slow...")
         model = model.to(device)
 
     if 0:
         valid_multi_gpu(model, args, config, verbose=True)
 
-    if config.training.optimizer == 'adam':
+    if config.training.optimizer == "adam":
         optimizer = Adam(model.parameters(), lr=config.training.lr)
-    elif config.training.optimizer == 'adamw':
+    elif config.training.optimizer == "adamw":
         optimizer = AdamW(model.parameters(), lr=config.training.lr)
-    elif config.training.optimizer == 'sgd':
-        print('Use SGD optimizer')
+    elif config.training.optimizer == "sgd":
+        print("Use SGD optimizer")
         optimizer = SGD(model.parameters(), lr=config.training.lr, momentum=0.999)
     else:
-        print('Unknown optimizer: {}'.format(config.training.optimizer))
+        print("Unknown optimizer: {}".format(config.training.optimizer))
         exit()
 
     gradient_accumulation_steps = 1
@@ -403,33 +467,42 @@ def train_model(args):
     except:
         pass
 
-    print("Patience: {} Reduce factor: {} Batch size: {} Grad accum steps: {} Effective batch size: {}".format(
-        config.training.patience,
-        config.training.reduce_factor,
-        batch_size,
-        gradient_accumulation_steps,
-        batch_size * gradient_accumulation_steps,
-    ))
+    print(
+        "Patience: {} Reduce factor: {} Batch size: {} Grad accum steps: {} Effective batch size: {}".format(
+            config.training.patience,
+            config.training.reduce_factor,
+            batch_size,
+            gradient_accumulation_steps,
+            batch_size * gradient_accumulation_steps,
+        )
+    )
     # Reduce LR if no SDR improvements for several epochs
-    scheduler = ReduceLROnPlateau(optimizer, 'max', patience=config.training.patience, factor=config.training.reduce_factor)
+    scheduler = ReduceLROnPlateau(
+        optimizer,
+        "max",
+        patience=config.training.patience,
+        factor=config.training.reduce_factor,
+    )
 
     if args.use_multistft_loss:
         try:
             loss_options = dict(config.loss_multistft)
         except:
             loss_options = dict()
-        print('Loss options: {}'.format(loss_options))
-        loss_multistft = auraloss.freq.MultiResolutionSTFTLoss(
-            **loss_options
-        )
+        print("Loss options: {}".format(loss_options))
+        loss_multistft = auraloss.freq.MultiResolutionSTFTLoss(**loss_options)
 
     scaler = GradScaler()
-    print('Train for: {}'.format(config.training.num_epochs))
+    print("Train for: {}".format(config.training.num_epochs))
     best_sdr = -100
     for epoch in range(config.training.num_epochs):
         model.train().to(device)
-        print('Train epoch: {} Learning rate: {}'.format(epoch, optimizer.param_groups[0]['lr']))
-        loss_val = 0.
+        print(
+            "Train epoch: {} Learning rate: {}".format(
+                epoch, optimizer.param_groups[0]["lr"]
+            )
+        )
+        loss_val = 0.0
         total = 0
 
         # total_loss = None
@@ -439,7 +512,7 @@ def train_model(args):
             x = mixes.to(device)  # mixture
 
             with torch.cuda.amp.autocast(enabled=use_amp):
-                if args.model_type in ['mel_band_roformer', 'bs_roformer']:
+                if args.model_type in ["mel_band_roformer", "bs_roformer"]:
                     # loss is computed in forward pass
                     loss = model(x, y)
                     if type(device_ids) != int:
@@ -448,8 +521,12 @@ def train_model(args):
                 else:
                     y_ = model(x)
                     if args.use_multistft_loss:
-                        y1_ = torch.reshape(y_, (y_.shape[0], y_.shape[1] * y_.shape[2], y_.shape[3]))
-                        y1 = torch.reshape(y, (y.shape[0], y.shape[1] * y.shape[2], y.shape[3]))
+                        y1_ = torch.reshape(
+                            y_, (y_.shape[0], y_.shape[1] * y_.shape[2], y_.shape[3])
+                        )
+                        y1 = torch.reshape(
+                            y, (y.shape[0], y.shape[1] * y.shape[2], y.shape[3])
+                        )
                         loss = loss_multistft(y1_, y1)
                         # We can use many losses at the same time
                         if args.use_mse_loss:
@@ -465,7 +542,7 @@ def train_model(args):
                             y_,
                             y,
                             q=config.training.q,
-                            coarse=config.training.coarse_loss_clip
+                            coarse=config.training.coarse_loss_clip,
                         )
 
             loss /= gradient_accumulation_steps
@@ -473,7 +550,9 @@ def train_model(args):
             if config.training.grad_clip:
                 nn.utils.clip_grad_norm_(model.parameters(), config.training.grad_clip)
 
-            if ((i + 1) % gradient_accumulation_steps == 0) or (i == len(train_loader) - 1):
+            if ((i + 1) % gradient_accumulation_steps == 0) or (
+                i == len(train_loader) - 1
+            ):
                 scaler.step(optimizer)
                 scaler.update()
                 optimizer.zero_grad(set_to_none=True)
@@ -481,18 +560,17 @@ def train_model(args):
             li = loss.item() * gradient_accumulation_steps
             loss_val += li
             total += 1
-            pbar.set_postfix({'loss': 100 * li, 'avg_loss': 100 * loss_val / (i + 1)})
+            pbar.set_postfix({"loss": 100 * li, "avg_loss": 100 * loss_val / (i + 1)})
             loss.detach()
 
-        print('Training loss: {:.6f}'.format(loss_val / total))
+        print("Training loss: {:.6f}".format(loss_val / total))
 
         # Save last
-        store_path = args.results_path + '/last_{}.ckpt'.format(args.model_type)
-        state_dict = model.state_dict() if len(device_ids) <= 1 else model.module.state_dict()
-        torch.save(
-            state_dict,
-            store_path
+        store_path = args.results_path + "/last_{}.ckpt".format(args.model_type)
+        state_dict = (
+            model.state_dict() if len(device_ids) <= 1 else model.module.state_dict()
         )
+        torch.save(state_dict, store_path)
 
         # if you have problem with multiproc validation change 0 to 1
         if 0:
@@ -500,13 +578,16 @@ def train_model(args):
         else:
             sdr_avg = valid_multi_gpu(model, args, config, verbose=False)
         if sdr_avg > best_sdr:
-            store_path = args.results_path + '/model_{}_ep_{}_sdr_{:.4f}.ckpt'.format(args.model_type, epoch, sdr_avg)
-            print('Store weights: {}'.format(store_path))
-            state_dict = model.state_dict() if len(device_ids) <= 1 else model.module.state_dict()
-            torch.save(
-                state_dict,
-                store_path
+            store_path = args.results_path + "/model_{}_ep_{}_sdr_{:.4f}.ckpt".format(
+                args.model_type, epoch, sdr_avg
             )
+            print("Store weights: {}".format(store_path))
+            state_dict = (
+                model.state_dict()
+                if len(device_ids) <= 1
+                else model.module.state_dict()
+            )
+            torch.save(state_dict, store_path)
             best_sdr = sdr_avg
         scheduler.step(sdr_avg)
 

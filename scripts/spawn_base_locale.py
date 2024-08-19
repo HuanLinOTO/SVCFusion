@@ -1,4 +1,3 @@
-import os
 
 # 原始文件路径和目标文件路径
 source_file = "package_utils/locale/zh_CN.py"

@@ -13,6 +13,6 @@ set PYTHONPATH="%PYTHONPATH%;%~dp0"
 
 echo %~dp0 > workdir
 
-"%~dp0.conda\ddsp.webui.exe" %~dp0\webui.bin
+"%~dp0.conda\ddsp.webui.exe" "%~dp0\webui.bin"
 
 pause

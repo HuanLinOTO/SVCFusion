@@ -3,7 +3,6 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from . import spec_utils
 
 
 class BaseASPPNet(nn.Module):

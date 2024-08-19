@@ -29,7 +29,9 @@ model:
   type: Diffusion
   use_pitch_aug: true
 spk:
-  wkr_raw: 0
+  default: 0
+spks:
+- default
 train:
   amp_dtype: fp32
   batch_size: 48

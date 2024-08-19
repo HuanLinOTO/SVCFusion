@@ -9,7 +9,6 @@ from . import snr
 
 
 def parse_loss(name: str, kwargs: Dict[str, Any]) -> _Loss:
-
     for module in [nn.modules.loss, snr, asteroid_losses, asteroid_losses.sdr]:
         if name in module.__dict__:
             return module.__dict__[name](**kwargs)
@@ -24,16 +23,14 @@ class MultiStemWrapper(_Loss):
         self.modality = modality
 
     def forward(
-            self,
-            preds: Dict[str, Dict[str, torch.Tensor]],
-            target: Dict[str, Dict[str, torch.Tensor]],
+        self,
+        preds: Dict[str, Dict[str, torch.Tensor]],
+        target: Dict[str, Dict[str, torch.Tensor]],
     ) -> torch.Tensor:
         loss = {
-                stem: self.loss(
-                        preds[self.modality][stem],
-                        target[self.modality][stem]
-                )
-                for stem in preds[self.modality] if stem in target[self.modality]
+            stem: self.loss(preds[self.modality][stem], target[self.modality][stem])
+            for stem in preds[self.modality]
+            if stem in target[self.modality]
         }
 
         return sum(list(loss.values()))

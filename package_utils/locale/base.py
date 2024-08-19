@@ -28,6 +28,8 @@ class Locale:
         dorpdown_liked_checkbox_yes = ""  # 是
         dorpdown_liked_checkbox_no = ""  # 否
     class model_manager:
+        choose_model_title = ""  # 选择模型
+        action_title = ""  # 操作
         pack_btn_value = ""  # 打包模型
         pack_result_label = ""  # 打包结果
         packing_tip = ""  # 正在打包，请勿多次点击
@@ -37,6 +39,13 @@ class Locale:
         change_model_type_btn_value = ""  # 确认更改
         change_success_tip = ""  # 更改成功
         change_fail_tip = ""  # 更改失败
+        move_folder_tip = ""  # #### 移动到 models 目录
+        move_folder_name = ""  # 模型名称
+        move_folder_name_auto_get = ""  # 自动获取
+        move_folder_btn_value = ""  # 移动
+        other_text = ""  # 等
+        moving_tip = ""  # 正在移动，请勿多次点击
+        moved_tip = ""  # 已移动到 {1}，刷新后可用
     class main_ui:
         release_memory_btn_value = ""  # 尝试释放显存/内存
         released_tip = ""  # 已尝试释放显存/内存
@@ -45,10 +54,17 @@ class Locale:
         train_tab = ""  # 🏋️‍♂️训练
         tools_tab = ""  # 🛠️小工具
         settings_tab = ""  # 🪡设置
+        model_tools_tab = ""  # 模型相关
+        audio_tools_tab = ""  # 音频相关
+        realtime_tools_tab = ""  # 实时
+        start_ddsp_realtime_gui_btn = ""  # 启动 DDSP 实时 GUI
+        starting_tip = ""  # 正在启动，请稍后，不要重复点击，后果很严重
+        load_model_btn_value = ""  # 加载模型
+        infer_btn_value = ""  # 开始推理
         model_manager_tab = ""  # 模型管理
         install_model_tab = ""  # 安装模型
         fish_audio_preprocess_tab = ""  # 简单音频处理
-        vocal_remove_tab = ""  # 人声分离
+        vocal_separation_tab = ""  # 人声分离
         compatible_tab = ""  # 模型兼容
         detect_spk_tip = ""  # 已检测到的角色：
         spk_not_found_tip = ""  # 未检测到任何角色
@@ -65,15 +81,17 @@ class Locale:
         sovits_diff_model_config_label = ""  # SoVITS 浅扩散配置
     class preprocess:
         tip = ""  # 
-        little_vram_tip = ""  # 
+        low_vram_tip = ""  # 
         open_dataset_folder_btn_value = ""  # 打开数据集文件夹
         choose_model_label = ""  # 选择模型
+        start_preprocess_btn_value = ""  # 开始预处理
     class train:
         current_train_model_label = ""  # 当前训练模型
         fouzu_tip = ""  # ~~整了个赛博佛祖，希望对你有帮助~~
         gd_plus_1 = ""  # 点我加功德
         gd_plus_1_tip = ""  # 功德 +1，炸炉 -1
         choose_sub_model_label = ""  # 选择子模型
+        start_train_btn_value = ""  # 开始/继续训练
         archieve_btn_value = ""  # 归档工作目录
         stop_btn_value = ""  # 停止训练
         archieving_tip = ""  # 正在归档，请勿多次点击
@@ -84,14 +102,18 @@ class Locale:
         launched_tb_tip = ""  # Tensorboard 已在 {1} 开放
     class settings:
         page = ""  # 页面
+        save_btn_value = ""  # 保存设置
         pkg_settings_label = ""  # 整合包设置
+        infer_settings_label = ""  # 推理设置
         sovits_settings_label = ""  # So-VITS-SVC 设置
         ddsp6_settings_label = ""  # DDSP-SVC 6 设置
         class pkg:
             lang_label = ""  # 语言
             lang_info = ""  # 更改语言需要重启整合包
+        class infer:
+            msst_device_label = ""  # 运行分离任务使用设备
         class sovits:
-            resolve_port_clash_label = ""  # 尝试解决端口冲突问题
+            resolve_port_clash_label = ""  # 尝试解决端口冲突问题（Windows 可用）
         class ddsp6:
             pretrained_model_preference_dropdown_label = ""  # 底模偏好
             default_pretrained_model = ""  # 默认底模 512 x 6
@@ -112,19 +134,39 @@ class Locale:
         preprocess_tab = ""  # 数据处理
         max_duration_label = ""  # 最大时长
         submit_btn_value = ""  # 开始
+        input_output_same_tip = ""  # 输入输出路径相同
         input_path_not_exist_tip = ""  # 输入路径不存在
-    class vocal_remove:
+    class vocal_separation:
         input_audio_label = ""  # 输入音频
+        input_path_label = ""  # 输入路径
+        output_path_label = ""  # 输出路径
+        use_batch_label = ""  # 启用批量处理
+        use_de_reverb_label = ""  # 去混响
+        use_harmonic_remove_label = ""  # 去和声
         submit_btn_value = ""  # 开始
         vocal_label = ""  # 输出-人声
         inst_label = ""  # 输出-伴奏
+        batch_output_message_label = ""  # 批量输出信息
+        no_file_tip = ""  # 未选择文件
+        no_input_tip = ""  # 未选择输入文件夹
+        no_output_tip = ""  # 未选择输出文件夹
+        input_not_exist_tip = ""  # 输入文件夹不存在
+        output_not_exist_tip = ""  # 输出文件夹不存在
+        input_output_same_tip = ""  # 输入输出文件夹相同
+        finished = ""  # 完成
+        error_when_processing = ""  # 处理时发生错误，可截图控制台寻求帮助
+        unusable_file_tip = ""  # {1} 已跳过, 文件格式不支持
+        batch_progress_desc = ""  # 总进度
+        job_to_progress_desc = ""  # {
     class common_infer:
         audio_label = ""  # 音频文件
         use_batch_label = ""  # 启用批量处理
-        use_vocal_remove_label = ""  # 去除伴奏
-        use_vocal_remove_info = ""  # 是否去除伴奏
-        use_harmony_remove_label = ""  # 去除和声
-        use_harmony_remove_info = ""  # 是否去除和声（必须先勾选移除伴奏）
+        use_vocal_separation_label = ""  # 去除伴奏
+        use_vocal_separation_info = ""  # 是否去除伴奏
+        use_de_reverb_label = ""  # 去除混响
+        use_de_reverb_info = ""  # 是否去除混响
+        use_harmonic_remove_label = ""  # 去除和声
+        use_harmonic_remove_info = ""  # 是否去除和声
         f0_label = ""  # f0 提取器
         f0_info = ""  # 用于音高提取/预测的模型
         keychange_label = ""  # 变调

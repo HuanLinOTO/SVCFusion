@@ -9,7 +9,7 @@ from tqdm import tqdm
 from . import spec_utils
 
 
-class VocalRemoverValidationSet(torch.utils.data.Dataset):
+class VocalSeparationrValidationSet(torch.utils.data.Dataset):
     def __init__(self, patch_list):
         self.patch_list = patch_list
 
@@ -180,4 +180,4 @@ def make_validation_set(filelist, cropsize, sr, hop_length, n_fft, offset):
                 )
             patch_list.append(outpath)
 
-    return VocalRemoverValidationSet(patch_list)
+    return VocalSeparationrValidationSet(patch_list)

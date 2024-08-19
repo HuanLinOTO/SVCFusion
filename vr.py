@@ -1,6 +1,8 @@
-import os,sys
+import os
+
 parent_directory = os.path.dirname(os.path.abspath(__file__))
-import logging,pdb
+import logging
+
 logger = logging.getLogger(__name__)
 
 import librosa
@@ -27,7 +29,9 @@ class AudioPre:
             "agg": agg,
             "high_end_process": "mirroring",
         }
-        mp = ModelParameters("%s/lib/lib_v5/modelparams/4band_v2.json"%parent_directory)
+        mp = ModelParameters(
+            "%s/lib/lib_v5/modelparams/4band_v2.json" % parent_directory
+        )
         model = Nets.CascadedASPPNet(mp.param["bins"] * 2)
         cpk = torch.load(model_path, map_location="cpu")
         model.load_state_dict(cpk)
@@ -41,7 +45,13 @@ class AudioPre:
         self.model = model
 
     def _path_audio_(
-        self, music_file, ins_root=None, vocal_root=None, format="flac", is_hp3=False, output_name="vocal"
+        self,
+        music_file,
+        ins_root=None,
+        vocal_root=None,
+        format="flac",
+        is_hp3=False,
+        output_name="vocal",
     ):
         if ins_root is None and vocal_root is None:
             return "No save root."
@@ -111,7 +121,7 @@ class AudioPre:
         v_spec_m = X_spec_m - y_spec_m
 
         if is_hp3 == True:
-            ins_root,vocal_root = vocal_root,ins_root
+            ins_root, vocal_root = vocal_root, ins_root
 
         print("start saving")
         if ins_root is not None:
@@ -139,7 +149,7 @@ class AudioPre:
                     self.mp.param["sr"],
                 )  #
             else:
-                print("saving in %s format"%format)
+                print("saving in %s format" % format)
                 path = os.path.join(
                     ins_root, head + "{}_{}.wav".format(name, self.data["agg"])
                 )
@@ -150,7 +160,9 @@ class AudioPre:
                 )
                 if os.path.exists(path):
                     opt_format_path = path[:-4] + ".%s" % format
-                    os.system("ffmpeg -i \"%s\" -vn \"%s\" -q:a 2 -y" % (path, opt_format_path))
+                    os.system(
+                        'ffmpeg -i "%s" -vn "%s" -q:a 2 -y' % (path, opt_format_path)
+                    )
                     if os.path.exists(opt_format_path):
                         try:
                             os.remove(path)
@@ -181,6 +193,8 @@ class AudioPre:
                 self.mp.param["sr"],
             )
         print("done saving")
+
+
 class AudioPreDeEcho:
     def __init__(self, agg, model_path, device, is_half, tta=False):
         self.model_path = model_path
@@ -194,7 +208,9 @@ class AudioPreDeEcho:
             "agg": agg,
             "high_end_process": "mirroring",
         }
-        mp = ModelParameters("%s/lib/lib_v5/modelparams/4band_v3.json"%parent_directory)
+        mp = ModelParameters(
+            "%s/lib/lib_v5/modelparams/4band_v3.json" % parent_directory
+        )
         nout = 64 if "DeReverb" in model_path else 48
         model = CascadedNet(mp.param["bins"] * 2, nout)
         cpk = torch.load(model_path, map_location="cpu")
@@ -209,7 +225,13 @@ class AudioPreDeEcho:
         self.model = model
 
     def _path_audio_(
-        self, music_file, vocal_root=None, ins_root=None, format="flac", is_hp3=False, output_name="vocal"
+        self,
+        music_file,
+        vocal_root=None,
+        ins_root=None,
+        format="flac",
+        is_hp3=False,
+        output_name="vocal",
     ):  # 3个VR模型vocal和ins是反的
         if ins_root is None and vocal_root is None:
             return "No save root."
@@ -291,10 +313,7 @@ class AudioPreDeEcho:
             logger.info("%s instruments done" % name)
             if format in ["wav", "flac"]:
                 sf.write(
-                    os.path.join(
-                        ins_root,
-                        output_name
-                    ),
+                    os.path.join(ins_root, output_name),
                     (np.array(wav_instrument) * 32768).astype("int16"),
                     self.mp.param["sr"],
                 )  #

@@ -5,7 +5,6 @@ import gradio as gr
 
 from package_utils.config import JSONReader
 from package_utils.i18n import I
-from package_utils.ui import ModelChooser
 
 
 class Compatible:

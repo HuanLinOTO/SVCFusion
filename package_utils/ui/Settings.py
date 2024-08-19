@@ -1,5 +1,4 @@
-from re import M
-from package_utils.config import JSONReader, applyChanges
+from package_utils.config import applyChanges
 from package_utils.i18n import I
 from package_utils.config import system_config
 from package_utils.locale import text_to_locale
@@ -69,15 +68,20 @@ class Settings:
                 },
                 "callback": self.get_save_config_fn("ddsp6"),
             },
+            I.settings.infer_settings_label: {
+                "form": {
+                    "msst_device": {
+                        "type": "device_chooser",
+                        "info": I.settings.infer.msst_device_label,
+                    }
+                },
+                "callback": self.get_save_config_fn("infer"),
+            },
         }
 
         self.triger = gr.Dropdown(
             label=I.settings.page,
-            choices=[
-                I.settings.pkg_settings_label,
-                I.settings.sovits_settings_label,
-                I.settings.ddsp6_settings_label,
-            ],
+            choices=self.form.keys(),
             value=I.settings.pkg_settings_label,
             interactive=True,
         )
@@ -85,4 +89,5 @@ class Settings:
         Form(
             triger_comp=self.triger,
             models=self.form,
+            submit_btn_text=I.settings.save_btn_value,
         )

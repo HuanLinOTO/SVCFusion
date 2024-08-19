@@ -7,7 +7,6 @@ import librosa
 import torch
 from torch.utils.data import Dataset
 
-from ddspsvc import logger
 from ddspsvc.logger import Progress
 
 

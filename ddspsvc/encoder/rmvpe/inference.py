@@ -3,24 +3,29 @@ import torch.nn.functional as F
 from torchaudio.transforms import Resample
 from .constants import *
 from .model import E2E0
-from .spec import MelSpectrogram 
+from .spec import MelSpectrogram
 from .utils import to_local_average_f0, to_viterbi_f0
+
 
 class RMVPE:
     def __init__(self, model_path, hop_length=160):
         self.resample_kernel = {}
         model = E2E0(4, 1, (2, 2))
         ckpt = torch.load(model_path)
-        model.load_state_dict(ckpt['model'], strict=False)
+        model.load_state_dict(ckpt["model"], strict=False)
         model.eval()
         self.model = model
-        self.mel_extractor = MelSpectrogram(N_MELS, SAMPLE_RATE, WINDOW_LENGTH, hop_length, None, MEL_FMIN, MEL_FMAX)
+        self.mel_extractor = MelSpectrogram(
+            N_MELS, SAMPLE_RATE, WINDOW_LENGTH, hop_length, None, MEL_FMIN, MEL_FMAX
+        )
         self.resample_kernel = {}
 
     def mel2hidden(self, mel):
         with torch.no_grad():
             n_frames = mel.shape[-1]
-            mel = F.pad(mel, (0, 32 * ((n_frames - 1) // 32 + 1) - n_frames), mode='constant')
+            mel = F.pad(
+                mel, (0, 32 * ((n_frames - 1) // 32 + 1) - n_frames), mode="constant"
+            )
             hidden = self.model(mel)
             return hidden[:, :n_frames]
 
@@ -28,19 +33,23 @@ class RMVPE:
         if use_viterbi:
             f0 = to_viterbi_f0(hidden, thred=thred)
         else:
-            f0 = to_local_average_f0(hidden, thred=thred)  
+            f0 = to_local_average_f0(hidden, thred=thred)
         return f0
 
-    def infer_from_audio(self, audio, sample_rate=16000, device=None, thred=0.03, use_viterbi=False):
+    def infer_from_audio(
+        self, audio, sample_rate=16000, device=None, thred=0.03, use_viterbi=False
+    ):
         if device is None:
-            device = 'cuda' if torch.cuda.is_available() else 'cpu'
+            device = "cuda" if torch.cuda.is_available() else "cpu"
         audio = torch.from_numpy(audio).float().unsqueeze(0).to(device)
         if sample_rate == 16000:
             audio_res = audio
         else:
             key_str = str(sample_rate)
             if key_str not in self.resample_kernel:
-                self.resample_kernel[key_str] = Resample(sample_rate, 16000, lowpass_filter_width=128)
+                self.resample_kernel[key_str] = Resample(
+                    sample_rate, 16000, lowpass_filter_width=128
+                )
             self.resample_kernel[key_str] = self.resample_kernel[key_str].to(device)
             audio_res = self.resample_kernel[key_str](audio)
         mel_extractor = self.mel_extractor.to(device)

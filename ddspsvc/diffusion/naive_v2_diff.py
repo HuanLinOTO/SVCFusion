@@ -29,21 +29,21 @@ class DiffusionEmbedding(nn.Module):
 
 
 class NaiveV2DiffLayer(nn.Module):
-
-    def __init__(self,
-                 dim_model: int,
-                 dim_cond: int,
-                 num_heads: int = 4,
-                 use_norm: bool = False,
-                 conv_only: bool = True,
-                 conv_dropout: float = 0.,
-                 atten_dropout: float = 0.1,
-                 use_mlp=True,
-                 expansion_factor=2,
-                 kernel_size=31,
-                 wavenet_like=False,
-                 conv_model_type='mode1',
-                 ):
+    def __init__(
+        self,
+        dim_model: int,
+        dim_cond: int,
+        num_heads: int = 4,
+        use_norm: bool = False,
+        conv_only: bool = True,
+        conv_dropout: float = 0.0,
+        atten_dropout: float = 0.1,
+        use_mlp=True,
+        expansion_factor=2,
+        kernel_size=31,
+        wavenet_like=False,
+        conv_model_type="mode1",
+    ):
         super().__init__()
 
         self.conformer = ConformerConvModule(
@@ -72,25 +72,29 @@ class NaiveV2DiffLayer(nn.Module):
                 nhead=num_heads,
                 dim_feedforward=dim_model * 4,
                 dropout=atten_dropout,
-                activation='gelu'
+                activation="gelu",
             )
         else:
             self.attn = None
 
     def forward(self, x, condition=None, diffusion_step=None) -> torch.Tensor:
         res_x = x.transpose(1, 2)
-        x = x + self.diffusion_step_projection(diffusion_step) + self.condition_projection(condition)
+        x = (
+            x
+            + self.diffusion_step_projection(diffusion_step)
+            + self.condition_projection(condition)
+        )
         x = x.transpose(1, 2)
 
         if self.attn is not None:
-            x = (self.attn(self.norm(x)))
+            x = self.attn(self.norm(x))
 
         x = self.conformer(x)  # (#batch, dim_model, length)
 
         if self.wavenet_like_proj is not None:
             x = self.wavenet_like_proj(x.transpose(1, 2)).transpose(1, 2)
             x = F.glu(x, dim=-1)
-            return ((x + res_x)/math.sqrt(2.0)).transpose(1, 2), res_x.transpose(1, 2)
+            return ((x + res_x) / math.sqrt(2.0)).transpose(1, 2), res_x.transpose(1, 2)
         else:
             x = x + res_x
             x = x.transpose(1, 2)
@@ -99,21 +103,21 @@ class NaiveV2DiffLayer(nn.Module):
 
 class NaiveV2Diff(nn.Module):
     def __init__(
-            self,
-            mel_channels=128,
-            dim=512,
-            use_mlp=True,
-            mlp_factor=4,
-            condition_dim=256,
-            num_layers=20,
-            expansion_factor=2,
-            kernel_size=31,
-            conv_only=True,
-            wavenet_like=False,
-            use_norm=False,
-            conv_model_type='mode1',
-            conv_dropout=0.0,
-            atten_dropout=0.1,
+        self,
+        mel_channels=128,
+        dim=512,
+        use_mlp=True,
+        mlp_factor=4,
+        condition_dim=256,
+        num_layers=20,
+        expansion_factor=2,
+        kernel_size=31,
+        conv_only=True,
+        wavenet_like=False,
+        use_norm=False,
+        conv_model_type="mode1",
+        conv_dropout=0.0,
+        atten_dropout=0.1,
     ):
         super(NaiveV2Diff, self).__init__()
         self.wavenet_like = wavenet_like
@@ -126,7 +130,7 @@ class NaiveV2Diff(nn.Module):
             nn.GELU(),
             nn.Linear(dim * mlp_factor, dim),
         )
-        
+
         if use_mlp:
             self.conditioner_projection = nn.Sequential(
                 nn.Conv1d(condition_dim, dim * mlp_factor, 1),
@@ -208,7 +212,9 @@ class NaiveV2Diff(nn.Module):
                 # forward
                 x, sk = layer(x, _conditioner, diffusion_step)
                 _sk.append(sk)
-            x = torch.sum(torch.stack(_sk), dim=0) / math.sqrt(len(self.residual_layers))
+            x = torch.sum(torch.stack(_sk), dim=0) / math.sqrt(
+                len(self.residual_layers)
+            )
 
         else:
             for layer in self.residual_layers:

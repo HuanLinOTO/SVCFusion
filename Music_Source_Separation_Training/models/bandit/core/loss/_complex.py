@@ -1,7 +1,6 @@
 from typing import Any
 
 import torch
-from torch import nn
 from torch.nn.modules import loss as _loss
 from torch.nn.modules.loss import _Loss
 
@@ -11,15 +10,8 @@ class ReImLossWrapper(_Loss):
         super().__init__()
         self.module = module
 
-    def forward(
-            self,
-            preds: torch.Tensor,
-            target: torch.Tensor
-            ) -> torch.Tensor:
-        return self.module(
-            torch.view_as_real(preds),
-            torch.view_as_real(target)
-            )
+    def forward(self, preds: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        return self.module(torch.view_as_real(preds), torch.view_as_real(target))
 
 
 class ReImL1Loss(ReImLossWrapper):

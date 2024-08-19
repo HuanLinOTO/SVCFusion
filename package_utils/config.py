@@ -101,6 +101,9 @@ class DefaultSystemConfig:
     class pkg:
         lang = "简体中文"
 
+    class infer:
+        msst_device = "cuda:0"
+
     class sovits:
         resolve_port_clash = False
 

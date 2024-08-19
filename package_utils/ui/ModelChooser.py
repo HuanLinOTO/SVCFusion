@@ -25,7 +25,7 @@ class ModelChooser:
                 result[key] = None
         return result
 
-    def get_on_topic_result(): ...
+    # def get_on_topic_result(): ...
 
     def refresh_search_paths(self):
         self.search_paths = [
@@ -88,8 +88,15 @@ class ModelChooser:
 
     selected_search_path = ""
 
+    search_path_handlers = []
+
+    def on_search_path_change(self, handler):
+        self.search_path_handlers.append(handler)
+
     def update_search_path(self, search_path):
         self.selected_search_path = search_path
+        for handler in self.search_path_handlers:
+            handler(search_path)
 
     def update_selected(self, search_path, device, *params_values):
         search_path = self.search_paths[search_path]
@@ -185,6 +192,7 @@ class ModelChooser:
         on_submit: Callable = lambda *x: None,
         show_options=True,
         show_submit_button=True,
+        submit_btn_text=I.model_chooser.submit_btn_value,
     ) -> None:
         self.submit_func = on_submit
         self.show_submit_button = show_submit_button
@@ -260,7 +268,7 @@ class ModelChooser:
             )
 
         self.load_model_btn = gr.Button(
-            I.model_chooser.submit_btn_value,
+            submit_btn_text,
             variant="primary",
             interactive=True,
             visible=show_submit_button,

@@ -17,6 +17,9 @@ class AudioSlicer:
     def callback(self, input, output, max_duration):
         if not vef_path(input):
             return
+        if input == output:
+            gr.Info(I.fish_audio_preprocess.input_output_same_tip)
+            return
         slice_audio(input, output, max_duration)
 
     def __init__(self) -> None:

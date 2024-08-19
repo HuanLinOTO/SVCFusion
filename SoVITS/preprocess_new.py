@@ -198,8 +198,8 @@ if __name__ == "__main__":
 
     num_processes = args.num_processes
     use_diff = args.use_diff
-    # debug = args.debug
-    debug = True
+    debug = args.debug
+    # debug = True
     asyncio.run(
         main(
             args=args,

@@ -4,17 +4,12 @@ __author__ = "Roman Solovyev (ZFTurbo): https://github.com/ZFTurbo/"
 import argparse
 import time
 import librosa
-from tqdm import tqdm
-import sys
-import os
 import gradio as gr
-import time
 import torch
 import numpy as np
 import soundfile as sf
 import torch.nn as nn
 import torchaudio
-import hashlib
 from Music_Source_Separation_Training.utils import (
     demix_track,
     demix_track_demucs,
@@ -29,64 +24,64 @@ warnings.filterwarnings("ignore")
 def run_folder(
     model,
     args,
+    vocal_opt_path,
+    inst_opt_path,
     config,
     device,
     save_inst=True,
-    progress=gr.Progress(),
+    progress=gr.Progress(track_tqdm=True),
     progress_desc="",
 ):
     start_time = time.time()
     model.eval()
-    all_mixtures_path = [args.input_folder]
-    print("Total files found: {}".format(len(all_mixtures_path)))
+    # all_mixtures_path = [args.input_folder]
+    path = args.input_folder
+    # print("Total files found: {}".format(len(all_mixtures_path)))
 
     instruments = config.training.instruments
     if config.training.target_instrument is not None:
         instruments = [config.training.target_instrument]
 
-    for path in all_mixtures_path:
-        wf, sr = torchaudio.load(path)
-        wf = torchaudio.functional.resample(wf, sr, 44100)
-        # 写入 tmp/时间戳.wav
-        path = f"tmp/{time.time()}.wav"
-        torchaudio.save(path, wf, 44100)
+    wf, sr = torchaudio.load(path)
+    wf = torchaudio.functional.resample(wf, sr, 44100)
+    # 写入 tmp/时间戳.wav
+    path = f"tmp/{time.time()}.wav"
+    torchaudio.save(path, wf, 44100)
 
-        try:
-            # mix, sr = sf.read(path)
-            mix, sr = librosa.load(path, sr=44100, mono=False)
-            mix = mix.T
-        except Exception as e:
-            print("Can read track: {}".format(path))
-            print("Error message: {}".format(str(e)))
-            continue
+    try:
+        # mix, sr = sf.read(path)
+        mix, sr = librosa.load(path, sr=44100, mono=False)
+        mix = mix.T
+    except Exception as e:
+        print("Can read track: {}".format(path))
+        print("Error message: {}".format(str(e)))
+        return
 
-        # Convert mono to stereo if needed
-        if len(mix.shape) == 1:
-            mix = np.stack([mix, mix], axis=-1)
+    # Convert mono to stereo if needed
+    if len(mix.shape) == 1:
+        mix = np.stack([mix, mix], axis=-1)
 
-        mixture = torch.tensor(mix.T, dtype=torch.float32)
-        if args.model_type == "htdemucs":
-            res = demix_track_demucs(config, model, mixture, device)
-        else:
-            res = demix_track(config, model, mixture, device, progress, progress_desc)
-        for instr in instruments:
-            vocal_opt_path = "{}_{}.wav".format(args.store_dir, instr)
-            inst_opt_path = "{}_{}.wav".format(args.store_dir, "Instrument")
-            sf.write(vocal_opt_path, res[instr].T, sr, subtype="FLOAT")
-            vocal, sr_vocal = torchaudio.load(vocal_opt_path)
-            origin, sr_origin = torchaudio.load(path)
+    mixture = torch.tensor(mix.T, dtype=torch.float32)
+    if args.model_type == "htdemucs":
+        res = demix_track_demucs(config, model, mixture, device)
+    else:
+        res = demix_track(config, model, mixture, device, progress, progress_desc)
+    for instr in instruments:
+        sf.write(vocal_opt_path, res[instr].T, sr, subtype="FLOAT")
+        vocal, sr_vocal = torchaudio.load(vocal_opt_path)
+        origin, sr_origin = torchaudio.load(path)
 
-            if sr_vocal != sr_origin:
-                print("Resampling vocal from {} to {}".format(sr_vocal, sr_origin))
-                origin = torchaudio.transforms.Resample(sr_vocal, sr_origin)(origin)
+        if sr_vocal != sr_origin:
+            print("Resampling vocal from {} to {}".format(sr_vocal, sr_origin))
+            origin = torchaudio.transforms.Resample(sr_vocal, sr_origin)(origin)
 
-            if vocal.shape[1] < origin.shape[1]:
-                origin = origin[:, : vocal.shape[1]]
-            elif vocal.shape[1] > origin.shape[1]:
-                vocal = vocal[:, : origin.shape[1]]
-            if save_inst:
-                inst = origin - vocal
-                torchaudio.save(inst_opt_path, inst, sr)
+        if vocal.shape[1] < origin.shape[1]:
+            origin = origin[:, : vocal.shape[1]]
+        elif vocal.shape[1] > origin.shape[1]:
+            vocal = vocal[:, : origin.shape[1]]
+        if save_inst:
+            inst = origin - vocal
+            torchaudio.save(inst_opt_path, inst, sr)
     print("Elapsed time: {:.2f} sec".format(time.time() - start_time))
 
 

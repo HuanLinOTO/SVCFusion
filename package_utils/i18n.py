@@ -1,4 +1,3 @@
-from os import system
 from package_utils.config import system_config
 from .locale.base import Locale
 from .locale import locale_dict, text_to_locale

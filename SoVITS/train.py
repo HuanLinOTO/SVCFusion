@@ -91,7 +91,7 @@ def run(rank, n_gpus, hps):
         else multiprocessing.cpu_count()
     )
     if all_in_mem:
-        num_workers = 0
+        num_workers = 1
     train_loader = DataLoader(
         train_dataset,
         num_workers=num_workers,
@@ -420,7 +420,7 @@ def train_and_evaluate(
             if global_step % hps.train.eval_interval == 0 or os.path.exists(
                 os.path.join(hps.model_dir, "stop.txt")
             ):
-                if os.path.exists("stop.txt"):
+                if os.path.exists(os.path.join(hps.model_dir, "stop.txt")):
                     logger.info("stop.txt found, stop training")
                 evaluate(hps, net_g, eval_loader, writer_eval)
                 utils.save_checkpoint(
@@ -444,9 +444,9 @@ def train_and_evaluate(
                         n_ckpts_to_keep=keep_ckpts,
                         sort_by_time=True,
                     )
-                if os.path.exists("stop.txt"):
+                if os.path.exists(os.path.join(hps.model_dir, "stop.txt")):
                     logger.info("good bye!")
-                    os.remove("stop.txt")
+                    os.remove(os.path.join(hps.model_dir, "stop.txt"))
                     os._exit(0)
         global_step += 1
         progress.advance(task)

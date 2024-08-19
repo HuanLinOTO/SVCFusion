@@ -32,8 +32,10 @@ model:
   use_attention: true
   use_pitch_aug: false
 model_type_index: 1
+spk:
+  default: 0
 spks:
-- QQ2222225007
+- default
 train:
   amp_dtype: fp32
   batch_size: 48

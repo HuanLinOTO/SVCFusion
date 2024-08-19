@@ -2,6 +2,7 @@ import gc
 import json
 import os
 import pickle
+import sys
 
 import yaml
 from SoVITS.compress_model import copyStateDict
@@ -25,8 +26,6 @@ from .common import common_infer_form, common_preprocess_form
 from SoVITS import logger, utils
 import gradio as gr
 
-
-from get_free_port import get_dynamic_ports
 
 import soundfile as sf
 
@@ -372,7 +371,9 @@ class SoVITSModel:
             if params["train.half_type"] == "fp16":
                 params["train.fp16_run"] = True
 
-            if system_config.sovits.resolve_port_clash:
+            if system_config.sovits.resolve_port_clash and sys.platform == "win32":
+                from get_free_port import get_dynamic_ports
+
                 params["train.port"] = str(get_dynamic_ports()[0])
                 logger.info(
                     f"Try to resolve port clasling with port {params['train.port']}"

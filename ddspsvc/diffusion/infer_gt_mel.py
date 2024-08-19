@@ -9,7 +9,7 @@ class DiffGtMel:
         if device is not None:
             self.device = device
         else:
-            self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+            self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = None
         self.vocoder = None
         self.args = None
@@ -31,8 +31,19 @@ class DiffGtMel:
             raise ValueError("DDSP与DIFF模型的encoder不一致")
         return True
 
-    def __call__(self, audio, f0, hubert, volume, acc=1, spk_id=1, k_step=0, method='pndm',
-                 spk_mix_dict=None, start_frame=0):
+    def __call__(
+        self,
+        audio,
+        f0,
+        hubert,
+        volume,
+        acc=1,
+        spk_id=1,
+        k_step=0,
+        method="pndm",
+        spk_mix_dict=None,
+        start_frame=0,
+    ):
         if audio is None:
             input_mel = None
         else:
@@ -49,7 +60,8 @@ class DiffGtMel:
             infer_speedup=acc,
             method=method,
             k_step=k_step,
-            use_tqdm=False)
+            use_tqdm=False,
+        )
         if start_frame > 0:
             out_mel = out_mel[:, start_frame:, :]
             f0 = f0[:, start_frame:, :]
@@ -58,20 +70,46 @@ class DiffGtMel:
             output = F.pad(output, (start_frame * self.vocoder.vocoder_hop_size, 0))
         return output
 
-    def infer(self, audio, f0, hubert, volume, acc=1, spk_id=1, k_step=0, method='pndm', silence_front=0,
-              use_silence=False, spk_mix_dict=None):
-        start_frame = int(silence_front * self.vocoder.vocoder_sample_rate / self.vocoder.vocoder_hop_size)
+    def infer(
+        self,
+        audio,
+        f0,
+        hubert,
+        volume,
+        acc=1,
+        spk_id=1,
+        k_step=0,
+        method="pndm",
+        silence_front=0,
+        use_silence=False,
+        spk_mix_dict=None,
+    ):
+        start_frame = int(
+            silence_front
+            * self.vocoder.vocoder_sample_rate
+            / self.vocoder.vocoder_hop_size
+        )
         if use_silence:
             if audio is not None:
-                audio = audio[:, start_frame * self.vocoder.vocoder_hop_size:]
+                audio = audio[:, start_frame * self.vocoder.vocoder_hop_size :]
             f0 = f0[:, start_frame:, :]
             hubert = hubert[:, start_frame:, :]
             volume = volume[:, start_frame:, :]
             _start_frame = 0
         else:
             _start_frame = start_frame
-        audio = self.__call__(audio, f0, hubert, volume, acc=acc, spk_id=spk_id, k_step=k_step,
-                              method=method, spk_mix_dict=spk_mix_dict, start_frame=_start_frame)
+        audio = self.__call__(
+            audio,
+            f0,
+            hubert,
+            volume,
+            acc=acc,
+            spk_id=spk_id,
+            k_step=k_step,
+            method=method,
+            spk_mix_dict=spk_mix_dict,
+            start_frame=_start_frame,
+        )
         if use_silence:
             if start_frame > 0:
                 audio = F.pad(audio, (start_frame * self.vocoder.vocoder_hop_size, 0))

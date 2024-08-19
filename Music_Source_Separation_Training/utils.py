@@ -1,14 +1,13 @@
 # coding: utf-8
 __author__ = "Roman Solovyev (ZFTurbo): https://github.com/ZFTurbo/"
 
-import time
 import numpy as np
 import torch
 import torch.nn as nn
 import yaml
-from tqdm import tqdm
 from ml_collections import ConfigDict
 from omegaconf import OmegaConf
+from tqdm import tqdm
 import gradio as gr
 
 
@@ -20,41 +19,47 @@ def get_model_from_config(model_type, config_path):
             config = ConfigDict(yaml.load(f, Loader=yaml.FullLoader))
 
     if model_type == "mdx23c":
-        from Music_Source_Separation_Training.models.mdx23c_tfc_tdf_v3 import (
-            TFC_TDF_net,
-        )
+        from .models.mdx23c_tfc_tdf_v3 import TFC_TDF_net
 
         model = TFC_TDF_net(config)
     elif model_type == "htdemucs":
-        from Music_Source_Separation_Training.models.demucs4ht import get_model
+        from .models.demucs4ht import get_model
 
         model = get_model(config)
     elif model_type == "segm_models":
-        from Music_Source_Separation_Training.models.segm_models import Segm_Models_Net
+        from .models.segm_models import Segm_Models_Net
 
         model = Segm_Models_Net(config)
+    elif model_type == "torchseg":
+        from .models.torchseg_models import Torchseg_Net
+
+        model = Torchseg_Net(config)
     elif model_type == "mel_band_roformer":
-        from Music_Source_Separation_Training.models.bs_roformer import MelBandRoformer
+        from .models.bs_roformer import MelBandRoformer
 
         model = MelBandRoformer(**dict(config.model))
     elif model_type == "bs_roformer":
-        from Music_Source_Separation_Training.models.bs_roformer import BSRoformer
+        from .models.bs_roformer import BSRoformer
 
         model = BSRoformer(**dict(config.model))
     elif model_type == "swin_upernet":
-        from Music_Source_Separation_Training.models.upernet_swin_transformers import (
-            Swin_UperNet_Model,
-        )
+        from .models.upernet_swin_transformers import Swin_UperNet_Model
 
         model = Swin_UperNet_Model(config)
     elif model_type == "bandit":
-        from Music_Source_Separation_Training.models.bandit.core.model import (
-            MultiMaskMultiSourceBandSplitRNNSimple,
-        )
+        from .models.bandit.core.model import MultiMaskMultiSourceBandSplitRNNSimple
 
         model = MultiMaskMultiSourceBandSplitRNNSimple(**config.model)
+    elif model_type == "bandit_v2":
+        from .models.bandit_v2.bandit import Bandit
+
+        model = Bandit(**config.kwargs)
+    elif model_type == "scnet_unofficial":
+        from .models.scnet_unofficial import SCNet
+
+        model = SCNet(**config.model)
     elif model_type == "scnet":
-        from Music_Source_Separation_Training.models.scnet import SCNet
+        from .models.scnet import SCNet
 
         model = SCNet(**config.model)
     else:
@@ -64,9 +69,19 @@ def get_model_from_config(model_type, config_path):
     return model, config
 
 
+def _getWindowingArray(window_size, fade_size):
+    fadein = torch.linspace(0, 1, fade_size)
+    fadeout = torch.linspace(1, 0, fade_size)
+    window = torch.ones(window_size)
+    window[-fade_size:] *= fadeout
+    window[:fade_size] *= fadein
+    return window
+
+
 def demix_track(config, model, mix, device, progress=gr.Progress(), progress_desc=""):
     C = config.audio.chunk_size
     N = config.inference.num_overlap
+    fade_size = C // 10
     step = int(C // N)
     border = C - step
     batch_size = config.inference.batch_size
@@ -77,7 +92,10 @@ def demix_track(config, model, mix, device, progress=gr.Progress(), progress_des
     if length_init > 2 * border and (border > 0):
         mix = nn.functional.pad(mix, (border, border), mode="reflect")
 
-    with torch.cuda.amp.autocast():
+    # windowingArray crossfades at segment boundaries to mitigate clicking artifacts
+    windowingArray = _getWindowingArray(C, fade_size)
+
+    with torch.cuda.amp.autocast(enabled=config.training.use_amp):
         with torch.inference_mode():
             if config.training.target_instrument is not None:
                 req_shape = (1,) + tuple(mix.shape)
@@ -89,11 +107,11 @@ def demix_track(config, model, mix, device, progress=gr.Progress(), progress_des
             i = 0
             batch_data = []
             batch_locations = []
-            pbar = progress.tqdm(
+            progress_bar = progress.tqdm(
                 list(range(mix.shape[1])), total=mix.shape[1], desc=progress_desc
             )
+
             while i < mix.shape[1]:
-                pbar.update(step)
                 # print(i, i + C, mix.shape[1])
                 part = mix[:, i : i + C].to(device)
                 length = part.shape[-1]
@@ -116,12 +134,26 @@ def demix_track(config, model, mix, device, progress=gr.Progress(), progress_des
                 if len(batch_data) >= batch_size or (i >= mix.shape[1]):
                     arr = torch.stack(batch_data, dim=0)
                     x = model(arr)
+
+                    window = windowingArray
+                    if i - step == 0:  # First audio chunk, no fadein
+                        window[:fade_size] = 1
+                    elif i >= mix.shape[1]:  # Last audio chunk, no fadeout
+                        window[-fade_size:] = 1
+
                     for j in range(len(batch_locations)):
                         start, l = batch_locations[j]
-                        result[..., start : start + l] += x[j][..., :l].cpu()
-                        counter[..., start : start + l] += 1.0
+                        result[..., start : start + l] += (
+                            x[j][..., :l].cpu() * window[..., :l]
+                        )
+                        counter[..., start : start + l] += window[..., :l]
+
                     batch_data = []
                     batch_locations = []
+
+                progress_bar.update(step)
+
+            progress_bar.close(None)
 
             estimated_sources = result / counter
             estimated_sources = estimated_sources.cpu().numpy()
@@ -139,7 +171,7 @@ def demix_track(config, model, mix, device, progress=gr.Progress(), progress_des
         }
 
 
-def demix_track_demucs(config, model, mix, device):
+def demix_track_demucs(config, model, mix, device, pbar=False):
     S = len(config.training.instruments)
     C = config.training.samplerate * config.training.segment
     N = config.inference.num_overlap
@@ -155,6 +187,12 @@ def demix_track_demucs(config, model, mix, device):
             i = 0
             batch_data = []
             batch_locations = []
+            progress_bar = (
+                tqdm(total=mix.shape[1], desc="Processing audio chunks", leave=False)
+                if pbar
+                else None
+            )
+
             while i < mix.shape[1]:
                 # print(i, i + C, mix.shape[1])
                 part = mix[:, i : i + C].to(device)
@@ -176,6 +214,12 @@ def demix_track_demucs(config, model, mix, device):
                         counter[..., start : start + l] += 1.0
                     batch_data = []
                     batch_locations = []
+
+                if progress_bar:
+                    progress_bar.update(step)
+
+            if progress_bar:
+                progress_bar.close()
 
             estimated_sources = result / counter
             estimated_sources = estimated_sources.cpu().numpy()

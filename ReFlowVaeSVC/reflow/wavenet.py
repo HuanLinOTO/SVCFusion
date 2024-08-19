@@ -2,18 +2,25 @@ import math
 from math import sqrt
 
 import torch
+
 try:
     import torch_musa
+
     use_torch_musa = True
 except ImportError:
     from torch.nn import Mish
+
     use_torch_musa = False
 import torch.nn as nn
 import torch.nn.functional as F
-from transformers.models.roformer.modeling_roformer import RoFormerEncoder, RoFormerConfig
+from transformers.models.roformer.modeling_roformer import (
+    RoFormerEncoder,
+    RoFormerConfig,
+)
 
 
 if use_torch_musa:
+
     class Mish(nn.Module):
         def __init__(self):
             super().__init__()
@@ -51,11 +58,15 @@ class ResidualBlock(nn.Module):
             residual_channels,
             2 * residual_channels,
             kernel_size=kernel_size,
-            padding=dilation if (kernel_size == 3) else int((kernel_size-1) * dilation / 2),
-            dilation=dilation
+            padding=dilation
+            if (kernel_size == 3)
+            else int((kernel_size - 1) * dilation / 2),
+            dilation=dilation,
         )
         self.diffusion_projection = nn.Linear(residual_channels, residual_channels)
-        self.conditioner_projection = nn.Conv1d(encoder_hidden, 2 * residual_channels, 1)
+        self.conditioner_projection = nn.Conv1d(
+            encoder_hidden, 2 * residual_channels, 1
+        )
         self.output_projection = nn.Conv1d(residual_channels, 2 * residual_channels, 1)
 
     def forward(self, x, conditioner, diffusion_step):
@@ -66,37 +77,56 @@ class ResidualBlock(nn.Module):
         y = self.dilated_conv(y) + conditioner
 
         # Using torch.split instead of torch.chunk to avoid using onnx::Slice
-        gate, filter = torch.split(y, [self.residual_channels, self.residual_channels], dim=1)
+        gate, filter = torch.split(
+            y, [self.residual_channels, self.residual_channels], dim=1
+        )
         y = torch.sigmoid(gate) * torch.tanh(filter)
 
         y = self.output_projection(y)
 
         # Using torch.split instead of torch.chunk to avoid using onnx::Slice
-        residual, skip = torch.split(y, [self.residual_channels, self.residual_channels], dim=1)
+        residual, skip = torch.split(
+            y, [self.residual_channels, self.residual_channels], dim=1
+        )
         return (x + residual) / math.sqrt(2.0), skip
 
 
 class WaveNet(nn.Module):
-    def __init__(self, in_dims=128, n_layers=20, n_chans=384, n_hidden=256, dilation=1, kernel_size=3,
-                 transformer_use=False, transformer_roformer_use=False, transformer_n_layers=2, transformer_n_head=4):
+    def __init__(
+        self,
+        in_dims=128,
+        n_layers=20,
+        n_chans=384,
+        n_hidden=256,
+        dilation=1,
+        kernel_size=3,
+        transformer_use=False,
+        transformer_roformer_use=False,
+        transformer_n_layers=2,
+        transformer_n_head=4,
+    ):
         super().__init__()
         self.input_projection = Conv1d(in_dims, n_chans, 1)
         self.diffusion_embedding = SinusoidalPosEmb(n_chans)
         self.mlp = nn.Sequential(
-            nn.Linear(n_chans, n_chans * 4),
-            Mish(),
-            nn.Linear(n_chans * 4, n_chans)
+            nn.Linear(n_chans, n_chans * 4), Mish(), nn.Linear(n_chans * 4, n_chans)
         )
-        self.residual_layers = nn.ModuleList([
-            ResidualBlock(
-                encoder_hidden=n_hidden,
-                residual_channels=n_chans,
-                dilation=(2 ** (i % dilation)) if (dilation != 1) else 1,
-                kernel_size=kernel_size
-            )
-            for i in range(n_layers)
-        ])
-        self.transformer_roformer_use = transformer_roformer_use if (transformer_roformer_use is not None) else False
+        self.residual_layers = nn.ModuleList(
+            [
+                ResidualBlock(
+                    encoder_hidden=n_hidden,
+                    residual_channels=n_chans,
+                    dilation=(2 ** (i % dilation)) if (dilation != 1) else 1,
+                    kernel_size=kernel_size,
+                )
+                for i in range(n_layers)
+            ]
+        )
+        self.transformer_roformer_use = (
+            transformer_roformer_use
+            if (transformer_roformer_use is not None)
+            else False
+        )
         if transformer_use:
             if transformer_roformer_use:
                 self.transformer = RoFormerEncoder(
@@ -105,7 +135,7 @@ class WaveNet(nn.Module):
                         max_position_embeddings=4096,
                         num_attention_heads=transformer_n_head,
                         num_hidden_layers=transformer_n_layers,
-                        add_cross_attention=False
+                        add_cross_attention=False,
                     )
                 )
             else:
@@ -114,9 +144,11 @@ class WaveNet(nn.Module):
                     nhead=transformer_n_head,
                     dim_feedforward=n_chans * 4,
                     dropout=0.1,
-                    activation='gelu'
+                    activation="gelu",
                 )
-                self.transformer = nn.TransformerEncoder(transformer_layer, num_layers=transformer_n_layers)
+                self.transformer = nn.TransformerEncoder(
+                    transformer_layer, num_layers=transformer_n_layers
+                )
         else:
             self.transformer = None
 

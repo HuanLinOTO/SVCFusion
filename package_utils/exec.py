@@ -1,9 +1,15 @@
 import os
 import subprocess
+import sys
 
 from loguru import logger
 
-executable = os.path.abspath(".conda\\python.exe")
+
+executable = (
+    os.path.abspath(".conda\\python.exe")
+    if sys.platform == "win32"
+    else (sys.executable if "python" in sys.executable else "python")
+)
 
 
 def exec_it(command):
@@ -47,4 +53,7 @@ def start_with_cmd(cmd: str):
     # cmd = "call .conda\\Scripts\\activate.bat" + " && " + cmd
 
     logger.info(f"Run command with cmd: {cmd}")
-    subprocess.Popen(["wt\\wt", *cmd.split(" ")], shell=True)
+    if sys.platform == "win32":
+        subprocess.Popen(["wt\\wt", *cmd.split(" ")], shell=True)
+    else:
+        os.system(cmd)

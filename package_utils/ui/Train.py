@@ -101,6 +101,7 @@ class Train:
                 Form(
                     triger_comp=sub_model_type_dropdown,
                     models=train_form,
+                    submit_btn_text=I.train.start_train_btn_value,
                 )
 
                 with gr.Row():

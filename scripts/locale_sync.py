@@ -1,131 +1,139 @@
-import inspect
+import ast
+import hashlib
 import os
-import importlib.util
+import ollama
 
 
-def load_module_from_file(module_name, file_path):
-    spec = importlib.util.spec_from_file_location(module_name, file_path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+class ModifyStringVisitor(ast.NodeTransformer):
+    def __init__(self, class_name, modify_function):
+        self.class_name = class_name
+        self.modify_function = modify_function
+        self.in_class = False
+        self.class_node = None
 
-
-locale_dict: dict[str, dict] = {}
-locale_to_display_name = {}
-locale_to_path = {}
-
-
-def merge_dicts(ref, source, prefix=""):
-    result = source.copy()  # 复制 source 到结果字典
-    for key in ref:
-        if key not in source:
-            print(f"Key {prefix}.{key} not found in source")
-            result[key] = ref[key]
-        if key in source and isinstance(source[key], dict):
-            result[key] = merge_dicts(
-                ref[key],
-                source[key],
-                prefix=f"{prefix}.{key}",
-            )
-    return result
-
-
-for filename in os.listdir("package_utils/locale"):
-    if filename.endswith(".py") and filename not in ["__init__.py", "base.py"]:
-        file_path = os.path.join("package_utils/locale", filename)
-        module_name = os.path.splitext(filename)[0]
-        module = load_module_from_file(module_name, file_path)
-
-        if (
-            hasattr(module, "_Locale")
-            and hasattr(module, "locale_name")
-            and hasattr(module, "locale_display_name")
-        ):
-            _Locale = getattr(module, "_Locale")
-            locale_name = getattr(module, "locale_name")
-            locale_display_name = getattr(module, "locale_display_name")
-
-            locale_dict[locale_name] = _Locale
-            locale_to_display_name[locale_name] = locale_display_name
-
-            locale_to_path[locale_name] = os.path.join("package_utils/locale", filename)
-
-            print(f"Loaded {locale_name} from {filename}")
-
-
-def remove_magic(dict):
-    return {key: value for key, value in dict.items() if not key.startswith("__")}
-
-
-# 递归
-def class_to_dict(cls):
-    return remove_magic(
-        {
-            key: class_to_dict(value) if inspect.isclass(value) else value
-            for key, value in cls.__dict__.items()
-        }
-    )
-
-
-LocaleDict = dict[str, "LocaleDict"]
-
-
-# 要递归的
-def dict_to_class_code(source, class_name, extent_node="", is_root=False):
-    if extent_node:
-        extent_name = f"{extent_node}{'' if is_root else '.'+class_name}"
-        code = f"class {class_name}({extent_name}):\n"
-    else:
-        code = f"class {class_name}:\n"
-    for key, value in source.items():
-        if isinstance(value, dict):
-            tmp = dict_to_class_code(value, key, extent_name if extent_node else "")
-            for i in tmp.split("\n"):
-                code += f"    {i}\n"
+    def visit_ClassDef(self, node):
+        if node.name == self.class_name:
+            self.in_class = True
+            self.class_node = node
+            # Transform the node (i.e., apply the modifications)
+            self.generic_visit(node)
+            self.in_class = False
         else:
-            if isinstance(value, str):
-                if "\n" in value:
-                    value = f'"""\n{value}\n"""'
-                else:
-                    value = f'"{value}"'
+            self.generic_visit(node)
+        return node
 
-            code += f"    {key} = {value}\n"
-    return code
+    def visit_Str(self, node):
+        if self.in_class:
+            new_value = self.modify_function(node.s)
+            return ast.copy_location(ast.Str(s=new_value), node)
+        return node
 
-
-def save_locale_file(class_code, path):
-    try:
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(class_code)
-    except UnicodeEncodeError as _e:
-        with open(path, "w") as f:
-            f.write(class_code)
+    def visit_Constant(self, node):
+        # Handle string literals in Python 3.8 and later
+        if self.in_class and isinstance(node.value, str):
+            new_value = self.modify_function(node.value)
+            return ast.copy_location(ast.Constant(value=new_value), node)
+        return node
 
 
-base_locale = class_to_dict(locale_dict["zh-cn"])
-del locale_dict["zh-cn"]
-for lang in locale_dict:
-    locale = class_to_dict(locale_dict[lang])
-    result = merge_dicts(
-        base_locale,
-        locale,
-        lang,
+def hash_string(value):
+    return hashlib.md5(value.encode()).hexdigest()
+
+
+examples = {
+    "english": ["你好。", "Hello."],
+    "emojilang": ["你好。", "👋🏻"],
+}
+
+opt_file = {
+    "english": "package_utils/locale/en_US.py",
+    "emojilang": "package_utils/locale/emoji.py",
+}
+
+info = {
+    "english": {
+        "name": "en-us",
+        "display_name": "English (US)",
+    },
+    "emojilang": {
+        "name": "emojilang",
+        "display_name": "😎",
+    },
+}
+
+model = {
+    "english": "qwen2:7b-instruct",
+    "emojilang": "qwen2:7b-instruct",
+}
+
+target = {
+    "english": "english, text only",
+    "emojilang": "emojilang, containing emojis only",
+}
+
+for lang in ["english", "emojilang"]:
+    prompt = (
+        """
+    Task: translate input to {target}, keep the markdown format
+
+    Example:
+    Input: {example_input}
+    Result: {example_output}
+
+    Input: {1}
+    Output: 
+    """.replace("{example_input}", examples[lang][0])
+        .replace("{example_output}", examples[lang][1])
+        .replace("{target}", target[lang])
     )
-    class_code = dict_to_class_code(
-        result,
-        "_Locale",
-        "Locale",
-        True,
-    )
-    save_locale_file(
-        f"""
-from package_utils.locale.base import Locale
 
-locale_name = "{lang}"
-locale_display_name = "{locale_to_display_name[lang]}"
+    # 修改字符串的函数，例如将所有字符串转换为大写
+    def modify_string(value):
+        file = "translate_tmp/" + lang + "/" + hash_string(value) + ".txt"
+        os.makedirs(os.path.dirname(file), exist_ok=True)
 
-"""
-        + class_code,
-        locale_to_path[lang],
-    )
-    print(f"Saved {lang}.py")
+        if os.path.exists(file):
+            with open(file, "r", encoding="utf-8") as f:
+                return f.read()
+        print(value)
+        stream = ollama.generate(
+            model=model[lang],
+            prompt=prompt.replace("{1}", value),
+            stream=True,
+        )
+        result = ""
+
+        for chunk in stream:
+            msg = chunk["response"]
+            print(msg, end="", flush=True)
+            result += msg
+
+        # 从 [] 中提取翻译结果
+
+        with open(
+            file,
+            "w",
+            encoding="utf-8",
+        ) as f:
+            f.write(result)
+        print("")
+        return result
+
+    # 解析zh_CN.py文件
+    with open("package_utils/locale/zh_CN.py", "r", encoding="utf-8") as file:
+        tree = ast.parse(file.read(), filename="zh_CN.py")
+
+    # 创建访问者并修改AST中的字符串
+    modifier = ModifyStringVisitor("_Locale", modify_string)
+    modified_tree = modifier.visit(tree)
+
+    # 将修改后的类还原为Python代码并输出到aaa.py文件中
+    with open(opt_file[lang], "w", encoding="utf-8") as output_file:
+        output_file.write(
+            ast.unparse(modified_tree)
+            .replace("locale_name = 'zh-cn'", f"locale_name = '{info[lang]['name']}'")
+            .replace(
+                "locale_display_name = '简体中文'",
+                f"locale_display_name = '{info[lang]['display_name']}'",
+            )
+        )

@@ -121,7 +121,10 @@ class Form:
                 editable=True,
             )
         elif item["type"] == "device_chooser":
-            return DeviceChooser(show=True).device_dropdown
+            return DeviceChooser(
+                show=True,
+                info=item.get("info", None),
+            ).device_dropdown
         elif item["type"] == "file":
             return gr.Files(
                 label=item["label"],
@@ -141,6 +144,7 @@ class Form:
         use_audio_opt=False,
         use_textbox_opt=False,
         show_submit=True,
+        submit_btn_text=I.form.submit_btn_value,
     ) -> None:
         self.models = models
         self.vertical = vertical
@@ -209,7 +213,9 @@ class Form:
                         row.__enter__()
                 if not vertical:
                     row.__exit__()
-                submit = gr.Button(I.form.submit_btn_value, visible=show_submit)
+                submit = gr.Button(
+                    submit_btn_text, visible=show_submit, variant="primary"
+                )
                 inputs = [*items]
                 self.extra_inputs_keys = []
                 for key in extra_inputs:

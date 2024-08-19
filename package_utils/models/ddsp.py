@@ -145,9 +145,11 @@ class DDSPModel:
             },
         }
 
+        del params["_model_name"]
+
         params.update(net_info[system_config.ddsp6.pretrained_model_preference])
 
-        config = applyChanges(working_config_path, params)
+        config = applyChanges(working_config_path, params, no_skip=True)
 
         load_pretrained(
             "ddsp6",
@@ -423,6 +425,10 @@ class DDSPModel:
         self.train_form.update(
             {
                 "cascade": {
+                    "device": {
+                        "type": "device_chooser",
+                        "individual": True,
+                    },
                     "train.batch_size": {
                         "type": "slider",
                         "default": lambda: self.get_config()["train"]["batch_size"],
