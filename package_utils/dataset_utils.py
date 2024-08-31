@@ -1,6 +1,7 @@
 import os
 from shutil import rmtree
 
+from package_utils.config import JSONReader, YAMLReader
 from package_utils.model_utils import detect_current_model_by_path
 from .exec import executable
 from loguru import logger
@@ -84,12 +85,10 @@ def check_spks():
 def get_spk_from_dir(search_path):
     model_type_index = detect_current_model_by_path(search_path)
     if model_type_index == 2:
-        with open(f"{search_path}/config.json", "r") as f:
-            config = yaml.safe_load(f)
-            return config["spks"].keys()
+        with JSONReader(f"{search_path}/config.json") as config:
+            return list(config["spk"].keys())
     elif model_type_index in [0, 1]:
-        with open(f"{search_path}/config.yaml", "r") as f:
-            config = yaml.safe_load(f)
+        with YAMLReader(f"{search_path}/config.yaml") as config:
             return config["spks"]
 
 

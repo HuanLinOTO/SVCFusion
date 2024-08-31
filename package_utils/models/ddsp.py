@@ -166,6 +166,9 @@ class DDSPModel:
         # 将 dataset_raw 下面的 文件夹 变成一个数组
         spks = []
         for f in os.listdir("dataset_raw"):
+            if f.startswith("."):
+                print(f, "has been skiped")
+                continue
             if os.path.isdir(os.path.join("dataset_raw", f)):
                 spks.append(f)
             # 扫描角色目录，如果发现 .WAV 文件 改成 .wav

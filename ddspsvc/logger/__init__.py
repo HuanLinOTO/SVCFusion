@@ -8,7 +8,9 @@ from rich.progress import (
     BarColumn,
     TimeElapsedColumn,
     TimeRemainingColumn,
+    ProgressColumn,
 )
+from rich.text import Text
 
 console = Console(stderr=None)
 
@@ -34,6 +36,15 @@ def hps(hps):
     console.print(hps)
 
 
+class SpeedColumn(ProgressColumn):
+    def render(self, task: any) -> any:
+        """Show data transfer speed."""
+        speed = task.finished_speed or task.speed
+        if speed is None:
+            return Text("?", style="progress.data.speed")
+        return Text(f"{speed}/s", style="progress.data.speed")
+
+
 def Progress():
     return _Progress(
         TextColumn("[progress.description]{task.description}"),
@@ -41,6 +52,8 @@ def Progress():
         BarColumn(),
         TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
         TimeRemainingColumn(),
+        # TextColumn("[progress.data.speed]{task.speed:06.2f}"),
+        SpeedColumn(),
         TextColumn("[red]*Elapsed[/red]"),
         TimeElapsedColumn(),
         console=console,

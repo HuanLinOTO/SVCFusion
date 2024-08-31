@@ -19,7 +19,6 @@ import gradio as gr
 
 class ModelManager:
     def pack(self):
-        search_path = self.model_chooser.selected_search_path
         model_type_index = self.model_chooser.seleted_model_type_index
         result = self.model_chooser.selected_parameters
         if hasattr(model_list[model_type_index], "pack_model"):
@@ -29,7 +28,7 @@ class ModelManager:
             make_dirs("tmp/packed_models")
             # yymmdd_HHMMSS
             # name = time.strftime("%y%m%d_%H-%M-%S", time.localtime())
-            output_path = f"tmp/packed_models/{self.get_dst_name(search_path)}.sf_pkg"
+            output_path = f"tmp/packed_models/{self.get_dst_name()}.sf_pkg"
             torch.save(packed_model, output_path)
             return gr.update(
                 value=output_path,
@@ -93,7 +92,7 @@ class ModelManager:
 
         if len(spks) == 1:
             result += f"_{spks[0]}"
-            return gr.update(value=result.replace(" ", "_"))
+            return result.replace(" ", "_")
 
         for spk in spks:
             tmp = result + f"_{spk}"
@@ -104,7 +103,7 @@ class ModelManager:
             else:
                 result = tmp
 
-        return gr.update(value=result.replace(" ", "_"))
+        return result.replace(" ", "_")
 
     def __init__(self) -> None:
         gr.Markdown("## " + I.model_manager.choose_model_title)

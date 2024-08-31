@@ -7,6 +7,9 @@ import torch
 from tqdm import tqdm
 from torch.utils.data import Dataset
 
+# 使用优化
+USE_OPTIMIZED = os.environ.get("USE_OPTIMIZED", "0") == "1"
+
 
 def traverse_dir(
     root_dir,
@@ -139,7 +142,12 @@ class AudioDataset(Dataset):
 
     def get_single_item(self, name_ext, device, n_spk, load_all_data, fp16):
         path_audio = os.path.join(self.path_root, "audio", name_ext)
-        duration = librosa.get_duration(filename=path_audio, sr=self.sample_rate)
+        if USE_OPTIMIZED:
+            duration = float(
+                open(os.path.join(self.path_root, "duration", name_ext + ".txt")).read()
+            )
+        else:
+            duration = librosa.get_duration(filename=path_audio, sr=self.sample_rate)
 
         path_f0 = os.path.join(self.path_root, "f0", name_ext) + ".npy"
         f0 = np.load(path_f0)

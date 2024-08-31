@@ -23,21 +23,19 @@ infer:
   infer_step: 20
   method: euler
 model:
-  n_chans: 1024
-  n_layers: 12
+  n_chans: 3080
+  n_layers: 10
   n_spk: 1
   t_start: 0.7
   type: RectifiedFlow
   use_pitch_aug: true
   win_length: 2048
 model_type_index: 0
-spk:
-  default: 0
 spks:
 - default
 train:
   amp_dtype: fp32
-  batch_size: 60
+  batch_size: 1
   cache_all_data: true
   cache_device: cpu
   cache_fp16: true

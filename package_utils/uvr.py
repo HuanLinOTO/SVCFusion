@@ -239,4 +239,4 @@ def getVocalAndInstrument(
             )
         last_vocal = vocal_path
     print("result", vocal_path, real_inst_path)
-    return Path(vocal_path), Path(real_inst_path)
+    return vocal_path, real_inst_path

@@ -1,10 +1,8 @@
-from genericpath import isfile
 import os
 from pathlib import Path
 import shutil
 from traceback import print_exception
 import gradio as gr
-from matplotlib.backend_bases import NonGuiException
 
 from fap.utils.file import AUDIO_EXTENSIONS
 from package_utils.i18n import I
@@ -28,6 +26,7 @@ class VocalSeparation:
 
         vocal, inst = getVocalAndInstrument(
             input_audio,
+            True,
             use_de_reverb,
             use_harmonic_remove,
         )

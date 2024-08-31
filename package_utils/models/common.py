@@ -218,10 +218,11 @@ def infer_fn_proxy(fn):
 
                 result.append(res)
                 processed_vocal = True
-                if not os.path.exists(EMPTY_WAV_PATH):
-                    torchaudio.save(EMPTY_WAV_PATH, torch.zeros(1, 1), 44100)
+
             except Exception as e:
-                gr.Info(I.error_when_infer.replace("{1}", audio).replace("{2}", str(e)))
+                gr.Info(
+                    I.error_when_infer.replace("{1}", str(audio)).replace("{2}", str(e))
+                )
                 print_exception(e)
                 if not processed_inst:
                     inst_list.append(EMPTY_WAV_PATH)
