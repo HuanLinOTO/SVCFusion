@@ -6,7 +6,7 @@ on:
       - .github/workflows/download_env_to_artifact.yml
 
 jobs:
-  upload:
+  download:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,10 +23,9 @@ jobs:
         run: |
           huggingface-cli download SVCFusion/SVCFusion-Release SVCFusion-Env-V1.7z --repo-type dataset --local-dir ./
           ls
-          mv SVCFusion-Env-V1.7z SVCFusion-Env-V1-${{ github.sha }}.7z
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: SVCFusion-Release
-          path: SVCFusion-Env-V1-${{ github.sha }}.7z
+          name: SVCFusion-Env-v1
+          path: SVCFusion-Env-V1.7z
