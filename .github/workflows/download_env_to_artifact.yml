@@ -1,0 +1,32 @@
+name: Download Env to Artifact
+
+on:
+  push:
+    paths:
+      - .github/workflows/download_env_to_artifact.yml
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install HuggingFace
+        run: |
+          pip install huggingface_hub
+
+      - name: Download Env
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          huggingface-cli download SVCFusion/SVCFusion-Release SVCFusion-Env-V1.7z --repo-type dataset --local-dir ./
+          ls
+          mv SVCFusion-Env-V1.7z SVCFusion-Env-V1-${{ github.sha }}.7z
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: SVCFusion-Release
+          path: SVCFusion-Env-V1-${{ github.sha }}.7z
