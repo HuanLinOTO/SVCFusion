@@ -48,7 +48,7 @@ jobs:
 
       # 上传到构建产物
       - name: Upload - GitHub
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: SVCFusion-Release
           path: ./SVCFusion-Release-${{ github.sha }}.7z
