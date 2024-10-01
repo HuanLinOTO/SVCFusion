@@ -27,15 +27,11 @@ jobs:
         run: |
           pip install huggingface_hub
 
-      - name: Download Env
-        uses: actions/download-artifact@v4
-        with:
-          name: SVCFusion-Env-v1
-
       - name: Prepare Env
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          huggingface-cli download SVCFusion/SVCFusion-Release SVCFusion-Env-V1.7z --repo-type dataset --local-dir ./
           7z x SVCFusion-Env-V1.7z -o./
           rm SVCFusion-Env-V1.7z -
           echo {} > configs/svcfusion.json
