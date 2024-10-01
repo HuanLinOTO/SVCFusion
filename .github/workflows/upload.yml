@@ -33,7 +33,7 @@ jobs:
         run: |
           huggingface-cli download SVCFusion/SVCFusion-Release SVCFusion-Env-V1.7z --repo-type dataset --local-dir ./
           7z x SVCFusion-Env-V1.7z -o./ || true
-          rm SVCFusion-Env-V1.7z -
+          rm SVCFusion-Env-V1.7z -f
           echo {} > configs/svcfusion.json
 
       - name: Compress 7z
