@@ -25,7 +25,6 @@ outdata_webui.py
 license.bin
 
 *.pyi
-*.pyd
 *.build/*
 workdir
 
@@ -34,7 +33,7 @@ workdir
 
 .conda
 scripts/buildtools.py
-dist*
+dist.py
 
 *.enigma64
 

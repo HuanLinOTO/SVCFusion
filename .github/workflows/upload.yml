@@ -1,0 +1,54 @@
+name: Upload Model
+
+on:
+  push:
+    paths:
+      - dist/**
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Move Files
+        run: |
+          mv dist/* ./
+          rm -rf dist
+
+      - name: Install 7z
+        run: |
+          sudo apt-get install p7zip-full -y
+
+      - name: Install HuggingFace
+        run: |
+          pip install huggingface_hub
+
+      - name: Prepare Env
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          huggingface-cli download SVCFusion/SVCFusion-Release SVCFusion-Env-V1.7z --repo-type dataset
+          7z x SVCFusion-Env-V1.7z -o./
+          rm SVCFusion-Env-V1.7z -
+          echo {} > configs/svcfusion.json
+
+      - name: Compress 7z
+        run: |
+          7z a -t7z -m0=lzma2 -mx=3 -mfb=64 -md=32m -ms=on SVCFusion-Release.7z ./
+          mv SVCFusion-Release.7z SVCFusion-Release-${{ github.sha }}.7z
+
+      - name: Upload - HuggingFace
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          huggingface-cli upload SVCFusion/SVCFusion-Release ./SVCFusion-Release-${{ github.sha }}.7z --repo-type dataset
+
+      # 上传到构建产物
+      - name: Upload - GitHub
+        uses: actions/upload-artifact@v2
+        with:
+          name: SVCFusion-Release
+          path: ./SVCFusion-Release-${{ github.sha }}.7z
