@@ -32,7 +32,7 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           huggingface-cli download SVCFusion/SVCFusion-Release SVCFusion-Env-V1.7z --repo-type dataset --local-dir ./
-          7z x SVCFusion-Env-V1.7z -o./
+          7z x SVCFusion-Env-V1.7z -o./ || true
           rm SVCFusion-Env-V1.7z -
           echo {} > configs/svcfusion.json
 
