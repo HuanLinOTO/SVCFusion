@@ -1,9 +1,10 @@
-name: Upload Model
+name: Upload Release
 
 on:
   push:
     paths:
       - dist/**
+      - .github/workflows/upload.yml
 
 jobs:
   upload:
