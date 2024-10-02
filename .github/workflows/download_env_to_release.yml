@@ -29,3 +29,16 @@ jobs:
         with:
           name: SVCFusion-Env-v1
           path: SVCFusion-Env-V1.7z
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: env-${{ github.sha }}
+          release_name: env-${{ github.sha }}
+          body: |
+            env-${{ github.sha }}
+          draft: false
+          prerelease: false
