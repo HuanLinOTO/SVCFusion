@@ -3,7 +3,7 @@ name: Download Env to Artifact
 on:
   push:
     paths:
-      - .github/workflows/download_env_to_artifact.yml
+      - .github/workflows/download_env_to_release.yml
 
 jobs:
   download:
