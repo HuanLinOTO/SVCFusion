@@ -34,3 +34,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: SVC-Fusion-Env-V1.7z
+          token: ${{ secrets.GITHUB_TOKEN }}
+          body: ${{ github.sha }}
+          tag_name: env-${{ github.sha }}
