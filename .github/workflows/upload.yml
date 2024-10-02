@@ -96,3 +96,20 @@ jobs:
           sudo echo '${{ secrets.ALIYUNPAN }}' > /etc/aliyunpan/aliyunpan_config.json
           sudo curl -fsSL http://file.tickstep.com/apt/pgp | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/tickstep-packages-archive-keyring.gpg > /dev/null && echo "deb [signed-by=/etc/apt/trusted.gpg.d/tickstep-packages-archive-keyring.gpg arch=amd64,arm64] http://file.tickstep.com/apt aliyunpan main" | sudo tee /etc/apt/sources.list.d/tickstep-aliyunpan.list > /dev/null && sudo apt-get update && sudo apt-get install -y aliyunpan
           aliyunpan upload ./SVCFusion-Release-${{ github.sha }}.7z /SVCFusion
+
+  upload_google_drive:
+    runs-on: ubuntu-latest
+    needs: prepare_and_compress
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-archive
+
+      - name: Upload to gdrive
+        uses: adityak74/google-drive-upload-git-action@main
+        with:
+          credentials: ${{ secrets.credentials }}
+          filename: SVCFusion-Release-${{ github.sha }}.7z
+          folderId: 1PJGWUq0OFErgODa-82gaFs0lJGGcbOI7
+          overwrite: "true" # optional boolean
