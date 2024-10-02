@@ -7,16 +7,12 @@ on:
       - .github/workflows/upload.yml
 
 jobs:
-  checkout:
+  prepare_and_compress:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-  prepare_and_compress:
-    runs-on: ubuntu-latest
-    needs: checkout
-    steps:
       - name: Move Files
         run: |
           mv dist/* ./
