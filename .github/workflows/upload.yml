@@ -55,6 +55,10 @@ jobs:
         with:
           name: release-archive
 
+      - name: Install HuggingFace
+        run: |
+          pip install huggingface_hub
+
       - name: Upload - HuggingFace
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -88,6 +92,7 @@ jobs:
       - name: Upload - AliyunPan
         run: |
           sudo mkdir -p /etc/aliyunpan
+          sudo chmod 777 /etc/aliyunpan
           sudo echo '${{ secrets.ALIYUNPAN }}' > /etc/aliyunpan/aliyunpan_config.json
           sudo curl -fsSL http://file.tickstep.com/apt/pgp | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/tickstep-packages-archive-keyring.gpg > /dev/null && echo "deb [signed-by=/etc/apt/trusted.gpg.d/tickstep-packages-archive-keyring.gpg arch=amd64,arm64] http://file.tickstep.com/apt aliyunpan main" | sudo tee /etc/apt/sources.list.d/tickstep-aliyunpan.list > /dev/null && sudo apt-get update && sudo apt-get install -y aliyunpan
           aliyunpan upload ./SVCFusion-Release-${{ github.sha }}.7z /SVCFusion
