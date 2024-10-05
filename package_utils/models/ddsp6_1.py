@@ -21,22 +21,22 @@ from .common import (
     common_preprocess_form,
     ddsp_based_preprocess_form,
 )
-from ddspsvc.reflow.vocoder import load_model_vocoder
-from ddspsvc.ddsp.vocoder import F0_Extractor, Volume_Extractor, Units_Encoder
-from ddspsvc.ddsp.core import upsample
-from ddspsvc.main_reflow import cross_fade, split
+from ddspsvc_6_1.reflow.vocoder import load_model_vocoder
+from ddspsvc_6_1.ddsp.vocoder import F0_Extractor, Volume_Extractor, Units_Encoder
+from ddspsvc_6_1.ddsp.core import upsample
+from ddspsvc_6_1.main_reflow import cross_fade, split
 import gradio as gr
-from ddspsvc.draw import main as draw_main
+from ddspsvc_6_1.draw import main as draw_main
 
 from package_utils.exec import exec, start_with_cmd
 
 
-class DDSPModel:
+class DDSP_6_1Model:
     def get_config(*args):
         with YAMLReader("configs/ddsp.yaml") as config:
             return config
 
-    model_name = "DDSP-SVC 6.0"
+    model_name = "DDSP-SVC 6.1"
 
     infer_form = {}
 

@@ -4,6 +4,7 @@ from package_utils.models.common import (
     train_fn_proxy,
 )
 from package_utils.models.ddsp import DDSPModel
+from package_utils.models.ddsp6_1 import DDSP_6_1Model
 from package_utils.models.sovits import SoVITSModel
 from package_utils.models.reflow import ReflowVAESVCModel
 
@@ -11,8 +12,9 @@ from package_utils.models.reflow import ReflowVAESVCModel
 ddsp_model = DDSPModel()
 sovits_model = SoVITSModel()
 reflow_vae_svc_model = ReflowVAESVCModel()
+ddsp_6_1_model = DDSP_6_1Model()
 
-model_list = [ddsp_model, reflow_vae_svc_model, sovits_model]
+model_list = [ddsp_model, reflow_vae_svc_model, sovits_model, ddsp_6_1_model]
 model_name_list = [model.model_name for model in model_list]
 
 
