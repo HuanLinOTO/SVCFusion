@@ -14,6 +14,7 @@ data:
   f0_min: 65
   sampling_rate: 44100
   train_path: data/train
+  use_one_file_feature: false
   valid_path: data/val
 device: cuda:0
 env:
@@ -23,7 +24,7 @@ infer:
   infer_step: 20
   method: euler
 model:
-  n_chans: 3080
+  n_chans: 1024
   n_layers: 10
   n_spk: 1
   t_start: 0.7
@@ -35,7 +36,7 @@ spks:
 - default
 train:
   amp_dtype: fp32
-  batch_size: 1
+  batch_size: 60
   cache_all_data: true
   cache_device: cpu
   cache_fp16: true

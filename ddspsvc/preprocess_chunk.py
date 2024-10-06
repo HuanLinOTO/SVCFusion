@@ -40,9 +40,12 @@ def parse_args(args=None, namespace=None):
         type=str,
         default="",
         required=False,
-        help="flag for pitch augmentation",
+        help="flag",
     )
     return parser.parse_args(args=args, namespace=namespace)
+
+
+pitch_aug_dict_cache = {}
 
 
 def preprocess(
@@ -56,6 +59,7 @@ def preprocess(
     device="cuda",
     use_pitch_aug=False,
     flag: str = "",
+    use_one_file_feature=False,
 ):
     for filepath in filelist:
         path_srcdir = os.path.dirname(filepath)
@@ -75,7 +79,9 @@ def preprocess(
         # pitch augmentation dictionary
         pitch_aug_dict = {}
 
-        if os.path.exists(path_pitchaugdict):
+        if pitch_aug_dict_cache.get(path_pitchaugdict, None) is not None:
+            pitch_aug_dict = pitch_aug_dict_cache[path_pitchaugdict]
+        elif os.path.exists(path_pitchaugdict):
             print("Load pitch augmentation dictionary from:", path_pitchaugdict)
             pitch_aug_dict = np.load(path_pitchaugdict, allow_pickle=True).item()
 
@@ -164,22 +170,40 @@ def preprocess(
             if len(f0[~uv]) > 0:
                 # interpolate the unvoiced f0
                 f0[uv] = np.interp(np.where(uv)[0], np.where(~uv)[0], f0[~uv])
-
-                # save npy
-                os.makedirs(os.path.dirname(path_unitsfile), exist_ok=True)
-                np.save(path_unitsfile, units)
-                os.makedirs(os.path.dirname(path_f0file), exist_ok=True)
-                np.save(path_f0file, f0)
-                os.makedirs(os.path.dirname(path_volumefile), exist_ok=True)
-                np.save(path_volumefile, volume)
-                if mel_extractor is not None:
+                if use_one_file_feature:
+                    os.makedirs(
+                        os.path.join(path_srcdir, "..", "features"), exist_ok=True
+                    )
                     pitch_aug_dict[file] = keyshift
-                    os.makedirs(os.path.dirname(path_melfile), exist_ok=True)
-                    np.save(path_melfile, mel)
-                    os.makedirs(os.path.dirname(path_augmelfile), exist_ok=True)
-                    np.save(path_augmelfile, aug_mel)
-                    os.makedirs(os.path.dirname(path_augvolfile), exist_ok=True)
-                    np.save(path_augvolfile, aug_vol)
+                    pitch_aug_dict_cache[path_pitchaugdict] = pitch_aug_dict
+
+                    np.savez_compressed(
+                        os.path.join(path_srcdir, "..", "features", file),
+                        units=units,
+                        f0=f0,
+                        volume=volume,
+                        mel=mel if mel_extractor is not None else None,
+                        aug_mel=aug_mel if mel_extractor is not None else None,
+                        aug_vol=aug_vol if mel_extractor is not None else None,
+                        duration=duration,
+                    )
+                else:  # save npy
+                    with open(path_duration, "w") as f:
+                        f.write(str(duration))
+                    os.makedirs(os.path.dirname(path_unitsfile), exist_ok=True)
+                    np.save(path_unitsfile, units)
+                    os.makedirs(os.path.dirname(path_f0file), exist_ok=True)
+                    np.save(path_f0file, f0)
+                    os.makedirs(os.path.dirname(path_volumefile), exist_ok=True)
+                    np.save(path_volumefile, volume)
+                    if mel_extractor is not None:
+                        pitch_aug_dict[file] = keyshift
+                        os.makedirs(os.path.dirname(path_melfile), exist_ok=True)
+                        np.save(path_melfile, mel)
+                        os.makedirs(os.path.dirname(path_augmelfile), exist_ok=True)
+                        np.save(path_augmelfile, aug_mel)
+                        os.makedirs(os.path.dirname(path_augvolfile), exist_ok=True)
+                        np.save(path_augvolfile, aug_vol)
             else:
                 print("\n[Error] F0 extraction failed: " + path_srcfile)
                 os.makedirs(os.path.dirname(path_skipfile), exist_ok=True)
@@ -209,6 +233,9 @@ if __name__ == "__main__":
     args = utils.load_config(cmd.config)
     sample_rate = args.data.sampling_rate
     hop_size = args.data.block_size
+    use_one_file_feature = args.data.use_one_file_feature
+    if use_one_file_feature:
+        print("Use one file feature")
 
     extensions = args.data.extensions
 
@@ -272,5 +299,6 @@ if __name__ == "__main__":
         device=device,
         use_pitch_aug=use_pitch_aug,
         flag=cmd.flag,
+        use_one_file_feature=use_one_file_feature,
     )
     exit(0)

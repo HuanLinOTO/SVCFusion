@@ -394,6 +394,7 @@ class Svc(object):
                     if self.vol_embedding
                     else None
                 )
+                vol = vol.to(self.dtype)
                 audio, f0 = self.net_g_ms.infer(
                     c,
                     f0=f0,

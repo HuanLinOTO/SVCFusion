@@ -133,6 +133,11 @@ class _Locale(Locale):
             pretrained_model_preference_dropdown_label = '🔍👌🏼'
             default_pretrained_model = ' résult: ⚙️，默认尺寸：512×6'
             large_pretrained_model = '🔍🌐尺寸：1024×12'
+
+        class ddsp6_1(Locale.settings.ddsp6_1):
+            pretrained_model_preference_dropdown_label = '🔍👌🏼'
+            default_pretrained_model = ' résult: ⚙️，默认尺寸：512×6'
+            large_pretrained_model = '🔍🌐尺寸：1024×12'
         saved_tip = '💾'
 
     class install_model(Locale.install_model):

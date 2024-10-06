@@ -62,8 +62,8 @@ info = {
 }
 
 model = {
-    "english": "qwen2:7b-instruct",
-    "emojilang": "qwen2:7b-instruct",
+    "english": "qwen2.5:14b-instruct",
+    "emojilang": "qwen2.5:14b-instruct",
 }
 
 target = {

@@ -68,10 +68,6 @@ def preprocess(
     # pitch augmentation dictionary
     pitch_aug_dict = {}
 
-    if os.path.exists(path_pitchaugdict):
-        print("Load pitch augmentation dictionary from:", path_pitchaugdict)
-        pitch_aug_dict = np.load(path_pitchaugdict, allow_pickle=True).item()
-
     # run
     def process(file):
         binfile = file + ".npy"

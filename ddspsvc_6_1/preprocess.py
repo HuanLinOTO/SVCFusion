@@ -7,7 +7,7 @@ import pyworld as pw
 import parselmouth
 import argparse
 import shutil
-from logger import utils
+from ddspsvc_6_1.logger import utils
 from tqdm import tqdm
 
 from ddspsvc_6_1.ddsp.vocoder import F0_Extractor, Volume_Extractor, Units_Encoder

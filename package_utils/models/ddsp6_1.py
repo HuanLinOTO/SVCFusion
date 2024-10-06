@@ -33,7 +33,7 @@ from package_utils.exec import exec, start_with_cmd
 
 class DDSP_6_1Model:
     def get_config(*args):
-        with YAMLReader("configs/ddsp.yaml") as config:
+        with YAMLReader("configs/ddsp6.1.yaml") as config:
             return config
 
     model_name = "DDSP-SVC 6.1"
@@ -133,35 +133,33 @@ class DDSP_6_1Model:
 
     def train(self, params, progress: gr.Progress):
         # print(params)
-        working_config_path = "configs/ddsp.yaml"
+        working_config_path = "configs/ddsp6.1.yaml"
         net_info = {
             0: {
-                "model.n_chans": 512,
-                "model.n_layers": 6,
-            },
-            1: {
                 "model.n_chans": 1024,
-                "model.n_layers": 12,
+                "model.n_layers": 10,
             },
         }
 
         del params["_model_name"]
 
-        params.update(net_info[system_config.ddsp6.pretrained_model_preference])
+        params.update(net_info[system_config.ddsp6_1.pretrained_model_preference])
 
         config = applyChanges(working_config_path, params, no_skip=True)
 
         load_pretrained(
-            "ddsp6",
-            f'{config["data"]["encoder"]}.{system_config.ddsp6.pretrained_model_preference}',
+            "ddsp6.1",
+            f'{config["data"]["encoder"]}.{system_config.ddsp6_1.pretrained_model_preference}',
         )
 
-        start_with_cmd(f"{executable} -m ddspsvc.train_reflow -c configs/ddsp.yaml")
+        start_with_cmd(
+            f"{executable} -m ddspsvc_6_1.train_reflow -c configs/ddsp6.1.yaml"
+        )
 
     def preprocess(self, params, progress: gr.Progress):
-        # 给 data/model_type 文件写入 0
+        # 给 data/model_type 文件写入 3
         with open("data/model_type", "w") as f:
-            f.write("0")
+            f.write("3")
 
         # 将 dataset_raw 下面的 文件夹 变成一个数组
         spks = []
@@ -187,19 +185,19 @@ class DDSP_6_1Model:
             rmtree("data/val")
             draw_main(DrawArgs())
 
-        with YAMLReader("configs/ddsp.yaml") as config:
+        with YAMLReader("configs/ddsp6.1.yaml") as config:
             config["data"]["f0_extractor"] = params["f0"]
             config["data"]["encoder"] = params["encoder"]
             config["model"]["n_spk"] = len(spks)
             config["spks"] = spks
 
-        with open("configs/ddsp.yaml", "w") as f:
+        with open("configs/ddsp6.1.yaml", "w") as f:
             yaml.dump(config, f, default_flow_style=False)
 
         for i in progress.tqdm(range(1), desc=I.preprocess_desc):
             assert (
                 exec(
-                    f"{executable} -m ddspsvc.preprocess -c configs/ddsp.yaml -d {params['device']}"
+                    f"{executable} -m ddspsvc_6_1.preprocess -c configs/ddsp6.1.yaml -d {params['device']}"
                 )
                 == 0
             ), I.preprocess_failed_tip

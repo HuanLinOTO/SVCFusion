@@ -110,6 +110,9 @@ class DefaultSystemConfig:
     class ddsp6:
         pretrained_model_preference = 0
 
+    class ddsp6_1:
+        pretrained_model_preference = 0
+
 
 class SystemConfig(dict):
     def __init__(self, *args, **kwargs):

@@ -93,9 +93,10 @@ async def main(
         os.makedirs(tmp_path, exist_ok=True)
 
         filelist_lines = []
-        filelist_lines.extend(scan_dir("data/train"))
-        filelist_lines.extend(scan_dir("data/val"))
-
+        filelist_lines.extend(scan_dir("data/train/audio"))
+        filelist_lines.extend(scan_dir("data/val/audio"))
+        print(filelist_lines, len(filelist_lines))
+        # exit()
         # 计算每个进程需要处理的行数
         num_train_lines = len(filelist_lines)
 
@@ -138,7 +139,14 @@ async def main(
                     callback=get_callback(filelist, debug, progress, taskid),
                 )
             )
-        await asyncio.gather(*tasks)
+            # task = exec_it(
+            #     command,
+            #     callback=get_callback(filelist, debug, progress, taskid),
+            # )
+            if len(tasks) == 2:
+                print("start")
+                await asyncio.gather(*tasks)
+                tasks = []
         # 合并所有的pitch_aug_dict
         for tp in ["train", "val"]:
             pitch_aug_dict = {}

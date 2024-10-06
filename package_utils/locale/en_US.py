@@ -133,6 +133,11 @@ class _Locale(Locale):
             pretrained_model_preference_dropdown_label = 'Preference for baseline models'
             default_pretrained_model = 'Default base model is 512x6.'
             large_pretrained_model = 'Large network base model 1024 x 12'
+
+        class ddsp6_1(Locale.settings.ddsp6_1):
+            pretrained_model_preference_dropdown_label = 'Preference for baseline models'
+            default_pretrained_model = 'Default base model is 512x6.'
+            large_pretrained_model = 'Large network base model 1024 x 12'
         saved_tip = 'Saved.'
 
     class install_model(Locale.install_model):

@@ -52,6 +52,9 @@ def traverse_dir(
 
 
 def get_data_loaders(args, whole_audio=False):
+    use_one_file_features = args.data.use_one_file_feature
+    if use_one_file_features:
+        print("Using one file features")
     data_train = AudioDataset(
         args.data.train_path,
         waveform_sec=args.data.duration,
@@ -64,6 +67,7 @@ def get_data_loaders(args, whole_audio=False):
         device=args.train.cache_device,
         fp16=args.train.cache_fp16,
         use_aug=True,
+        use_one_file_features=use_one_file_features,
     )
     loader_train = torch.utils.data.DataLoader(
         data_train,
@@ -84,6 +88,7 @@ def get_data_loaders(args, whole_audio=False):
         whole_audio=True,
         extensions=args.data.extensions,
         n_spk=args.model.n_spk,
+        use_one_file_features=use_one_file_features,
     )
     loader_valid = torch.utils.data.DataLoader(
         data_valid, batch_size=1, shuffle=False, num_workers=0, pin_memory=True
@@ -91,7 +96,56 @@ def get_data_loaders(args, whole_audio=False):
     return loader_train, loader_valid
 
 
+def load_to_device(data, device, fp16):
+    tmp = torch.from_numpy(data).float().unsqueeze(-1).to(device)
+    if fp16:
+        tmp = tmp.half()
+    return tmp
+
+
 class AudioDataset(Dataset):
+    def get_item_by_one_file_features(
+        self,
+        name_ext,
+        load_all_data=True,
+        device="cpu",
+        fp16=False,
+        n_spk=None,
+    ):
+        path_features = os.path.join(self.path_root, "features", name_ext) + ".npz"
+        features = np.load(path_features)
+
+        if n_spk is not None and n_spk > 1:
+            dirname_split = re.split(r"_|\-", os.path.dirname(name_ext), 2)[0]
+            spk_id = int(dirname_split) if str.isdigit(dirname_split) else 0
+            if spk_id < 1 or spk_id > n_spk:
+                raise ValueError(
+                    " [x] Muiti-speaker traing error : spk_id must be a positive integer from 1 to n_spk "
+                )
+        else:
+            spk_id = 1
+        spk_id = torch.LongTensor(np.array([spk_id])).to(device)
+
+        if load_all_data:
+            return name_ext, {
+                "duration": load_to_device(features["duration"], device, fp16),
+                "mel": load_to_device(features["mel"], device, fp16),
+                "aug_mel": load_to_device(features["aug_mel"], device, fp16),
+                "units": load_to_device(features["units"], device, fp16),
+                "f0": load_to_device(features["f0"], device, fp16),
+                "volume": load_to_device(features["volume"], device, fp16),
+                "aug_vol": load_to_device(features["aug_vol"], device, fp16),
+                "spk_id": spk_id,
+            }
+        else:
+            return name_ext, {
+                "duration": load_to_device(features["duration"], device, fp16),
+                "f0": load_to_device(features["f0"], device, fp16),
+                "volume": load_to_device(features["volume"], device, fp16),
+                "aug_vol": load_to_device(features["aug_vol"], device, fp16),
+                "spk_id": spk_id,
+            }
+
     def get_item(
         self,
         name_ext,
@@ -183,6 +237,7 @@ class AudioDataset(Dataset):
         device="cpu",
         fp16=False,
         use_aug=False,
+        use_one_file_features=False,
     ):
         super().__init__()
 
@@ -211,7 +266,9 @@ class AudioDataset(Dataset):
             with ThreadPoolExecutor(max_workers=10) as executor:
                 futures = [
                     executor.submit(
-                        self.get_item,
+                        self.get_item_by_one_file_features
+                        if use_one_file_features
+                        else self.get_item,
                         name_ext,
                         load_all_data,
                         device,
@@ -272,10 +329,13 @@ class AudioDataset(Dataset):
         if mel is None:
             mel = os.path.join(self.path_root, mel_key, name_ext) + ".npy"
             mel = np.load(mel)
-            mel = mel[start_frame : start_frame + units_frame_len]
+            # mel = mel[start_frame : start_frame + units_frame_len]
             mel = torch.from_numpy(mel).float()
-        else:
-            mel = mel[start_frame : start_frame + units_frame_len]
+
+        if start_frame + units_frame_len > mel.shape[0]:
+            start_frame = mel.shape[0] - units_frame_len
+
+        mel = mel[start_frame : start_frame + units_frame_len]
 
         # load units
         units = data_buffer.get("units")

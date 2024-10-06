@@ -107,6 +107,7 @@ class Locale:
         infer_settings_label = ""  # 推理设置
         sovits_settings_label = ""  # So-VITS-SVC 设置
         ddsp6_settings_label = ""  # DDSP-SVC 6 设置
+        ddsp6_1_settings_label = ""  # DDSP-SVC 6.1 设置
         class pkg:
             lang_label = ""  # 语言
             lang_info = ""  # 更改语言需要重启整合包
@@ -116,8 +117,11 @@ class Locale:
             resolve_port_clash_label = ""  # 尝试解决端口冲突问题（Windows 可用）
         class ddsp6:
             pretrained_model_preference_dropdown_label = ""  # 底模偏好
-            default_pretrained_model = ""  # 默认底模 512 x 6
-            large_pretrained_model = ""  # 大网络底模 1024 x 12
+            default_pretrained_model = ""  # 默认底模 512 6
+            large_pretrained_model = ""  # 大网络底模 1024 12
+        class ddsp6_1:
+            pretrained_model_preference_dropdown_label = ""  # 底模偏好
+            large_pretrained_model = ""  # 默认(大网络)底模 1024 10
         saved_tip = ""  # 已保存
     class install_model:
         tip = ""  # 
