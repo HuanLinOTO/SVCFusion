@@ -44,7 +44,7 @@ class F0_Extractor:
             self.resample_kernel = CREPE_RESAMPLE_KERNEL[key_str]
         if f0_extractor == "rmvpe":
             if "rmvpe" not in F0_KERNEL:
-                from ddspsvc_6_1.encoder.rmvpe import RMVPE
+                from encoder.rmvpe import RMVPE
 
                 F0_KERNEL["rmvpe"] = RMVPE("pretrain/rmvpe/model.pt", hop_length=160)
             self.rmvpe = F0_KERNEL["rmvpe"]
@@ -613,6 +613,7 @@ class CombSubSuperFast(torch.nn.Module):
         win_length,
         n_unit=256,
         n_spk=1,
+        use_attention=False,
         use_pitch_aug=False,
         pcmer_norm=False,
     ):
@@ -632,7 +633,12 @@ class CombSubSuperFast(torch.nn.Module):
             "noise_phase": win_length // 2 + 1,
         }
         self.unit2ctrl = Unit2Control(
-            n_unit, block_size, n_spk, split_map, use_pitch_aug=use_pitch_aug
+            n_unit,
+            block_size,
+            n_spk,
+            split_map,
+            use_attention=use_attention,
+            use_pitch_aug=use_pitch_aug,
         )
 
     def fast_source_gen(self, f0_frames):

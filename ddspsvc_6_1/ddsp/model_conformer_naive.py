@@ -5,7 +5,7 @@ import torch.nn.functional as F
 # From https://github.com/CNChTu/Diffusion-SVC/ by CNChTu
 # License: MIT
 
-      
+
 class ConformerNaiveEncoder(nn.Module):
     """
     Conformer Naive Encoder
@@ -20,15 +20,16 @@ class ConformerNaiveEncoder(nn.Module):
         atten_dropout (float): Dropout rate of attention module, default 0.
     """
 
-    def __init__(self,
-                 num_layers: int,
-                 num_heads: int,
-                 dim_model: int,
-                 use_norm: bool = False,
-                 conv_only: bool = False,
-                 conv_dropout: float = 0.,
-                 atten_dropout: float = 0.
-                 ):
+    def __init__(
+        self,
+        num_layers: int,
+        num_heads: int,
+        dim_model: int,
+        use_norm: bool = False,
+        conv_only: bool = False,
+        conv_dropout: float = 0.0,
+        atten_dropout: float = 0.0,
+    ):
         super().__init__()
         self.num_layers = num_layers
         self.num_heads = num_heads
@@ -39,7 +40,14 @@ class ConformerNaiveEncoder(nn.Module):
 
         self.encoder_layers = nn.ModuleList(
             [
-                CFNEncoderLayer(dim_model, num_heads, use_norm, conv_only, conv_dropout, atten_dropout)
+                CFNEncoderLayer(
+                    dim_model,
+                    num_heads,
+                    use_norm,
+                    conv_only,
+                    conv_dropout,
+                    atten_dropout,
+                )
                 for _ in range(num_layers)
             ]
         )
@@ -53,7 +61,7 @@ class ConformerNaiveEncoder(nn.Module):
             torch.Tensor: Output tensor (#batch, length, dim_model)
         """
 
-        for (i, layer) in enumerate(self.encoder_layers):
+        for i, layer in enumerate(self.encoder_layers):
             x = layer(x, mask)
         return x  # (#batch, length, dim_model)
 
@@ -71,25 +79,28 @@ class CFNEncoderLayer(nn.Module):
         atten_dropout (float): Dropout rate of attention module, default 0.1
     """
 
-    def __init__(self,
-                 dim_model: int,
-                 num_heads: int = 8,
-                 use_norm: bool = False,
-                 conv_only: bool = False,
-                 conv_dropout: float = 0.,
-                 atten_dropout: float = 0.1
-                 ):
+    def __init__(
+        self,
+        dim_model: int,
+        num_heads: int = 8,
+        use_norm: bool = False,
+        conv_only: bool = False,
+        conv_dropout: float = 0.0,
+        atten_dropout: float = 0.1,
+    ):
         super().__init__()
 
-        self.conformer = ConformerConvModule(dim_model, use_norm=use_norm, dropout=conv_dropout)
-        
+        self.conformer = ConformerConvModule(
+            dim_model, use_norm=use_norm, dropout=conv_dropout
+        )
+
         if not conv_only:
             self.attn = nn.TransformerEncoderLayer(
                 d_model=dim_model,
                 nhead=num_heads,
                 dim_feedforward=dim_model * 4,
                 dropout=atten_dropout,
-                activation='gelu'
+                activation="gelu",
             )
             self.norm = nn.LayerNorm(dim_model)
         else:
@@ -104,7 +115,7 @@ class CFNEncoderLayer(nn.Module):
             torch.Tensor: Output tensor (#batch, length, dim_model)
         """
         if self.attn is not None:
-            x = x + (self.attn(self.norm(x), mask=mask))
+            x = x + (self.attn(self.norm(x), mask))
 
         x = x + (self.conformer(x))
 
@@ -113,35 +124,41 @@ class CFNEncoderLayer(nn.Module):
 
 class ConformerConvModule(nn.Module):
     def __init__(
-            self,
-            dim,
-            expansion_factor=2,
-            kernel_size=31,
-            dropout=0.,
-            use_norm=False,
-            conv_model_type='mode1'
+        self,
+        dim,
+        expansion_factor=2,
+        kernel_size=31,
+        dropout=0.0,
+        use_norm=False,
+        conv_model_type="mode1",
     ):
         super().__init__()
 
         inner_dim = dim * expansion_factor
         padding = calc_same_padding(kernel_size)
 
-        if conv_model_type == 'mode1':
+        if conv_model_type == "mode1":
             self.net = nn.Sequential(
                 nn.LayerNorm(dim) if use_norm else nn.Identity(),
                 Transpose((1, 2)),
                 nn.Conv1d(dim, inner_dim * 2, 1),
                 SwiGLU(dim=1),
-                nn.Conv1d(inner_dim, inner_dim, kernel_size=kernel_size, padding=padding[0], groups=inner_dim),
+                nn.Conv1d(
+                    inner_dim,
+                    inner_dim,
+                    kernel_size=kernel_size,
+                    padding=padding[0],
+                    groups=inner_dim,
+                ),
                 nn.PReLU(num_parameters=inner_dim),
                 nn.Conv1d(inner_dim, dim, 1),
                 Transpose((1, 2)),
-                nn.Dropout(dropout)
+                nn.Dropout(dropout),
             )
-        elif conv_model_type == 'mode2':
-            raise NotImplementedError('mode2 not implemented yet')
+        elif conv_model_type == "mode2":
+            raise NotImplementedError("mode2 not implemented yet")
         else:
-            raise ValueError(f'{conv_model_type} is not a valid conv_model_type')
+            raise ValueError(f"{conv_model_type} is not a valid conv_model_type")
 
     def forward(self, x):
         return self.net(x)
@@ -155,7 +172,7 @@ def calc_same_padding(kernel_size):
 class Transpose(nn.Module):
     def __init__(self, dims):
         super().__init__()
-        assert len(dims) == 2, 'dims must be a tuple of two dimensions'
+        assert len(dims) == 2, "dims must be a tuple of two dimensions"
         self.dims = dims
 
     def forward(self, x):
@@ -167,6 +184,7 @@ class SwiGLU(nn.Module):
     def __init__(self, dim=-1):
         super().__init__()
         self.dim = dim
+
     def forward(self, x):
         out, gate = x.chunk(2, dim=self.dim)
         return out * F.silu(gate)

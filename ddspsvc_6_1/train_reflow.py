@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
     # load model
     if args.model.type == "RectifiedFlow":
-        from reflow.solver import train
+        from ddspsvc_6_1.reflow.solver import train
 
         model = Unit2Wav(
             args.data.sampling_rate,

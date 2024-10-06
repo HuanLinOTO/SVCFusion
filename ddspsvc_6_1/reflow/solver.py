@@ -3,8 +3,8 @@ import time
 import numpy as np
 import torch
 import librosa
-from logger.saver import Saver
-from logger import utils
+from ddspsvc_6_1.logger.saver import Saver
+from ddspsvc_6_1.logger import utils
 from torch import autocast
 from torch.cuda.amp import GradScaler
 from ddspsvc_6_1.nsf_hifigan.nvSTFT import STFT
