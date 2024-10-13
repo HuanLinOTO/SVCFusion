@@ -80,7 +80,14 @@ def load_pretrained(model_name, extra):
     else:
         dst = os.path.join(WORK_DIR_PATH, "diffusion")
     for file in os.listdir(pretrained_path):
+        if "config.yaml" in file:
+            continue
         shutil.copy(os.path.join(pretrained_path, file), dst)
+
+    # 如果pretrain目录下面有 config.yaml，读取并返回
+    if os.path.exists(os.path.join(pretrained_path, "config.yaml")):
+        with YAMLReader(os.path.join(pretrained_path, "config.yaml")) as config:
+            return config
 
 
 def tensorboard():

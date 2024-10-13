@@ -81,6 +81,7 @@ class _Locale(Locale):
         model_tools_tab = "模型相关"
         audio_tools_tab = "音频相关"
         realtime_tools_tab = "实时"
+        dlc_install_tools_tab = "DLC 安装"
 
         start_ddsp_realtime_gui_btn = "启动 DDSP 实时 GUI"
 

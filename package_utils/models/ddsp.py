@@ -134,27 +134,21 @@ class DDSPModel:
     def train(self, params, progress: gr.Progress):
         # print(params)
         working_config_path = "configs/ddsp.yaml"
-        net_info = {
-            0: {
-                "model.n_chans": 512,
-                "model.n_layers": 6,
-            },
-            1: {
-                "model.n_chans": 1024,
-                "model.n_layers": 12,
-            },
-        }
 
         del params["_model_name"]
 
-        params.update(net_info[system_config.ddsp6.pretrained_model_preference])
+        # params.update(net_info[system_config.ddsp6.pretrained_model_preference])
 
         config = applyChanges(working_config_path, params, no_skip=True)
 
-        load_pretrained(
+        pretrained_model_config = load_pretrained(
             "ddsp6",
             f'{config["data"]["encoder"]}.{system_config.ddsp6.pretrained_model_preference}',
         )
+        if pretrained_model_config:
+            config = applyChanges(
+                working_config_path, pretrained_model_config, no_skip=True
+            )
 
         start_with_cmd(f"{executable} -m ddspsvc.train_reflow -c configs/ddsp.yaml")
 

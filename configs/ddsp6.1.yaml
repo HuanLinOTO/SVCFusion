@@ -17,21 +17,23 @@ data:
   train_path: data/train
   use_big_chunks: true
   valid_path: data/val
-device: cuda
+device: cuda:0
 env:
-  expdir: exp/1024_10
+  expdir: exp/workdir
   gpu_id: 0
 infer:
   infer_step: 20
   method: euler
 model:
-  n_chans: 1024
-  n_layers: 10
+  n_chans: 512
+  n_layers: 6
   n_spk: 253
   t_start: 0.7
   type: RectifiedFlow
+  use_attention: false
   use_pitch_aug: true
   win_length: 2048
+model_type_index: 3
 spks:
 - default
 train:
@@ -51,6 +53,7 @@ train:
   num_workers: 2
   save_opt: false
   weight_decay: 0
+use_pretrain: true
 vocoder:
   ckpt: pretrain/nsf_hifigan/model
   type: nsf-hifigan

@@ -136,7 +136,9 @@ class ReflowVAESVCModel:
         working_config_path = "configs/reflow.yaml"
         config = applyChanges(working_config_path, params, True)
 
-        load_pretrained("reflow", config["data"]["encoder"])
+        pretrained_model_config = load_pretrained("reflow", config["data"]["encoder"])
+        if pretrained_model_config:
+            config = applyChanges(working_config_path, pretrained_model_config, True)
 
         start_with_cmd(f"{executable} -m ReFlowVaeSVC.train -c configs/reflow.yaml")
 

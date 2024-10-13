@@ -147,10 +147,14 @@ class DDSP_6_1Model:
 
         config = applyChanges(working_config_path, params, no_skip=True)
 
-        load_pretrained(
+        pretrained_model_config = load_pretrained(
             "ddsp6.1",
             f'{config["data"]["encoder"]}.{system_config.ddsp6_1.pretrained_model_preference}',
         )
+        if pretrained_model_config:
+            config = applyChanges(
+                working_config_path, pretrained_model_config, no_skip=True
+            )
 
         start_with_cmd(
             f"{executable} -m ddspsvc_6_1.train_reflow -c configs/ddsp6.1.yaml"
