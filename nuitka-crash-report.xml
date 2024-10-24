@@ -10,22 +10,22 @@
       <module_usage name="sys" finding="absolute" line="6" />
       <module_usage name="gradio" finding="absolute" line="7" />
       <module_usage name="torch" finding="absolute" line="8" />
-      <module_usage name="package_utils.config" finding="absolute" line="10" />
-      <module_usage name="package_utils.const_vars" finding="absolute" line="11" />
-      <module_usage name="package_utils.dataset_utils" finding="absolute" line="12" />
-      <module_usage name="package_utils.i18n" finding="absolute" line="13" />
-      <module_usage name="package_utils.model_utils" finding="absolute" line="14" />
-      <module_usage name="package_utils.ui.ModelChooser" finding="absolute" line="17" />
-      <module_usage name="package_utils.ui.Form" finding="absolute" line="18" />
-      <module_usage name="package_utils.models.inited" finding="absolute" line="19" />
-      <module_usage name="package_utils.ui.Settings" finding="absolute" line="26" />
-      <module_usage name="package_utils.ui.Train" finding="absolute" line="27" />
-      <module_usage name="package_utils.ui.tools.Compatible" finding="absolute" line="28" />
-      <module_usage name="package_utils.ui.tools.FishAudioPreprocess" finding="absolute" line="29" />
-      <module_usage name="package_utils.ui.tools.InstallModel" finding="absolute" line="30" />
-      <module_usage name="package_utils.ui.tools.ModelManager" finding="absolute" line="31" />
-      <module_usage name="package_utils.ui.tools.VocalSeparation" finding="absolute" line="32" />
-      <module_usage name="package_utils.exec" finding="absolute" line="34" />
+      <module_usage name="SVCFusion.config" finding="absolute" line="10" />
+      <module_usage name="SVCFusion.const_vars" finding="absolute" line="11" />
+      <module_usage name="SVCFusion.dataset_utils" finding="absolute" line="12" />
+      <module_usage name="SVCFusion.i18n" finding="absolute" line="13" />
+      <module_usage name="SVCFusion.model_utils" finding="absolute" line="14" />
+      <module_usage name="SVCFusion.ui.ModelChooser" finding="absolute" line="17" />
+      <module_usage name="SVCFusion.ui.Form" finding="absolute" line="18" />
+      <module_usage name="SVCFusion.models.inited" finding="absolute" line="19" />
+      <module_usage name="SVCFusion.ui.Settings" finding="absolute" line="26" />
+      <module_usage name="SVCFusion.ui.Train" finding="absolute" line="27" />
+      <module_usage name="SVCFusion.ui.tools.Compatible" finding="absolute" line="28" />
+      <module_usage name="SVCFusion.ui.tools.FishAudioPreprocess" finding="absolute" line="29" />
+      <module_usage name="SVCFusion.ui.tools.InstallModel" finding="absolute" line="30" />
+      <module_usage name="SVCFusion.ui.tools.ModelManager" finding="absolute" line="31" />
+      <module_usage name="SVCFusion.ui.tools.VocalSeparation" finding="absolute" line="32" />
+      <module_usage name="SVCFusion.exec" finding="absolute" line="34" />
       <module_usage name="rich.traceback" finding="absolute" line="35" />
       <module_usage name="json" finding="excluded" line="303" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
       <module_usage name="os" finding="excluded" line="304" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
