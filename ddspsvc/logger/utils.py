@@ -2,7 +2,7 @@ import os
 import json
 import torch
 
-from package_utils.config import YAMLReader
+from SVCFusion.config import YAMLReader
 
 
 def traverse_dir(
