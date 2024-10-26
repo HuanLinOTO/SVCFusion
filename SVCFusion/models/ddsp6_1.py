@@ -14,7 +14,7 @@ import yaml
 from SVCFusion.config import YAMLReader, applyChanges, system_config
 from SVCFusion.dataset_utils import DrawArgs, auto_normalize_dataset
 from SVCFusion.i18n import I
-from SVCFusion.model_utils import load_pretrained
+from SVCFusion.model_utils import get_pretrain_models_form_item, load_pretrained
 from .common import (
     common_infer_form,
     ddsp_based_infer_form,
@@ -428,6 +428,7 @@ class DDSP_6_1Model:
         self.train_form.update(
             {
                 "cascade": {
+                    **get_pretrain_models_form_item("ddsp6.1"),
                     "device": {
                         "type": "device_chooser",
                         "individual": True,

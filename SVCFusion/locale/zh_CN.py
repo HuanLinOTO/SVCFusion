@@ -76,7 +76,7 @@ class _Locale(Locale):
         preprocess_tab = "⏳数据处理"
         train_tab = "🏋️‍♂️训练"
         tools_tab = "🛠️小工具"
-        settings_tab = "🪡设置"
+        settings_tab = "⚙️设置"
 
         model_tools_tab = "模型相关"
         audio_tools_tab = "音频相关"
@@ -172,6 +172,10 @@ class _Locale(Locale):
         choose_sub_model_label = "选择子模型"
         choose_pretrain_model_label = "选择预训练模型"
         choose_pretrain_model_info = "占位符，没改就骂死我"
+
+        pretrain_model_vec = "编码器"
+        pretrain_model_vec = "声码器"
+        pretrain_model_vec = "网络参数"
 
         load_pretrained_failed_tip = (
             "加载预训练模型失败，可能为选择的模型不适配当前参数或无预训练模型"
