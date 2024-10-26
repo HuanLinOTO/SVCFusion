@@ -7,7 +7,7 @@ import librosa
 import numpy as np
 import soundfile as sf
 
-from fap.utils.slice_audio import slice_by_max_duration
+from .slice_audio import slice_by_max_duration
 
 
 class Slicer:
@@ -225,6 +225,8 @@ def slice_audio_file_v2(
     top_db: int = -40,
     hop_length: int = 10,
     max_silence_kept: float = 0.5,
+    flat_layout: bool = False,
+    merge_short=None,
 ) -> None:
     """
     Slice audio by silence and save to output folder
@@ -241,9 +243,9 @@ def slice_audio_file_v2(
     """
 
     output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
+    if not flat_layout:
+        output_dir.mkdir(parents=True, exist_ok=True)
 
-    input_file_name = Path(input_file).stem
     audio, rate = librosa.load(str(input_file), sr=None, mono=True)
     for idx, sliced in enumerate(
         slice_audio_v2(
@@ -257,4 +259,7 @@ def slice_audio_file_v2(
             max_silence_kept=max_silence_kept,
         )
     ):
-        sf.write(str(output_dir / f"{input_file_name}_{idx:04d}.wav"), sliced, rate)
+        if flat_layout:
+            sf.write(str(output_dir) + f"_{idx:04d}.wav", sliced, rate)
+        else:
+            sf.write(str(output_dir / f"{idx:04d}.wav"), sliced, rate)
