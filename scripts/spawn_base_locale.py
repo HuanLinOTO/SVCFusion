@@ -1,7 +1,6 @@
-
 # 原始文件路径和目标文件路径
-source_file = "package_utils/locale/zh_CN.py"
-target_file = "package_utils/locale/base.py"
+source_file = "SVCFusion/locale/zh_CN.py"
+target_file = "SVCFusion/locale/base.py"
 
 # 读取源文件内容
 with open(source_file, "r", encoding="utf-8") as file:

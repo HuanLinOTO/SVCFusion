@@ -1,3 +1,5 @@
+@import url(https://s1.hdslb.com/bfs/static/jinkela/long/font/medium.css);
+
 button.stop {
     background-color: var(--color-red-500);
     color: white;
@@ -6,4 +8,23 @@ button.stop {
 
 textarea {
     box-shadow: 1px 1px 3px 0px #e0e0e0 !important;
+}
+
+span>p {
+    color: #9f9f9f !important;
+}
+
+* {
+    --input-border-color: #007fff !important;
+
+    font-family: HarmonyOS_Medium;
+}
+
+/* 匹配 data-testid="markdown" */
+.prose>span>p {
+    color: var(--body-text-color) !important;
+}
+
+code {
+    font-family: 'Fira Code', 'Courier New', monospace !important;
 }

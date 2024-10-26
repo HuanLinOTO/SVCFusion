@@ -46,8 +46,8 @@ examples = {
 }
 
 opt_file = {
-    "english": "package_utils/locale/en_US.py",
-    "emojilang": "package_utils/locale/emoji.py",
+    "english": "SVCFusion/locale/en_US.py",
+    "emojilang": "SVCFusion/locale/emoji.py",
 }
 
 info = {
@@ -120,7 +120,7 @@ for lang in ["english", "emojilang"]:
         return result
 
     # 解析zh_CN.py文件
-    with open("package_utils/locale/zh_CN.py", "r", encoding="utf-8") as file:
+    with open("SVCFusion/locale/zh_CN.py", "r", encoding="utf-8") as file:
         tree = ast.parse(file.read(), filename="zh_CN.py")
 
     # 创建访问者并修改AST中的字符串

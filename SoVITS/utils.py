@@ -17,7 +17,7 @@ from scipy.io.wavfile import read
 from sklearn.cluster import MiniBatchKMeans
 from torch.nn import functional as F
 
-from package_utils.config import JSONReader
+from SVCFusion.config import JSONReader
 
 from . import logger
 

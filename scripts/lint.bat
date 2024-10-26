@@ -1,4 +1,4 @@
 ruff check webui.py --fix
-ruff check package_utils --fix
+ruff check SVCFusion --fix
 ruff format webui.py 
-ruff format package_utils 
+ruff format SVCFusion 
