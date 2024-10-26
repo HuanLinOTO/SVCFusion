@@ -102,6 +102,11 @@ class _Locale(Locale):
     class DLC(Locale.DLC):
         dlc_install_label = "上传新 DLC"
         dlc_install_btn_value = "安装 DLC"
+        dlc_installing_tip = "正在安装"
+        dlc_install_success = "安装成功"
+        dlc_install_failed = "安装失败"
+        dlc_install_empty = "未选择文件"
+        dlc_install_ext_error = "不支持非 .sf_dlc 文件格式"
 
     class compatible_models(Locale.compatible_models):
         upload_error = "上传错误，请检查文件是否完整"
