@@ -13,39 +13,6 @@ from SVCFusion.exec import exec
 from SVCFusion.i18n import I
 
 
-def reload_models(search_dir):
-    global models, search_paths
-    models = search_models(search_paths[search_dir])
-    search_paths = [
-        WORK_DIR_PATH,
-        *[
-            "archieve/" + p
-            for p in os.listdir("archieve")
-            if os.path.isdir(os.path.join("archieve", p))
-        ],
-        *[
-            "models/" + p
-            for p in os.listdir("models")
-            if os.path.isdir(os.path.join("models", p))
-        ],
-    ]
-    return (
-        gr.update(choices=models, value=models[-1]),
-        gr.update(
-            choices=[
-                "工作目录",
-                *[
-                    p.replace("models/", "models 文件夹 - ").replace(
-                        "archieve/", "已归档训练 - "
-                    )
-                    for p in search_paths
-                    if not p.startswith("exp")
-                ],
-            ],
-        ),
-    )
-
-
 def search_models(search_dir) -> list:
     models = []
     # for root, dirs, files in os.walk(search_dir):
@@ -64,9 +31,9 @@ def search_models(search_dir) -> list:
     return models
 
 
-def archieve():
-    make_dirs("archieve/", False)
-    path = f"./archieve/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}/"
+def archive():
+    make_dirs("archive/", False)
+    path = f"./archive/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}/"
     # make_dirs(path, False)
     shutil.move(WORK_DIR_PATH, path)
     make_dirs(WORK_DIR_PATH, False)
@@ -90,6 +57,14 @@ def get_pretrain_models(model_name):
     return pretrain_models
 
 
+def get_pretrain_models_meta(path):
+    path_meta = os.path.join(path, "meta.yaml")
+    if not os.path.exists(path_meta):
+        raise FileNotFoundError(f"File not found: {path_meta}")
+    with YAMLReader(path_meta) as meta:
+        return meta
+
+
 def get_pretrain_models_form_item(model_name):
     def update():
         models = get_pretrain_models(model_name)
@@ -107,6 +82,29 @@ def get_pretrain_models_form_item(model_name):
             value=choices[0][1] if len(choices) > 0 else "无预训练模型",
         )
 
+    def update_tip(path):
+        meta = get_pretrain_models_meta(path)
+        infos = []
+
+        if meta.get("official", False) is True:
+            infos.append("<b>" + I.train.official_pretrain_model + "</b>")
+
+        if meta.get("desc"):
+            infos.append(meta["desc"])
+        if meta.get("vec"):
+            infos.append(I.train.pretrain_model_vec + ": " + meta["vec"])
+        if meta.get("vocoder"):
+            infos.append(I.train.pretrain_model_vocoder + ": " + meta["vocoder"])
+        if meta.get("size"):
+            infos.append(I.train.pretrain_model_size + ": " + meta["size"])
+        if meta.get("attn"):
+            infos.append(
+                I.train.pretrain_model_attn + ": " + I.form.dorpdown_liked_checkbox_yes
+                if meta["attn"]
+                else I.form.dorpdown_liked_checkbox_no
+            )
+        return f'<div style="background: var(--block-background-fill); padding: 8px;">{"<br/>".join(infos)}</div>'
+
     return {
         "#pretrain": {
             "type": "dropdown",
@@ -115,6 +113,7 @@ def get_pretrain_models_form_item(model_name):
             "info": I.train.choose_pretrain_model_info,
             "label": I.train.choose_pretrain_model_label,
             "individual": True,
+            "addition_tip_when_update": update_tip,
         }
     }
 

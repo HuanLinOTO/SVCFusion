@@ -195,6 +195,12 @@ class SoVITSModel:
             "label": I.sovits.model_chooser_extra.feature_retrieval_label,
             "info": I.sovits.model_chooser_extra.feature_retrieval_info,
         },
+        "only_diffusion": {
+            "type": "checkbox",
+            "default": False,
+            "label": I.sovits.model_chooser_extra.only_diffusion_label,
+            "info": I.sovits.model_chooser_extra.only_diffusion_info,
+        },
     }
 
     def install_model(self, package, model_name):
@@ -352,7 +358,7 @@ class SoVITSModel:
             diffusion_model_path=diffusion_model_path,
             diffusion_config_path=diff_config_path,
             shallow_diffusion=self.use_diff,
-            only_diffusion=False,
+            only_diffusion=args["only_diffusion"],
             spk_mix_enable=False,
             feature_retrieval=args["feature_retrieval"],
         )

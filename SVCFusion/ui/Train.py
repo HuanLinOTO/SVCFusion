@@ -37,10 +37,10 @@ class Train:
         webbrowser.open(self.tb_url)
         gr.Info(I.train.launched_tb_tip.replace("{1}", self.tb_url))
 
-    def archieve(self):
+    def archive(self):
         gr.Info(I.train.archieving_tip)
-        # 将 {WORKDIR} 移动到 archieves/yyyy-mm-dd-HH-MM-SS
-        dst = f"archieve/{time.strftime('%Y-%m-%d-%H-%M-%S')}"
+        # 将 {WORKDIR} 移动到 archives/yyyy-mm-dd-HH-MM-SS
+        dst = f"archive/{time.strftime('%Y-%m-%d-%H-%M-%S')}"
         shutil.move(WORK_DIR_PATH, dst)
         os.mkdir(WORK_DIR_PATH)
         if os.path.exists(f"{dst}/config.yaml"):
@@ -55,7 +55,7 @@ class Train:
             )
         # 用explorer打开归档目录
         os.system(f"explorer {os.path.abspath(dst)}")
-        gr.Info(I.train.archieved_tip)
+        gr.Info(I.train.archived_tip)
 
     def stop(self):
         # 往 workdir 写入 stop.txt
@@ -105,8 +105,8 @@ class Train:
                 )
 
                 with gr.Row():
-                    archieve_btn = gr.Button(
-                        I.train.archieve_btn_value,
+                    archive_btn = gr.Button(
+                        I.train.archive_btn_value,
                         variant="stop",
                     )
                     stop_btn = gr.Button(
@@ -124,8 +124,8 @@ class Train:
                 outputs=[sub_model_type_dropdown],
             )
 
-            archieve_btn.click(
-                self.archieve,
+            archive_btn.click(
+                self.archive,
             )
             stop_btn.click(self.stop)
 

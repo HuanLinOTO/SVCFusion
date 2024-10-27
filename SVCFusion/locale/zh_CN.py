@@ -19,7 +19,7 @@ class _Locale(Locale):
         search_path_label = "搜索路径"
 
         workdir_name = "工作目录"
-        archieve_dir_name = "已归档训练"
+        archive_dir_name = "已归档训练"
         models_dir_name = "models 文件夹"
 
         no_model_value = "无模型"
@@ -171,11 +171,15 @@ class _Locale(Locale):
 
         choose_sub_model_label = "选择子模型"
         choose_pretrain_model_label = "选择预训练模型"
-        choose_pretrain_model_info = "占位符，没改就骂死我"
+        choose_pretrain_model_info = (
+            "根据你的设备选择合适的底模，你可以在官方网站上获取更多底模"
+        )
 
         pretrain_model_vec = "编码器"
-        pretrain_model_vec = "声码器"
-        pretrain_model_vec = "网络参数"
+        pretrain_model_vocoder = "声码器"
+        pretrain_model_size = "网络参数"
+        pretrain_model_attn = "是否有注意力机制"
+        official_pretrain_model = "官方预训练模型"
 
         load_pretrained_failed_tip = (
             "加载预训练模型失败，可能为选择的模型不适配当前参数或无预训练模型"
@@ -183,11 +187,11 @@ class _Locale(Locale):
 
         start_train_btn_value = "开始/继续训练"
 
-        archieve_btn_value = "归档工作目录"
+        archive_btn_value = "归档工作目录"
         stop_btn_value = "停止训练"
 
         archieving_tip = "正在归档，请勿多次点击"
-        archieved_tip = "归档完成，请查看打开的文件夹"
+        archived_tip = "归档完成，请查看打开的文件夹"
 
         stopped_tip = "已发送停止训练命令，请查看训练窗口"
 
@@ -472,6 +476,9 @@ class _Locale(Locale):
 
             feature_retrieval_label = "启用特征提取"
             feature_retrieval_info = "是否使用特征检索，如果使用聚类模型将被禁用"
+
+            only_diffusion_label = "仅浅扩散"
+            only_diffusion_info = "仅推理扩散模型，不推荐"
 
     class ddsp6(Locale.ddsp6):
         infer_tip = "推理 DDSP 模型"

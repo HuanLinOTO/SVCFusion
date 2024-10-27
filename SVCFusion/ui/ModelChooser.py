@@ -31,9 +31,9 @@ class ModelChooser:
         self.search_paths = [
             WORK_DIR_PATH,
             *[
-                "archieve/" + p
-                for p in os.listdir("archieve")
-                if os.path.isdir(os.path.join("archieve", p))
+                "archive/" + p
+                for p in os.listdir("archive")
+                if os.path.isdir(os.path.join("archive", p))
             ],
             *[
                 "models/" + p
@@ -48,7 +48,7 @@ class ModelChooser:
             I.model_chooser.workdir_name,
             *[
                 p.replace("models/", f"{I.model_chooser.models_dir_name} - ").replace(
-                    "archieve/", f"{I.model_chooser.archieve_dir_name} - "
+                    "archive/", f"{I.model_chooser.archive_dir_name} - "
                 )
                 for p in self.search_paths
                 if not p.startswith("exp")
@@ -128,7 +128,6 @@ class ModelChooser:
         result.update(on_topic_extra_form_values)
 
         result = self.result_normalize(result)
-        # Q:我这个变量用于储存已选的参数，应该叫啥名字
         self.selected_parameters = result
         self.seleted_model_type_index = model_type_index
 

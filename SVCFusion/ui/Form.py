@@ -55,7 +55,7 @@ class Form:
 
     def parse_item(self, item: FormComponent):
         if item["type"] == "slider":
-            return gr.Slider(
+            comp = gr.Slider(
                 label=item["label"],
                 info=item["info"],
                 minimum=item["min"],
@@ -66,7 +66,7 @@ class Form:
                 visible=item.get("visible", True),
             )
         elif item["type"] == "dropdown":
-            return gr.Dropdown(
+            comp = gr.Dropdown(
                 label=item["label"],
                 info=item.get("info", None),
                 choices=item["choices"],
@@ -93,7 +93,7 @@ class Form:
                         else I.form.dorpdown_liked_checkbox_no
                     )
 
-            return gr.Dropdown(
+            comp = gr.Dropdown(
                 label=item["label"],
                 info=item["info"],
                 choices=[
@@ -105,7 +105,7 @@ class Form:
                 visible=item.get("visible", True),
             )
         elif item["type"] == "checkbox" or item["type"] == "show_switch":
-            return gr.Checkbox(
+            comp = gr.Checkbox(
                 label=item["label"],
                 info=item.get("info", None),
                 value=item["default"],
@@ -113,7 +113,7 @@ class Form:
                 visible=item.get("visible", True),
             )
         elif item["type"] == "audio":
-            return gr.Audio(
+            comp = gr.Audio(
                 label=item["label"],
                 type="filepath",
                 interactive=True,
@@ -121,12 +121,12 @@ class Form:
                 editable=True,
             )
         elif item["type"] == "device_chooser":
-            return DeviceChooser(
+            comp = DeviceChooser(
                 show=True,
                 info=item.get("info", None),
             ).device_dropdown
         elif item["type"] == "file":
-            return gr.Files(
+            comp = gr.Files(
                 label=item["label"],
                 type="filepath",
                 interactive=True,
@@ -134,6 +134,8 @@ class Form:
             )
         else:
             raise Exception("未知类型", item)
+
+        return comp
 
     def __init__(
         self,
@@ -211,6 +213,17 @@ class Form:
                         row.__exit__()
                         row = gr.Row()
                         row.__enter__()
+
+                    if item.get("addition_tip_when_update", False):
+                        comp.change(
+                            item["addition_tip_when_update"],
+                            inputs=[comp],
+                            outputs=[gr.HTML()],
+                        )
+                        row.__exit__()
+                        row = gr.Row()
+                        row.__enter__()
+
                 if not vertical:
                     row.__exit__()
                 submit = gr.Button(
