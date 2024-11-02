@@ -147,10 +147,14 @@ class Form:
         use_textbox_opt=False,
         show_submit=True,
         submit_btn_text=I.form.submit_btn_value,
+        default_display_key="",
     ) -> None:
         self.models = models
         self.vertical = vertical
         self.model_name_list = []
+
+        if not default_display_key:
+            default_display_key = list(models.keys())[0]
 
         self.index2param_info: Dict[int, ParamInfo] = {}
         self.key2param_info: Dict[str, ParamInfo] = {}
@@ -163,8 +167,7 @@ class Form:
         for model_name in models:
             self.model_name_list.append(model_name)
             form = models[model_name]["form"]
-            group = gr.Group(visible=is_fisrt_group)
-            is_fisrt_group = False
+            group = gr.Group(visible=model_name == default_display_key)
             groups.append(group)
             with group:
                 items = []

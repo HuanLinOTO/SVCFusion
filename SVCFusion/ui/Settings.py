@@ -57,34 +57,34 @@ class Settings:
                 },
                 "callback": self.get_save_config_fn("sovits"),
             },
-            I.settings.ddsp6_settings_label: {
-                "form": {
-                    "pretrained_model_preference": {
-                        "type": "dropdown",
-                        "label": I.settings.ddsp6.pretrained_model_preference_dropdown_label,
-                        "choices": ddsp6_pretrain_models,
-                        "value_type": "index",
-                        "default": lambda: ddsp6_pretrain_models[
-                            system_config.ddsp6.pretrained_model_preference
-                        ],
-                    },
-                },
-                "callback": self.get_save_config_fn("ddsp6"),
-            },
-            I.settings.ddsp6_1_settings_label: {
-                "form": {
-                    "pretrained_model_preference": {
-                        "type": "dropdown",
-                        "label": I.settings.ddsp6_1.pretrained_model_preference_dropdown_label,
-                        "choices": ddsp6_1_pretrain_models,
-                        "value_type": "index",
-                        "default": lambda: ddsp6_pretrain_models[
-                            system_config.ddsp6_1.pretrained_model_preference
-                        ],
-                    },
-                },
-                "callback": self.get_save_config_fn("ddsp6_1"),
-            },
+            # I.settings.ddsp6_settings_label: {
+            #     "form": {
+            #         "pretrained_model_preference": {
+            #             "type": "dropdown",
+            #             "label": I.settings.ddsp6.pretrained_model_preference_dropdown_label,
+            #             "choices": ddsp6_pretrain_models,
+            #             "value_type": "index",
+            #             "default": lambda: ddsp6_pretrain_models[
+            #                 system_config.ddsp6.pretrained_model_preference
+            #             ],
+            #         },
+            #     },
+            #     "callback": self.get_save_config_fn("ddsp6"),
+            # },
+            # I.settings.ddsp6_1_settings_label: {
+            #     "form": {
+            #         "pretrained_model_preference": {
+            #             "type": "dropdown",
+            #             "label": I.settings.ddsp6_1.pretrained_model_preference_dropdown_label,
+            #             "choices": ddsp6_1_pretrain_models,
+            #             "value_type": "index",
+            #             "default": lambda: ddsp6_pretrain_models[
+            #                 system_config.ddsp6_1.pretrained_model_preference
+            #             ],
+            #         },
+            #     },
+            #     "callback": self.get_save_config_fn("ddsp6_1"),
+            # },
             I.settings.infer_settings_label: {
                 "form": {
                     "msst_device": {

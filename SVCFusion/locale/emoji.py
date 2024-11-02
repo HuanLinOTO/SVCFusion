@@ -1,394 +1,573 @@
 from SVCFusion.locale.base import Locale
 
-locale_name = "emojilang"
-locale_display_name = "😎"
+locale_name = "🇨🇳"
+locale_display_name = "🇨🇳"
 
 
 class _Locale(Locale):
-    unknown_model_type_tip = "🔍🔍🤖💡📖🌐🔄🔍🔍"
-    preprocess_failed_tip = "👋🚫❗️🔍🖥📷💬"
-    error_when_infer = "👋🏼"
+    unknown_model_type_tip = "🌐🚫未知模型类型，请前往🔧📚模型管理确认模型类型"
+    preprocess_failed_tip = "🚧💔预处理失败！截图控制台信息并加群反馈"
+
+    error_when_infer = "🚨🚧在推理时遇到错误<br>已跳过{1}文件<br>详细查看控制台<br>{2}"
 
     class device_chooser(Locale.device_chooser):
-        device_dropdown_label = "📱"
+        device_dropdown_label = "🖥️"
 
     class model_chooser(Locale.model_chooser):
-        submit_btn_value = "🤖🔍"
-        model_type_dropdown_label = " Modelo tipo 🚨"
-        search_path_label = "🔍🔄"
-        workdir_name = "📁🚀"
-        archive_dir_name = "📝📚🔒"
-        models_dir_name = "📦 Modelo"
-        no_model_value = "🚫 Modelo no encontrado"
-        unuse_value = "🚫"
-        no_spk_value = ":no_speech_bubbles:"
-        choose_model_dropdown_prefix = "🤖🔍"
-        refresh_btn_value = "🔄'options'"
-        spk_dropdown_label = "👋🏼"
-        no_spk_option = "🔍🤖"
+        submit_btn_value = "🤖🔄选择模型"
+        model_type_dropdown_label = "🌐🚫模型类型"
+        search_path_label = "🔍路径"
+
+        workdir_name = "📁工作目录"
+        archive_dir_name = "🗄️已归档训练"
+        models_dir_name = "📁models 文件夹"
+
+        no_model_value = "📦无模型"
+        unuse_value = "🚫不使用"
+        no_spk_value = "🗣️无说话人"
+
+        choose_model_dropdown_prefix = "🤖🔄选择模型"
+
+        refresh_btn_value = "🔁刷新选项"
+
+        spk_dropdown_label = "🗣️选择说话人"
+        no_spk_option = "🌐🚫未加载模型"
 
     class form(Locale.form):
-        submit_btn_value = "👋"
-        audio_output_1 = "🌍🔍💡"
-        audio_output_2 = "演奏音乐🎶 提供支持🎵"
-        textbox_output = "🌍🔍💡"
-        dorpdown_liked_checkbox_yes = "👋🏼"
-        dorpdown_liked_checkbox_no = ":no_entry_sign:"
+        submit_btn_value = "提交"
+        audio_output_1 = "🎧结果"
+        audio_output_2 = "🎧结果/伴奏"
+        textbox_output = "📝输出结果"
+
+        dorpdown_liked_checkbox_yes = "👍是"
+        dorpdown_liked_checkbox_no = "👎否"
 
     class model_manager(Locale.model_manager):
-        choose_model_title = "🤖🔍"
-        action_title = "🤖🚀"
-        pack_btn_value = "📦🤖"
-        pack_result_label = "📦结果显示"
-        packing_tip = "🔄📦，请🚫重复クリック"
-        unpackable_tip = "🚫📦🤖"
-        clean_log_btn_value = "🔄 Logs Reset (Confirm No More Training Before Reset)"
-        change_model_type_info = "🔄 🎨 💪🏼 🤔 🔍 ➕ 🔑 📜"
-        change_model_type_btn_value = "🤔👍🏼🔄"
-        change_success_tip = "👍🏼✅"
-        change_fail_tip = "🚫 تحديث проваленный"
-        move_folder_tip = "🔄 ➕ 📂移到️ 🏷️`models`"
-        move_folder_name = "🤖📝"
-        move_folder_name_auto_get = "🤖📚🔍"
-        move_folder_btn_value = " telefon"
-        other_text = "รอ"
-        moving_tip = "🔄🚫🙅"
-        moved_tip = "🔄➡️👉🏼 `{1}`"
+        choose_model_title = "🤖🔄选择模型"
+        action_title = "🔧动作"
+
+        pack_btn_value = "📦打包模型"
+        pack_result_label = "📦结果"
+        packing_tip = "正在进行中，请勿多次点击"
+        unpackable_tip = "该模型不支持打包"
+
+        clean_log_btn_value = "🚮清空日志(确认不再训练再清空)"
+
+        change_model_type_info = """
+        🚫🚨仅在发生无法识别模型类型时使用！不是转换模型类型！是更改识别的模型类型！
+        """
+        change_model_type_btn_value = "🔄确认更改"
+        change_success_tip = "✅已更改成功"
+        change_fail_tip = "🚫更改失败"
+
+        move_folder_tip = "📍🚨移动到 models 目录"
+        move_folder_name = "📦模型名称"
+        move_folder_name_auto_get = "自动获取"
+        move_folder_btn_value = "移至"
+        other_text = "等"
+        moving_tip = "正在进行中，请勿多次点击"
+        moved_tip = "已移至 {1}，刷新后可用"
 
     class main_ui(Locale.main_ui):
-        release_memory_btn_value = "🔄🖥️%/ данными"
-        released_tip = "🔄🔍 vidéoramă"
-        infer_tab = "💡🔎"
-        preprocess_tab = "🔄🧮"
-        train_tab = "🏋️\u200d♂️💪"
-        tools_tab = "🛠️🧰"
-        settings_tab = "🪡🛠️"
-        model_tools_tab = "🤖🔗"
-        audio_tools_tab = "🎶🎵🎧🎧📢🗣️🎤🎧"
-        realtime_tools_tab = "ライブ"
-        start_ddsp_realtime_gui_btn = "👋🚀📚🌐📊💰⏰💻📈🔍"
-        starting_tip = "🔄🚀잠시후,다시클릭하지마세요.중대한결과가있습니다"
-        load_model_btn_value = "🔄🤖 Modelo️"
-        infer_btn_value = "💡🔍"
-        model_manager_tab = "🤖 Quản lý"
-        install_model_tab = "💡🤖🔍 Modelo de Instalación"
-        fish_audio_preprocess_tab = "演奏🎶，简化обработка🎵"
-        vocal_separation_tab = "🎶🎧"
-        compatible_tab = " Modelo Compatible"
-        detect_spk_tip = "👋🏼"
-        spk_not_found_tip = "🔍🤖"
+        release_memory_btn_value = "🔧🔄释放显存/内存"
+        released_tip = "已尝试释放显存/内存"
+        infer_tab = "💡推理"
+        preprocess_tab = "⏳数据处理"
+        train_tab = "🏋️‍♂️训练"
+        tools_tab = "🛠️小工具"
+        settings_tab = "⚙️设置"
+
+        model_tools_tab = "模型相关"
+        audio_tools_tab = "音频相关"
+        realtime_tools_tab = "实时"
+        dlc_install_tools_tab = "DLL安装"
+
+        start_ddsp_realtime_gui_btn = "启动 DDSP 实时 GUI"
+
+        starting_tip = "正在进行中，请稍后，不要重复点击，后果严重"
+
+        load_model_btn_value = "加载模型"
+        infer_btn_value = "开始推理"
+
+        model_manager_tab = "模型管理"
+        install_model_tab = "安装模型"
+        fish_audio_preprocess_tab = "简单音频处理"
+        vocal_separation_tab = "人声分离"
+        compatible_tab = "模型兼容"
+
+        detect_spk_tip = "已检测到的🗣️角色："
+        spk_not_found_tip = "未检测到任何🗣️角色"
+
+    class DLC(Locale.DLC):
+        dlc_install_label = "上传新 DLL"
+        dlc_install_btn_value = "安装DLL"
+        dlc_installing_tip = "正在进行中"
+        dlc_install_success = "✅成功"
+        dlc_install_failed = "🚫失败"
+        dlc_install_empty = "未选择文件"
+        dlc_install_ext_error = "不允许其他格式，仅支持.dll"
 
     class compatible_models(Locale.compatible_models):
-        upload_error = "📦🚫➡️🔍📝✅"
-        model_name_label = "🤖📝"
-        upload_success = ".Upload réussi"
-        model_exists = "🔍💡"
-        compatible_sovits = "🤖🎵📈"
-        sovits_main_model_label = " Modelo_principal_de_SOVITS"
-        sovits_diff_model_label = "👨\u200d🎤💡🔄👩\u200d💻🔍"
-        sovits_cluster_model_label = "🤖🔍"
-        sovits_main_model_config_label = "🤖📝"
-        sovits_diff_model_config_label = "соло 🌐 🔍💡"
+        upload_error = "上传错误，请检查文件是否完整"
+        model_name_label = "📦模型名称"
+        upload_success = "✅成功"
+        model_exists = "已存在该模型"
+
+        compatible_sovits = "兼容SoVITS 模型"
+        sovits_main_model_label = "主模型"
+        sovits_diff_model_label = "浅扩散模型"
+        sovits_cluster_model_label = "聚类/检索模型"
+
+        sovits_main_model_config_label = "配置主模型"
+        sovits_diff_model_config_label = "配置浅扩散模型"
 
     class preprocess(Locale.preprocess):
-        tip = "👋🏻\n📝 📝 🇯́其他国家的输入法"
-        low_vram_tip = "👋🏼\n\n## 📲:no_smoking: 🔢GPU内存容量,当前设备上没有任何一个大于6GB的显卡显存。我们仅推荐您在进行DDSP模型的训练时使用。  \n\n📚:warning: 注意：这并不意味着你无法进行训练！"
-        open_dataset_folder_btn_value = '👋🌍🔍"data" 🗂️'
-        choose_model_label = "🤖🔍"
-        start_preprocess_btn_value = "🔄准备工作"
+        tip = """
+            📂将你的数据集（.wav 文件）放入整合包下的 🚀dataset_raw/你的角色名字 目录中
+
+            可以通过创建多个角色文件夹同时训练多个角色
+
+            应该是这样的结构：
+
+            ```
+            dataset_raw/
+            |-你的角色名字1/
+            |  | 1.wav
+            |  | 2.wav
+            |  | 3.wav
+            |  ...
+            |-你的角色名字2/
+            |  | 1.wav
+            |  | 2.wav
+            |  | 3.wav
+            |  ...
+            ```
+
+            如果不懂，点击按钮进行全自动处理
+
+            如懂参数，选择手动模式，更详细处理
+            
+            **CPU 用户请使用 FCPE 作为 F0 提取器/预测器**
+        """
+        low_vram_tip = """
+            ## 当前设备没有一张显卡显存大于 6GB，仅推荐训练 DDSP 模型
+
+            注意 这并不代表你不能训练！！
+        """
+
+        open_dataset_folder_btn_value = "打开数据集文件夹"
+
+        choose_model_label = "选择模型"
+        start_preprocess_btn_value = "开始预处理"
 
     class train(Locale.train):
-        current_train_model_label = " Modelo de entrenamiento actual"
-        fouzu_tip = "👋🚀🙏✨"
-        gd_plus_1 = "🤔"
-        gd_plus_1_tip = " cooker爆炸='-1',功德增加='+'"
-        choose_sub_model_label = "🔍🤖"
-        start_train_btn_value = "📚🚀🏃\u200d♂️🔥🔄🔄"
-        archive_btn_value = "📚🔍폴더"
-        stop_btn_value = "🚫🔥🤖️프로그래밍"
-        archieving_tip = "🔍📚🔒🚫"
-        archived_tip = "🗂️✅🔍폴더 열어서 확인해 주세요"
-        stopped_tip = "👋🌍 ➡️👤🤖🔍📚👀🌐"
-        tensorboard_btn = "🔥🚀💡"
-        launching_tb_tip = "🚀🔍📝"
-        launched_tb_tip = "🔍📚🌐💰"
+        current_train_model_label = "正在进行的训练模型"
+
+        fouzu_tip = "💡整了个赛博佛祖，希望对你有帮助"
+
+        gd_plus_1 = "+1功德"
+        gd_plus_1_tip = "功德 +1，炸炉 -1"
+
+        choose_sub_model_label = "选择子模型"
+        choose_pretrain_model_label = "选择预训练模型"
+        choose_pretrain_model_info = (
+            "根据设备选择合适的底模，在官方网站获取更多底模"
+        )
+
+        pretrain_model_vec = "编码器"
+        pretrain_model_vocoder = "声码器"
+        pretrain_model_size = "网络参数"
+        pretrain_model_attn = "是否含注意力机制"
+        official_pretrain_model = "官方预训练模型"
+
+        load_pretrained_failed_tip = (
+            "加载预训练模型失败，可能是选择的模型不适应当前参数或无预训练模型"
+        )
+
+        pretrain_model_not_found_tip = "未找到预训练模型"
+
+        start_train_btn_value = "开始/继续训练"
+
+        archive_btn_value = "归档工作目录"
+        stop_btn_value = "停止训练"
+
+        archieving_tip = "正在进行中，请勿多次点击"
+        archived_tip = "已成功，查看打开的文件夹"
+
+        stopped_tip = "发送了停止训练命令，请查看训练窗口"
+
+        tensorboard_btn = "启动 Tensorboard"
+
+        launching_tb_tip = "正在进行中"
+        launched_tb_tip = "Tensorboard 在 {1} 开放"
 
     class settings(Locale.settings):
-        page = "📖🌍"
-        save_btn_value = "📌👍🏼📝"
-        pkg_settings_label = "捆绑包设置"
-        infer_settings_label = "🔍🛠️"
-        sovits_settings_label = "👋🚫💡🛠️"
-        ddsp6_settings_label = "🎤📚 seis"
+        page = "页面"
+
+        save_btn_value = "保存设置"
+
+        pkg_settings_label = "整合包设置"
+        infer_settings_label = "推理设置"
+        sovits_settings_label = "SoVITS 设置"
+        ddsp6_settings_label = "DDSP-SVC 6 设置"
+        ddsp6_1_settings_label = "DDSP-SVC 6.1 设置"
 
         class pkg(Locale.settings.pkg):
-            lang_label = "👋🏾"
-            lang_info = "🔄🔧🌍"
+            lang_label = "语言"
+            lang_info = "更改语言需要重启整合包"
 
         class infer(Locale.settings.infer):
-            msst_device_label = "🏃🏽\u200d♂️🔍⚙️🔍📱"
+            msst_device_label = "分离任务设备"
 
         class sovits(Locale.settings.sovits):
-            resolve_port_clash_label = "🔄🛠️💻🚀🚫🌐Mbps"
+            resolve_port_clash_label = "尝试解决端口冲突问题（Windows 可用）"
 
         class ddsp6(Locale.settings.ddsp6):
-            pretrained_model_preference_dropdown_label = "🔍👌🏼"
-            default_pretrained_model = " résult: ⚙️，默认尺寸：512×6"
-            large_pretrained_model = "🔍🌐尺寸：1024×12"
+            pretrained_model_preference_dropdown_label = "底模偏好"
+            default_pretrained_model = "默认512 6"
+            large_pretrained_model = "大网络1024 12"
 
         class ddsp6_1(Locale.settings.ddsp6_1):
-            pretrained_model_preference_dropdown_label = "🔍👌🏼"
-            default_pretrained_model = " résult: ⚙️，默认尺寸：512×6"
-            large_pretrained_model = "🔍🌐尺寸：1024×12"
+            pretrained_model_preference_dropdown_label = "底模偏好"
+            default_pretrained_model = "默认(大网络)1024 10"
 
-        saved_tip = "💾"
+        saved_tip = "✅已保存"
 
     class install_model(Locale.install_model):
-        tip = '📚)>> 📂>> 💾>> 🔗>> `.sf_pkg/`.h0_ddsp_pkg_model">'
-        file_label = "🧶📦 ➕ Modelo"
-        model_name_label = "🤖📝"
-        model_name_placeholder = "👋 输入模型名称"
-        submit_btn_value = "💡🤖🔍 Modelo de Instalación"
+        tip = """
+        ## 目前仅支持上传 .sf_pkg/.h0_ddsp_pkg_model 格式的模型包
+        """
+
+        file_label = "上传模型包"
+
+        model_name_label = "📦模型名称"
+        model_name_placeholder = "请输入模型名称"
+
+        submit_btn_value = "安装模型"
 
     class path_chooser(Locale.path_chooser):
-        input_path_label = "폴더"
-        output_path_label = "endir 文件夹"
+        input_path_label = "输入路径"
+        output_path_label = "输出路径"
 
     class fish_audio_preprocess(Locale.fish_audio_preprocess):
-        to_wav_tab = "🎶تحويل lượng كبير 🎤"
-        slice_audio_tab = "👋🏼"
-        preprocess_tab = "🤖📝"
-        max_duration_label = "最长时间段"
-        submit_btn_value = "🔄"
-        input_output_same_tip = "🔗➡️"
-        input_path_not_exist_tip = "🔍 Đường dẫn không tồn tại"
+        to_wav_tab = "批量转 WAV"
+        slice_audio_tab = "音频切片"
+        preprocess_tab = "数据处理"
+        max_duration_label = "最大时长"
+        submit_btn_value = "开始"
+
+        input_output_same_tip = "输入输出路径相同"
+        input_path_not_exist_tip = "未找到输入路径"
 
     class vocal_separation(Locale.vocal_separation):
-        input_audio_label = "🎶🎧"
-        input_path_label = "🔍 📁"
-        output_path_label = "endir 👉🏼"
-        use_batch_label = "🤔"
-        use_de_reverb_label = "👋🏼"
-        use_harmonic_remove_label = "🎶🎤"
-        submit_btn_value = "🔄"
-        vocal_label = "👋🏼"
-        inst_label = "演奏🎵-同伴🎸"
-        batch_output_message_label = "📝🤖📢💥"
-        no_file_tip = ":no_file_folder_with_lock:."
-        no_input_tip = "🔍폴더 선택 안 함"
-        no_output_tip = "폴더를 선택하지 않았습니다"
-        input_not_exist_tip = "📁🔍"
-        output_not_exist_tip = "📁"
-        input_output_same_tip = "📂✅命名为同一文件夹"
-        finished = "🏁"
-        error_when_processing = "🔍🔧🚨出现问题啦！查阅日志获取帮助📷"
-        unusable_file_tip = "👋🏼 | 🎵 | 🔀 | 💾"
-        batch_progress_desc = "📈"
+        input_audio_label = "音频文件"
+        input_path_label = "输入路径"
+        output_path_label = "输出路径"
+
+        use_batch_label = "批量处理"
+        use_de_reverb_label = "去混响"
+        use_harmonic_remove_label = "去除和声"
+
+        submit_btn_value = "开始"
+        vocal_label = " vocals 输出"
+        inst_label = " accompaniment 输出"
+
+        batch_output_message_label = "批处理信息"
+
+        no_file_tip = "未选择文件"
+        no_input_tip = "未选择输入路径"
+        no_output_tip = "未选择输出路径"
+        input_not_exist_tip = "未找到输入目录"
+        output_not_exist_tip = "未找到输出目录"
+        input_output_same_tip = "输入输出相同"
+
+        finished = "完成"
+        error_when_processing = "处理时发生错误，截图控制台寻求帮助"
+
+        unusable_file_tip = "{1} 已跳过, 文件格式不支持"
+
+        batch_progress_desc = "总进度"
+
         job_to_progress_desc = {
-            "🎤🎶": "🎶🚫",
-            "👋🏼": "🎶🚫",
-            "🤖": "👋🏼",
-            "🎤🎧": "🎶🎤",
+            "vocal": "去人声",
+            "kim_vocal": "去人声",
+            "deverb": "去混响",
+            "karaoke": "去和声",
         }
 
     class common_infer(Locale.common_infer):
-        audio_label = "🎶🎧"
-        use_batch_label = "🤔"
-        use_vocal_separation_label = "🎶剔除非演奏部分"
-        use_vocal_separation_info = "演奏🎵 是否要去掉背景音乐🎶？"
-        use_de_reverb_label = "👋🏼"
-        use_de_reverb_info = "🚫Echo️️"
-        use_harmonic_remove_label = "👋🌍🎵🚫"
-        use_harmonic_remove_info = ":noises_off:"
-        f0_label = "🔍🤖"
-        f0_info = "🎤🎧🔍🔧🤖"
-        keychange_label = "👋🏼"
-        keychange_info = "👩️\u200d剃鬍子🔄(man to woman) 12，👸🏼剃鬍子🔄(woman to man) -12，🗣️音色不像可以调节这个"
-        threshold_label = "一刀切阈值"
-        threshold_info = "👋🏻/audio_slices_threshold_for_voiced_samples, adjust to -40 or higher if there's background noise"
+        audio_label = "音频文件"
+
+        use_batch_label = "批量处理"
+        use_vocal_separation_label = "去除伴奏"
+        use_vocal_separation_info = "是否去除伴奏"
+
+        use_de_reverb_label = "去混响"
+        use_de_reverb_info = "是否去混响"
+
+        use_harmonic_remove_label = "去和声"
+        use_harmonic_remove_info = "是否去和声"
+
+        f0_label = "音高提取器"
+        f0_info = "用于音高提取/预测的模型"
+
+        keychange_label = "调校"
+        keychange_info = "参考：男转女 12，女转男 -12，声音不像可以调节这个"
+
+        threshold_label = "阈值"
+        threshold_info = "人声切片的阈值，如果有底噪可以调为 -40 或更高"
 
     class ddsp_based_infer(Locale.ddsp_based_infer):
-        method_label = " kontroler"
-        method_info = "👋🏼📚🔍🤖🔥"
-        infer_step_label = "🔍🚶\u200d♂️"
-        infer_step_info = "🔍🚶\u200d♂️ 默认就是这样"
-        t_start_label = "👋"
-        t_start_info = "🤔"
-        num_formant_shift_key_label = "🔄📈"
-        num_formant_shift_key_info = "🎵🎤📈发声音越尖锐🎵🎤📉发声音越粗糙"
+        method_label = "采样器"
+        method_info = "用于 reflow 的采样器"
+
+        infer_step_label = "推理步数"
+        infer_step_info = "推理步长，默认就行"
+
+        t_start_label = "T Start"
+        t_start_info = "未知"
+
+        num_formant_shift_key_label = "共振峰偏移"
+        num_formant_shift_key_info = "值越大声音越细，值越小声音越粗"
 
     class ddsp_based_preprocess(Locale.ddsp_based_preprocess):
-        method_label = "🔍🤖"
-        method_info = "👋🏼📚🔍🤖🔥"
+        method_label = "音高提取器"
+        method_info = "用于 reflow 的采样器"
 
     class common_preprocess(Locale.common_preprocess):
-        encoder_label = "🎶🎧🚀🤖"
-        encoder_info = "🎶🔍🎵📝🤖"
-        f0_label = "🔍🤖"
-        f0_info = "🎤🎧🔍🔧🤖"
+        encoder_label = "声音编码器"
+        encoder_info = "用于对声音进行编码的模型"
+
+        f0_label = "音高提取器"
+        f0_info = "用于音高提取/预测的模型"
 
     class sovits(Locale.sovits):
-        dataset_not_complete_tip = "🔍🚫🔄📊📈"
-        finished = "🏁"
+        dataset_not_complete_tip = "数据集不完整，请检查数据或重新预处理"
+        finished = "完成"
 
         class train_main(Locale.sovits.train_main):
-            log_interval_label = "ログイン間隔"
-            log_interval_info = "👋🤖.every 🕒 steps ⚡log"
-            eval_interval_label = "🔍.spacing"
-            eval_interval_info = "💾每隔N步保存并与验证"
-            all_in_mem_label = "🔍🔄📊🌐"
-            all_in_mem_info = "💡📚➡️🔍🔄🤖🧠📈-memory"
-            keep_ckpts_label = "🔍📝"
-            keep_ckpts_info = "留守最后的 N 度检查点"
-            batch_size_label = "🏃\u200d♂️👥💨"
-            batch_size_info = "🔍📈📷📝🧩"
-            learning_rate_label = "🔍"
-            learning_rate_info = "🔍"
-            num_workers_label = "🔄📈📊"
-            num_workers_info = "💻🔥🚀🔧≧４➡️⚡,+🎯🔍👍"
-            half_type_label = "🔍"
-            half_type_info = "🤔💥➡️)>>👌🏼✨📈%/的风险升高了，可以变得更快。"
+            log_interval_label = "日志间隔"
+            log_interval_info = "每 N 步输出一次日志"
+
+            eval_interval_label = "验证间隔"
+            eval_interval_info = "每 N 步保存并验证一次"
+
+            all_in_mem_label = "缓存全数据集"
+            all_in_mem_info = (
+                "将所有数据加载到内存中训练，会加快训练速度，但是需要足够的内存"
+            )
+
+            keep_ckpts_label = "保留检查点"
+            keep_ckpts_info = "保留最近 N 个检查点"
+
+            batch_size_label = "批大小"
+            batch_size_info = "越大越好，但显存占用更大"
+
+            learning_rate_label = "学习率"
+            learning_rate_info = "学习率"
+
+            num_workers_label = "加载进程数"
+            num_workers_info = "仅在 CPU 核心大于 4 时启用，大就是好"
+
+            half_type_label = "精度"
+            half_type_info = "选择 fp16 可以获得更快的速度，但炸炉概率更高"
 
         class train_diff(Locale.sovits.train_diff):
-            batchsize_label = "🏃\u200d♂️👥💨"
-            batchsize_info = "🔍✨➡️📈❗️📷ⁿ➡️💾🚫🔥👉🏼🔢"
-            num_workers_label = "🏃\u200d♂️"
-            num_workers_info = " 若要你的显卡不错，你可以设置为 0"
-            amp_dtype_label = "🔍 Tiến độ 📊"
-            amp_dtype_info = "😋🎵🔍⚡️🎮💥🔥📈⏰🚀"
-            lr_label = "🔍"
-            lr_info = "🚫:no_action:"
-            interval_val_label = "🔍.spacing"
-            interval_val_info = "🔍每隔Ν步骤检查一遍，并且储存"
-            interval_log_label = "ログイン間隔"
-            interval_log_info = "👋🤖.every 🕒 steps ⚡log"
-            interval_force_save_label = "🔍💾🔄🕒"
-            interval_force_save_info = "🔄حفظ النموذج كل N الخطوات"
-            gamma_label = "👋🏼"
-            gamma_info = "🚫:no_action:"
-            cache_device_label = "🔍🔋🌐"
-            cache_device_info = "👋🌍💻📈🔥🔍📷➡️📸🎥🎥🎥GPU++\n\n>Note: I've used '+' symbol to maintain markdown formatting and separate the output into different sentences or phrases as per the input. The 'GPU++' represents \"greater performance\" since GPUs are often associated with speed in computing."
-            cache_all_data_label = "📜➡️🔍📚"
-            cache_all_data_info = "🚀📈✨📝💻📊🔍🔧💥 multeramemory"
-            epochs_label = "🔄(Maximum Training Rounds)"
-            epochs_info = "🤖📚🔍💡🛠️🔧🔄"
-            use_pretrain_label = "🔍🤖"
-            use_pretrain_info = "🔄🔍⏰🛠️📚🚫"
+            batchsize_label = "批大小"
+            batchsize_info = "越大越好，但显存占用更大, 不能超过训练集条数"
+
+            num_workers_label = "加载进程数"
+            num_workers_info = "如果你 GPU 性能好，可以设为 0"
+
+            amp_dtype_label = "精度"
+            amp_dtype_info = "选择 fp16/bf16 可以获得更快的速度，但炸炉概率更高"
+
+            lr_label = "学习率"
+            lr_info = "不建议动"
+
+            interval_val_label = "验证间隔"
+            interval_val_info = "每 N 步验证一次，同时保存"
+
+            interval_log_label = "日志间隔"
+            interval_log_info = "每 N 步输出一次日志"
+
+            interval_force_save_label = "强制保存模型间隔"
+            interval_force_save_info = "每 N 步保存一次模型"
+
+            gamma_label = "学习率衰减"
+            gamma_info = "不建议动"
+
+            cache_device_label = "缓存设备"
+            cache_device_info = "选择 cuda 可以获得更快的速度，但需要大显存的 GPU (SoVITS 主模型无效)"
+
+            cache_all_data_label = "缓存所有数据"
+            cache_all_data_info = "可以获得更快的速度，但需要大内存/显存"
+
+            epochs_label = "最大训练轮数"
+            epochs_info = "达到设定值时将会停止训练"
+
+            use_pretrain_label = "使用预训练模型"
+            use_pretrain_info = "勾选可以大幅减少训练时间，如果你不懂，不要动"
 
         class train_cluster(Locale.sovits.train_cluster):
-            cluster_or_index_label = "🔍📚"
-            cluster_or_index_info = "🔍 Modelo de agrupamiento o de recuperación, la recuperación es ligeramente mejor que la agrupación."
-            use_gpu_label = "GPU🚀💡"
-            use_gpu_info = "🔄⚡️🔧🔍🔍💡📚"
+            cluster_or_index_label = "聚类或检索"
+            cluster_or_index_info = "要训练聚类还是检索模型，检索咬字比聚类稍好"
+
+            use_gpu_label = "使用 GPU"
+            use_gpu_info = "使用 GPU 可以加速训练，该参数只对聚类可用"
 
         class infer(Locale.sovits.infer):
-            cluster_infer_ratio_label = "📊\\/📈"
-            cluster_infer_ratio_info = "📊%/📈-feature-ratio,范畴️:0-1，默认值是0，当未训练聚类模型或特征检索时。"
-            linear_gradient_info = "🎶🎧 ➕ ✨🕰️"
-            linear_gradient_label = "🌈-Length Adjustments"
-            k_step_label = "🚶🌍"
-            k_step_info = "👋🏼 | 🌍 | ➡️ | 📊 | 🔄 | 🔢 | 100"
-            enhancer_adaptive_key_label = "🔄👍"
-            enhancer_adaptive_key_info = "演奏者的声音能够覆盖更大的范围 | 默认值是0"
-            f0_filter_threshold_label = "🔍ParameterValue"
-            f0_filter_threshold_info = "👋🏻 🌍 若要在 Python 中实现一个将输入转换为仅包含表情符号的翻译程序，并保持 Markdown 格式不变，可以使用一些 API 或库来获取特定的 emoji。然而，请注意，这个任务可能非常具有挑战性且效果可能不理想，因为自然语言与表情符号的对应不是一一对应的。\n\nPython 没有内置函数能够直接将文本翻译成 emoji。一个实际应用这种方法的方法可能是编写一个字典或者使用外部 API（如通过网络请求获取某个词的 emoji）。以下是一个简单的示例使用 Python 字典来处理特定英文短语到 emoji 的翻译：\n\n```python\nemoji_dict = {\n    '你好': ':wave:',\n    '有效': ':ok:',\n    '数值范围': ':range:',\n    '降低该值': ':down_arrow:',\n    '增加哑音': ':volume_down:',\n}\n\ndef translate_to_emojis(text):\n    lines = text.split('\\n')\n    result_lines = []\n    \n    for line in lines:\n        parts = line.strip().split('.')\n        \n        # 处理每部分，如果在 emoji_dict 中找到对应项，则替换为 emoji，否则保留原样\n        translated_parts = [emoji_dict.get(part, part) for part in parts]\n        \n        result_lines.append('.'.join(translated_parts))\n    \n    return '\\n'.join(result_lines)\n\ninput_text = \"\"\"\n只有使用crepe时有效. 数值范围从0-1. \n降低该值可减少跑调概率，但会增加哑音\n\"\"\"\n\noutput_text = translate_to_emojis(input_text)\nprint(output_text)\n```\n\n这个示例代码仅使用预先定义好的 emoji 字典来替换输入文本中的部分单词。然而，请注意这只能处理特定的英语短语到emoji的映射，并且实际效果可能会很有限，尤其对于复杂的自然语言结构和非预定义词汇。\n\n如果你想更全面地实现这个功能（比如支持中文和其他语言），你可能需要使用机器翻译引擎，例如 Google Translate API 或其他类似的云服务。然而，这通常涉及到高昂的成本或需要复杂的身份验证过程，并且还可能需要处理文本切分、语法分析等自然语言处理任务来确保正确匹配单词和表情符号。\n\n请根据实际需求调整此代码以实现更完整的功能。"
-            audio_predict_f0_label = "🤖🔍"
-            audio_predict_f0_info = "🎤🔄🎶🎵🚫🎧"
-            second_encoding_label = ""
-            second_encoding_info = "👋🏽 🎤 🔇 📢 🎶 💯 🙄"
-            clip_label = "📝切割长度强制执行"
-            clip_info = " músicː⃣ slice ⏰ length, 0 ⚫ no enforce"
+            cluster_infer_ratio_label = "聚类/特征比例"
+            cluster_infer_ratio_info = (
+                "聚类/特征占比，范围0-1，若没有训练聚类模型或特征检索则默认0即可"
+            )
+
+            linear_gradient_info = "两段音频切片的交叉淡入长度"
+            linear_gradient_label = "渐变长度"
+
+            k_step_label = "扩散步数"
+            k_step_info = "越大越接近扩散模型的结果，默认100"
+
+            enhancer_adaptive_key_label = "增强器适应"
+            enhancer_adaptive_key_info = "使增强器适应更高音域(单位为半音数)|默认为0"
+
+            f0_filter_threshold_label = "f0 过滤阈值"
+            f0_filter_threshold_info = "只有使用crepe时有效. 数值范围从0-1. 降低该值可减少跑调概率，但会增加哑音"
+
+            audio_predict_f0_label = "自动 f0 预测"
+            audio_predict_f0_info = (
+                "语音转换自动预测音高，转换歌声时不要打开这个会严重跑调"
+            )
+
+            second_encoding_label = "二次编码"
+            second_encoding_info = (
+                "浅扩散前会对原始音频进行二次编码，玄学选项，有时候效果好，有时候效果差"
+            )
+
+            clip_label = "强制切片长度"
+            clip_info = "强制音频切片长度, 0 为不强制"
 
         class preprocess(Locale.sovits.preprocess):
-            use_diff_label = "🏃\u200d♂️📚🔍🤖 représenterait la traduction en Emojilang de \"训练浅扩散\". Note que l'Emojilang utilise souvent des symboles plus généraux pour simuler le sens d'une phrase ou d'un terme."
-            use_diff_info = (
-                "🔄 若要生成训练深散播所需的档案，则需选取此项，但相对耗时较长"
-            )
-            vol_aug_label = "演奏🎵🎶，\n\nInput: 响度嵌入\nOutput: 🎵🎸，\n\n或者如果是指音量或声音的“响度”，可以使用：\n🔊、\n\n取决于具体语境和你想表达的意思。在Markdown中，这应该会被表示为：\n\n```\n演奏🎵🎶，\n\n或者如果是指音量或声音的“响度”，可以使用：\n🔊、\n```"
-            vol_aug_info = "🎶💡🔊🔍"
-            num_workers_label = " Tiến trình số"
-            num_workers_info = "📚🚀"
-            subprocess_num_workers_label = "🔢🧶"
-            subprocess_num_workers_info = "📚🚀"
-            debug_label = "💡🔍"
-            debug_info = "💡📝🔧📣📢📢🚫❗"
+            use_diff_label = "训练浅扩散"
+            use_diff_info = "勾选后将会生成训练浅扩散需要的文件，会比不选慢"
+
+            vol_aug_label = "响度嵌入"
+            vol_aug_info = "勾选后将会使用响度嵌入"
+
+            num_workers_label = "进程数"
+            num_workers_info = "理论越大越快"
+
+            subprocess_num_workers_label = "每个进程的线程数"
+            subprocess_num_workers_info = "理论越大越快"
+
+            debug_label = "是否开启 Debug 模式"
+            debug_info = "开启后会输出调试信息，非特殊情况没必要开"
 
         class model_types(Locale.sovits.model_types):
-            main = " Modelo_principal"
-            diff = "🔍️⁺⁻"
-            cluster = "🔍📚"
+            main = "主模型"
+            diff = "浅扩散"
+            cluster = "聚类/检索模型"
 
         class model_chooser_extra(Locale.sovits.model_chooser_extra):
-            enhance_label = "BOSE🎶🎧🔊"
-            enhance_info = "🎶🎧📈🔍📢🤖🗣️📝📚🔄🔥📉🚫💡🌍"
-            feature_retrieval_label = "💡🔍人脸识别提取"
-            feature_retrieval_info = "🔍🤖📈🚫"
+            enhance_label = "NSFHifigan 音频增强"
+            enhance_info = (
+                "对部分训练集少的模型有一定的音质增强效果，对训练好的模型有反面效果"
+            )
+
+            feature_retrieval_label = "启用特征提取"
+            feature_retrieval_info = "是否使用特征检索，如果使用聚类模型将被禁用"
+
+            only_diffusion_label = "仅浅扩散"
+            only_diffusion_info = "仅推理扩散模型，不推荐"
 
     class ddsp6(Locale.ddsp6):
-        infer_tip = "🔍🤖🎧🎶"
+        infer_tip = "	DDSP 模型推理"
 
         class model_types(Locale.ddsp6.model_types):
-            cascade = "🤔"
+            cascade = "级联模型"
 
         class train(Locale.ddsp6.train):
-            batch_size_label = "🏃\u200d♂️👥💨"
-            batch_size_info = "🔍✨➡️📈❗️📷ⁿ➡️💾🚫🔥👉🏼🔢"
-            num_workers_label = "🏃\u200d♂️"
-            num_workers_info = " 若要你的显卡不错，你可以设置为 0"
-            amp_dtype_label = "🔍 Tiến độ 📊"
-            amp_dtype_info = "😋🎵🔍⚡️🎮💥🔥📈⏰🚀"
-            lr_label = "🔍"
-            lr_info = "🚫:no_action:"
-            interval_val_label = "🔍.spacing"
-            interval_val_info = "🔍每隔Ν步骤检查一遍，并且储存"
-            interval_log_label = "ログイン間隔"
-            interval_log_info = "👋🤖.every 🕒 steps ⚡log"
-            interval_force_save_label = "🔍💾🔄🕒"
-            interval_force_save_info = "🔄حفظ النموذج كل N الخطوات"
-            gamma_label = "👋🏼"
-            gamma_info = "🚫:no_action:"
-            cache_device_label = "🔍🔋🌐"
-            cache_device_info = "👋🌍💻📈🔥🔍📷➡️📸🎥🎥🎥GPU++\n\n>Note: I've used '+' symbol to maintain markdown formatting and separate the output into different sentences or phrases as per the input. The 'GPU++' represents \"greater performance\" since GPUs are often associated with speed in computing."
-            cache_all_data_label = "📜➡️🔍📚"
-            cache_all_data_info = "🚀📈✨📝💻📊🔍🔧💥 multeramemory"
-            epochs_label = "🔄(Maximum Training Rounds)"
-            epochs_info = "🤖📚🔍💡🛠️🔧🔄"
-            use_pretrain_label = "🔍🤖"
-            use_pretrain_info = "🔄🔍⏰🛠️📚🚫"
+            batch_size_label = "批大小"
+            batch_size_info = "越大越好，但显存占用更大, 不能超过训练集条数"
+
+            num_workers_label = "加载进程数"
+            num_workers_info = "如果你 GPU 性能好，可以设为 0"
+
+            amp_dtype_label = "精度"
+            amp_dtype_info = "选择 fp16/bf16 可以获得更快的速度，但炸炉概率更高"
+
+            lr_label = "学习率"
+            lr_info = "不建议动"
+
+            interval_val_label = "验证间隔"
+            interval_val_info = "每 N 步验证一次，同时保存"
+
+            interval_log_label = "日志间隔"
+            interval_log_info = "每 N 步输出一次日志"
+
+            interval_force_save_label = "强制保存模型间隔"
+            interval_force_save_info = "每 N 步保存一次模型"
+
+            gamma_label = "学习率衰减"
+            gamma_info = "不建议动"
+
+            cache_device_label = "缓存设备"
+            cache_device_info = "选择 cuda 可以获得更快的速度，但需要大显存的 GPU (SoVITS 主模型无效)"
+
+            cache_all_data_label = "缓存所有数据"
+            cache_all_data_info = "可以获得更快的速度，但需要大内存/显存"
+
+            epochs_label = "最大训练轮数"
+            epochs_info = "达到设定值时将会停止训练"
+
+            use_pretrain_label = "使用预训练模型"
+            use_pretrain_info = "勾选可以大幅减少训练时间，如果你不懂，不要动"
 
     class reflow(Locale.reflow):
-        infer_tip = "🔍🤖💡"
+        infer_tip = "ReflowVAESVC 模型推理"
 
         class train(Locale.ddsp6.train):
-            batch_size_label = "🏃\u200d♂️👥💨"
-            batch_size_info = "🔍✨➡️📈❗️📷ⁿ➡️💾🚫🔥👉🏼🔢"
-            num_workers_label = "🏃\u200d♂️"
-            num_workers_info = " 若要你的显卡不错，你可以设置为 0"
-            amp_dtype_label = "🔍 Tiến độ 📊"
-            amp_dtype_info = "😋🎵🔍⚡️🎮💥🔥📈⏰🚀"
-            lr_label = "🔍"
-            lr_info = "🚫:no_action:"
-            interval_val_label = "🔍.spacing"
-            interval_val_info = "🔍每隔Ν步骤检查一遍，并且储存"
-            interval_log_label = "ログイン間隔"
-            interval_log_info = "👋🤖.every 🕒 steps ⚡log"
-            interval_force_save_label = "🔍💾🔄🕒"
-            interval_force_save_info = "🔄حفظ النموذج كل N الخطوات"
-            gamma_label = "👋🏼"
-            gamma_info = "🚫:no_action:"
-            cache_device_label = "🔍🔋🌐"
-            cache_device_info = "👋🌍💻📈🔥🔍📷➡️📸🎥🎥🎥GPU++\n\n>Note: I've used '+' symbol to maintain markdown formatting and separate the output into different sentences or phrases as per the input. The 'GPU++' represents \"greater performance\" since GPUs are often associated with speed in computing."
-            cache_all_data_label = "📜➡️🔍📚"
-            cache_all_data_info = "🚀📈✨📝💻📊🔍🔧💥 multeramemory"
-            epochs_label = "🔄(Maximum Training Rounds)"
-            epochs_info = "🤖📚🔍💡🛠️🔧🔄"
-            use_pretrain_label = "🔍🤖"
-            use_pretrain_info = "🔄🔍⏰🛠️📚🚫"
+            batch_size_label = "批大小"
+            batch_size_info = "越大越好，但显存占用更大, 不能超过训练集条数"
+
+            num_workers_label = "加载进程数"
+            num_workers_info = "如果你 GPU 性能好，可以设为 0"
+
+            amp_dtype_label = "精度"
+            amp_dtype_info = "选择 fp16/bf16 可以获得更快的速度，但炸炉概率更高"
+
+            lr_label = "学习率"
+            lr_info = "不建议动"
+
+            interval_val_label = "验证间隔"
+            interval_val_info = "每 N 步验证一次，同时保存"
+
+            interval_log_label = "日志间隔"
+            interval_log_info = "每 N 步输出一次日志"
+
+            interval_force_save_label = "强制保存模型间隔"
+            interval_force_save_info = "每 N 步保存一次模型"
+
+            gamma_label = "学习率衰减"
+            gamma_info = "不建议动"
+
+            cache_device_label = "缓存设备"
+            cache_device_info = "选择 cuda 可以获得更快的速度，但需要大显存的 GPU (SoVITS 主模型无效)"
+
+            cache_all_data_label = "缓存所有数据"
+            cache_all_data_info = "可以获得更快的速度，但需要大内存/显存"
+
+            epochs_label = "最大训练轮数"
+            epochs_info = "达到设定值时将会停止训练"
+
+            use_pretrain_label = "使用预训练模型"
+            use_pretrain_info = "勾选可以大幅减少训练时间，如果你不懂，不要动"
 
         class model_types(Locale.reflow.model_types):
-            cascade = "🤔"
+            cascade = "级联模型"
 
-    default_spk_name = "👋🏼"
-    preprocess_draw_desc = "🔍分割✅集"
-    preprocess_desc = "🔄🔍📚💻📢👀"
-    preprocess_finished = "📝🚀🛠️🔍🔄✅"
+    default_spk_name = "默认说话人"
+
+    preprocess_draw_desc = "划分验证集"
+    preprocess_desc = "预处理(进度看终端)"
+    preprocess_finished = "已完成预处理"

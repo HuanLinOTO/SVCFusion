@@ -77,9 +77,14 @@ def get_pretrain_models_form_item(model_name):
                     model.get("_path"),
                 )
             )
+
+        if len(choices) == 0:
+            choices = [
+                (I.train.pretrain_model_not_found_tip, ""),
+            ]
         return gr.update(
             choices=choices,
-            value=choices[0][1] if len(choices) > 0 else "无预训练模型",
+            value=choices[0][1],
         )
 
     def update_tip(path):

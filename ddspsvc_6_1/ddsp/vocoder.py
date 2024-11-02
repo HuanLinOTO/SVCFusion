@@ -44,7 +44,7 @@ class F0_Extractor:
             self.resample_kernel = CREPE_RESAMPLE_KERNEL[key_str]
         if f0_extractor == "rmvpe":
             if "rmvpe" not in F0_KERNEL:
-                from encoder.rmvpe import RMVPE
+                from ..encoder.rmvpe import RMVPE
 
                 F0_KERNEL["rmvpe"] = RMVPE("pretrain/rmvpe/model.pt", hop_length=160)
             self.rmvpe = F0_KERNEL["rmvpe"]
