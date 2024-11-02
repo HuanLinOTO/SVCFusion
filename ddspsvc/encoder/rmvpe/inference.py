@@ -11,7 +11,10 @@ class RMVPE:
     def __init__(self, model_path, hop_length=160):
         self.resample_kernel = {}
         model = E2E0(4, 1, (2, 2))
-        ckpt = torch.load(model_path)
+        ckpt = torch.load(
+            model_path,
+            map_location="cuda" if torch.cuda.is_available() else "cpu",
+        )
         model.load_state_dict(ckpt["model"], strict=False)
         model.eval()
         self.model = model
