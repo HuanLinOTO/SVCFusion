@@ -87,7 +87,7 @@ def get_spk_from_dir(search_path):
     if model_type_index == 2:
         with JSONReader(f"{search_path}/config.json") as config:
             return list(config["spk"].keys())
-    elif model_type_index in [0, 1]:
+    elif model_type_index in [0, 1, 3]:
         with YAMLReader(f"{search_path}/config.yaml") as config:
             return config["spks"]
 

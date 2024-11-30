@@ -33,6 +33,7 @@ def run_folder(
     progress_desc="",
 ):
     start_time = time.time()
+    model = torch.compile(model)
     model.eval()
     # all_mixtures_path = [args.input_folder]
     path = args.input_folder
@@ -140,7 +141,7 @@ def proc_folder(args):
         print("CUDA is not avilable. Run inference on CPU. It will be very slow...")
         model = model.to(device)
 
-    run_folder(model, args, config, device, verbose=False)
+    run_folder(model, args, config, device)
 
 
 if __name__ == "__main__":

@@ -51,7 +51,6 @@ def exec(command: str):
 
 def start_with_cmd(cmd: str):
     # cmd = "call .conda\\Scripts\\activate.bat" + " && " + cmd
-
     logger.info(f"Run command with cmd: {cmd}")
     if sys.platform == "win32":
         subprocess.Popen(["wt\\wt", *cmd.split(" ")], shell=True)

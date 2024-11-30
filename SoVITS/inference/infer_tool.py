@@ -394,7 +394,7 @@ class Svc(object):
                     if self.vol_embedding
                     else None
                 )
-                vol = vol.to(self.dtype)
+
                 audio, f0 = self.net_g_ms.infer(
                     c,
                     f0=f0,
@@ -402,7 +402,7 @@ class Svc(object):
                     uv=uv,
                     predict_f0=auto_predict_f0,
                     noice_scale=noice_scale,
-                    vol=vol,
+                    vol=vol.to(self.dtype) if isinstance(vol, torch.Tensor) else None,
                 )
                 audio = audio[0, 0].data.float()
                 audio_mel = (
@@ -417,6 +417,7 @@ class Svc(object):
                 c = c.to(torch.float32)
                 f0 = f0.to(torch.float32)
                 uv = uv.to(torch.float32)
+                # vol = vol.to(torch.float32)
             if self.only_diffusion or self.shallow_diffusion:
                 vol = (
                     self.volume_extractor.extract(audio[None, :])[None, :, None].to(

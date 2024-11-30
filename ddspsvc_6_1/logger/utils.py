@@ -4,6 +4,8 @@ import json
 import pickle
 import torch
 
+from SVCFusion.config import YAMLReader
+
 def traverse_dir(
         root_dir,
         extensions,
@@ -66,9 +68,8 @@ def get_network_paras_amount(model_dict):
 
 
 def load_config(path_config):
-    with open(path_config, "r") as config:
-        args = yaml.safe_load(config)
-    args = DotDict(args)
+    with YAMLReader(path_config) as args:
+        args = DotDict(args)
     # print(args)
     return args
 

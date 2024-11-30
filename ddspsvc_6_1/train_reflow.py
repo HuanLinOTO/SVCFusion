@@ -2,9 +2,9 @@ import os
 import argparse
 import torch
 from torch.optim import lr_scheduler
-from ddspsvc_6_1.logger import utils
-from ddspsvc_6_1.reflow.data_loaders import get_data_loaders
-from ddspsvc_6_1.reflow.vocoder import Vocoder, Unit2Wav
+from .logger import utils
+from .reflow.data_loaders import get_data_loaders
+from .reflow.vocoder import Vocoder, Unit2Wav
 
 
 def parse_args(args=None, namespace=None):
@@ -30,17 +30,21 @@ if __name__ == "__main__":
 
     # load model
     if args.model.type == "RectifiedFlow":
-        from ddspsvc_6_1.reflow.solver import train
+        from .reflow.solver import train
 
+        print(args.model.use_norm, args.model.n_aux_layers)
         model = Unit2Wav(
             args.data.sampling_rate,
             args.data.block_size,
             args.model.win_length,
             args.data.encoder_out_channels,
             args.model.n_spk,
+            args.model.use_norm,
             args.model.use_attention,
             args.model.use_pitch_aug,
             vocoder.dimension,
+            args.model.n_aux_layers,
+            args.model.n_aux_chans,
             args.model.n_layers,
             args.model.n_chans,
         )

@@ -9,7 +9,7 @@ import torchcrepe
 import resampy
 from transformers import HubertModel, Wav2Vec2FeatureExtractor
 from fairseq import checkpoint_utils
-from ddspsvc_6_1.encoder.hubert.model import HubertSoft
+from ..encoder.hubert.model import HubertSoft
 from torch.nn.modules.utils import consume_prefix_in_state_dict_if_present
 from torchaudio.transforms import Resample
 from .unit2control import Unit2Control
@@ -613,9 +613,11 @@ class CombSubSuperFast(torch.nn.Module):
         win_length,
         n_unit=256,
         n_spk=1,
+        num_layers=3,
+        dim_model=256,
+        use_norm=False,
         use_attention=False,
         use_pitch_aug=False,
-        pcmer_norm=False,
     ):
         super().__init__()
 
@@ -637,6 +639,9 @@ class CombSubSuperFast(torch.nn.Module):
             block_size,
             n_spk,
             split_map,
+            num_layers=num_layers,
+            dim_model=dim_model,
+            use_norm=use_norm,
             use_attention=use_attention,
             use_pitch_aug=use_pitch_aug,
         )

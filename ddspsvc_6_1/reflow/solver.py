@@ -1,14 +1,14 @@
 import os
+import sys
 import time
 import numpy as np
 import torch
 import librosa
-from ddspsvc_6_1.logger.saver import Saver
-from ddspsvc_6_1.logger import utils
+from ..logger.saver import Saver
+from ..logger import utils
 from torch import autocast
 from torch.cuda.amp import GradScaler
-from ddspsvc_6_1.nsf_hifigan.nvSTFT import STFT
-from ddspsvc_6_1.reflow.data_loaders import AudioDataset
+from ..nsf_hifigan.nvSTFT import STFT
 
 
 def calculate_mel_snr(gt_mel, pred_mel):
@@ -130,10 +130,7 @@ def test(args, model, vocoder, loader_test, saver):
             path_audio = os.path.join(
                 args.data.valid_path, "audio", data["name_ext"][0]
             )
-            audio, sr = librosa.load(
-                AudioDataset.remove_npz_suffix(None, path_audio),
-                sr=args.data.sampling_rate,
-            )
+            audio, sr = librosa.load(path_audio, sr=args.data.sampling_rate)
             if len(audio.shape) > 1:
                 audio = librosa.to_mono(audio)
             audio = torch.from_numpy(audio).unsqueeze(0).to(signal)
@@ -345,3 +342,12 @@ def train(
                 )
 
                 model.train()
+
+            # 如果存在 exp/workdir/stop.txt 则停止训练
+            if os.path.exists(os.path.join(args.env.expdir, "stop.txt")):
+                saver.log_info("Stop.txt detected, stop training.")
+                optimizer_save = optimizer if args.train.save_opt else None
+
+                # save latest
+                saver.save_model(model, optimizer_save, postfix=f"{saver.global_step}")
+                sys.exit(0)

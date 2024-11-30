@@ -10,7 +10,7 @@ data:
   encoder_sample_rate: 16000
   extensions:
   - wav
-  f0_extractor: rmvpe
+  f0_extractor: fcpe
   f0_max: 800
   f0_min: 65
   sampling_rate: 44100
@@ -25,12 +25,12 @@ infer:
   infer_step: 20
   method: euler
 model:
-  n_chans: 512
+  n_chans: 2048
   n_layers: 6
-  n_spk: 253
+  n_spk: 1
   t_start: 0.7
   type: RectifiedFlow
-  use_attention: false
+  use_attention: true
   use_pitch_aug: true
   win_length: 2048
 model_type_index: 3
@@ -38,16 +38,16 @@ spks:
 - default
 train:
   amp_dtype: fp32
-  batch_size: 48
-  cache_all_data: false
-  cache_device: cpu
+  batch_size: 40
+  cache_all_data: true
+  cache_device: cuda
   cache_fp16: true
   decay_step: 50000
   epochs: 100000
   gamma: 0.5
   interval_force_save: 10000
   interval_log: 1
-  interval_val: 10000
+  interval_val: 1000
   lambda_ddsp: 1
   lr: 0.0002
   num_workers: 2

@@ -7,11 +7,13 @@ import pyworld as pw
 import parselmouth
 import argparse
 import shutil
-from .logger import utils
+from ddspsvc_6_1.logger import utils
 from tqdm import tqdm
-from .ddsp.vocoder import F0_Extractor, Volume_Extractor, Units_Encoder
-from .reflow.vocoder import Vocoder
-from .logger.utils import traverse_dir
+
+from ddspsvc_6_1.ddsp.vocoder import F0_Extractor, Volume_Extractor, Units_Encoder
+from ddspsvc_6_1.reflow.vocoder import Vocoder
+from ddspsvc_6_1.logger.utils import traverse_dir
+
 import concurrent.futures
 
 
@@ -45,12 +47,7 @@ def preprocess(
     extensions=["wav"],
 ):
     path_srcdir = os.path.join(path, "audio")
-    path_unitsdir = os.path.join(path, "units")
-    path_f0dir = os.path.join(path, "f0")
-    path_volumedir = os.path.join(path, "volume")
-    path_augvoldir = os.path.join(path, "aug_vol")
-    path_meldir = os.path.join(path, "mel")
-    path_augmeldir = os.path.join(path, "aug_mel")
+    path_featuresdir = os.path.join(path, "features")
     path_skipdir = os.path.join(path, "skip")
 
     # list files
@@ -63,15 +60,19 @@ def preprocess(
 
     # run
     def process(file):
-        binfile = file + ".npy"
+        binfile = file
         path_srcfile = os.path.join(path_srcdir, file)
-        path_unitsfile = os.path.join(path_unitsdir, binfile)
-        path_f0file = os.path.join(path_f0dir, binfile)
-        path_volumefile = os.path.join(path_volumedir, binfile)
-        path_augvolfile = os.path.join(path_augvoldir, binfile)
-        path_melfile = os.path.join(path_meldir, binfile)
-        path_augmelfile = os.path.join(path_augmeldir, binfile)
-        path_skipfile = os.path.join(path_skipdir, file)
+        path_featuresfile = os.path.join(path_featuresdir, binfile)
+        if os.path.exists(path_featuresfile + ".npz"):
+            try:
+                _ = np.load(path_featuresfile + ".npz", allow_pickle=True)
+                # print(path_srcfile, "skip because exist")
+                return
+            except Exception as e:
+                print(path_srcfile, "exist but load failed")
+                pass
+
+        features = {}
 
         # load audio
         audio, _ = librosa.load(path_srcfile, sr=sample_rate)
@@ -80,13 +81,17 @@ def preprocess(
         audio_t = torch.from_numpy(audio).float().to(device)
         audio_t = audio_t.unsqueeze(0)
 
+        features["duration"] = audio.shape[0] / sample_rate
+
         # extract volume
         volume = volume_extractor.extract(audio)
+        features["volume"] = volume
 
         # extract mel and volume augmentaion
         if mel_extractor is not None:
             mel_t = mel_extractor.extract(audio_t, sample_rate)
             mel = mel_t.squeeze().to("cpu").numpy()
+            features["mel"] = mel
 
             max_amp = float(torch.max(torch.abs(audio_t))) + 1e-5
             max_shift = min(1, np.log10(1 / max_amp))
@@ -99,51 +104,38 @@ def preprocess(
             aug_mel_t = mel_extractor.extract(
                 audio_t * (10**log10_vol_shift), sample_rate, keyshift=keyshift
             )
-            aug_mel = aug_mel_t.squeeze().to("cpu").numpy()
-            aug_vol = volume_extractor.extract(audio * (10**log10_vol_shift))
+            features["aug_mel"] = aug_mel_t.squeeze().to("cpu").numpy()
+
+            features["aug_vol"] = volume_extractor.extract(
+                audio * (10**log10_vol_shift)
+            )
 
         # units encode
         units_t = units_encoder.encode(audio_t, sample_rate, hop_size)
-        units = units_t.squeeze().to("cpu").numpy()
+        features["units"] = units_t.squeeze().to("cpu").numpy()
 
         # extract f0
         f0 = f0_extractor.extract(audio, uv_interp=False)
+        features["f0"] = f0
 
         uv = f0 == 0
-        if len(f0[~uv]) > 0:
-            # interpolate the unvoiced f0
-            f0[uv] = np.interp(np.where(uv)[0], np.where(~uv)[0], f0[~uv])
 
-            # save npy
-            os.makedirs(os.path.dirname(path_unitsfile), exist_ok=True)
-            np.save(path_unitsfile, units)
-            os.makedirs(os.path.dirname(path_f0file), exist_ok=True)
-            np.save(path_f0file, f0)
-            os.makedirs(os.path.dirname(path_volumefile), exist_ok=True)
-            np.save(path_volumefile, volume)
-            if mel_extractor is not None:
-                pitch_aug_dict[file] = keyshift
-                os.makedirs(os.path.dirname(path_melfile), exist_ok=True)
-                np.save(path_melfile, mel)
-                os.makedirs(os.path.dirname(path_augmelfile), exist_ok=True)
-                np.save(path_augmelfile, aug_mel)
-                os.makedirs(os.path.dirname(path_augvolfile), exist_ok=True)
-                np.save(path_augvolfile, aug_vol)
-        else:
+        if len(f0[~uv]) <= 0:
+            path_skipfile = os.path.join(path_skipdir, file)
             print("\n[Error] F0 extraction failed: " + path_srcfile)
             os.makedirs(os.path.dirname(path_skipfile), exist_ok=True)
             shutil.move(path_srcfile, os.path.dirname(path_skipfile))
             print("This file has been moved to " + path_skipfile)
+        else:
+            features["aug_shift"] = keyshift
+            os.makedirs(os.path.dirname(path_featuresfile), exist_ok=True)
+            np.savez_compressed(path_featuresfile, **features)
 
     print("Preprocess the audio clips in :", path_srcdir)
 
     # single process
     for file in tqdm(filelist, total=len(filelist)):
         process(file)
-
-    if mel_extractor is not None:
-        path_pitchaugdict = os.path.join(path, "pitch_aug_dict.npy")
-        np.save(path_pitchaugdict, pitch_aug_dict)
     # multi-process (have bugs)
     """
     with concurrent.futures.ProcessPoolExecutor(max_workers=2) as executor:

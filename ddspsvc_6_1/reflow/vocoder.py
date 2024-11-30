@@ -4,12 +4,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from ddspsvc_6_1.nsf_hifigan.nvSTFT import STFT
-from ddspsvc_6_1.nsf_hifigan.models import load_model, load_config
+from ..nsf_hifigan.nvSTFT import STFT
+from ..nsf_hifigan.models import load_model, load_config
 from torchaudio.transforms import Resample
 from .reflow import RectifiedFlow
 from .lynxnet import LYNXNet
-from ddspsvc_6_1.ddsp.vocoder import CombSubSuperFast
+from ..ddsp.vocoder import CombSubSuperFast
 
 
 class DotDict(dict):
@@ -38,9 +38,12 @@ def load_model_vocoder(model_path, device="cpu"):
             args.model.win_length,
             args.data.encoder_out_channels,
             args.model.n_spk,
+            args.model.use_norm,
             args.model.use_attention,
             args.model.use_pitch_aug,
             vocoder.dimension,
+            args.model.n_aux_layers,
+            args.model.n_aux_chans,
             args.model.n_layers,
             args.model.n_chans,
         )
@@ -159,9 +162,12 @@ class Unit2Wav(nn.Module):
         win_length,
         n_unit,
         n_spk,
+        use_norm=False,
         use_attention=False,
         use_pitch_aug=False,
         out_dims=128,
+        n_aux_layers=3,
+        n_aux_chans=256,
         n_layers=6,
         n_chans=512,
     ):
@@ -174,6 +180,9 @@ class Unit2Wav(nn.Module):
             win_length,
             n_unit,
             n_spk,
+            n_aux_layers if n_aux_layers is not None else 3,
+            n_aux_chans if n_aux_chans is not None else 256,
+            use_norm,
             use_attention,
             use_pitch_aug,
         )
@@ -225,9 +234,12 @@ class Unit2Wav(nn.Module):
 
         if not infer:
             ddsp_loss = F.mse_loss(ddsp_mel, gt_spec)
-            reflow_loss = self.reflow_model(
-                ddsp_mel, gt_spec=gt_spec, t_start=t_start, infer=False
-            )
+            if t_start < 1.0:
+                reflow_loss = self.reflow_model(
+                    ddsp_mel, gt_spec=gt_spec, t_start=t_start, infer=False
+                )
+            else:
+                reflow_loss = torch.tensor(0)
             return ddsp_loss, reflow_loss
         else:
             if gt_spec is not None and ddsp_mel is None:
