@@ -246,7 +246,7 @@ def slice_audio_file_v2(
     if not flat_layout:
         output_dir.mkdir(parents=True, exist_ok=True)
 
-    audio, rate = librosa.load(str(input_file), sr=None, mono=True)
+    audio, rate = librosa.load(str(input_file), sr=44100, mono=True)
     for idx, sliced in enumerate(
         slice_audio_v2(
             audio,

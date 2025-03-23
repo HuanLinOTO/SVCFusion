@@ -22,10 +22,9 @@
         "use_sr": true,
         "max_speclen": 512,
         "port": "8001",
-        "keep_ckpts": 3,
+        "keep_ckpts": 30000000000000000,
         "all_in_mem": false,
-        "vol_aug": false,
-        "num_workers": 4
+        "vol_aug": false
     },
     "data": {
         "training_files": "filelists/train.txt",
@@ -92,7 +91,7 @@
         "use_spectral_norm": false,
         "gin_channels": 768,
         "ssl_dim": 768,
-        "n_speakers": 1,
+        "n_speakers": 131,
         "vocoder_name": "nsf-hifigan",
         "speech_encoder": "vec768l12",
         "speaker_embedding": false,
@@ -105,8 +104,5 @@
     "spk": {
         "default": 0
     },
-    "model_type_index": 2,
-    "spks": [
-        "default"
-    ]
+    "model_type_index": 2
 }

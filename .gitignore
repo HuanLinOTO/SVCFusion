@@ -61,3 +61,5 @@ scripts/build*
 translate_tmp/
 dev/
 nuitka-crash-report.xml
+
+_*

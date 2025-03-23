@@ -35,10 +35,10 @@ model:
   win_length: 2048
 model_type_index: 3
 spks:
-- default
+- qq1784207
 train:
   amp_dtype: fp32
-  batch_size: 40
+  batch_size: 32
   cache_all_data: true
   cache_device: cuda
   cache_fp16: true

@@ -25,7 +25,6 @@ class DeviceChooser:
 
     def get_device_str_from_index(index):
         if not index:
-            print("index is None", index)
             return "cpu"
         if index == 0:
             return "cpu"

@@ -148,6 +148,7 @@ class Form:
         show_submit=True,
         submit_btn_text=I.form.submit_btn_value,
         default_display_key="",
+        allow_cancel=False,
     ) -> None:
         self.models = models
         self.vertical = vertical
@@ -232,6 +233,9 @@ class Form:
                 submit = gr.Button(
                     submit_btn_text, visible=show_submit, variant="primary"
                 )
+                cancel = gr.Button(
+                    I.form.cancel_btn_value, visible=allow_cancel, variant="stop"
+                )
                 inputs = [*items]
                 self.extra_inputs_keys = []
                 for key in extra_inputs:
@@ -248,6 +252,12 @@ class Form:
                         label=I.form.audio_output_2,
                         visible=False,
                     )
+                    audio_output_3 = gr.Audio(
+                        type="filepath",
+                        label=I.form.audio_output_3,
+                        visible=False,
+                    )
+
                     audio_output_batch_1 = gr.Files(
                         type="filepath",
                         label=I.form.audio_output_1,
@@ -258,18 +268,31 @@ class Form:
                         label=I.form.audio_output_2,
                         visible=False,
                     )
+                    audio_output_batch_3 = gr.Files(
+                        type="filepath",
+                        label=I.form.audio_output_3,
+                        visible=False,
+                    )
                 outputs = []
                 if use_audio_opt:
                     outputs.append(audio_output_1)
                     outputs.append(audio_output_2)
+                    outputs.append(audio_output_3)
                     outputs.append(audio_output_batch_1)
                     outputs.append(audio_output_batch_2)
+                    outputs.append(audio_output_batch_3)
                 if use_textbox_opt:
                     outputs.append(gr.Textbox(label=I.form.textbox_output))
-                submit.click(
+                submit_event = submit.click(
                     self.get_fn(model_name),
                     inputs=inputs,
                     outputs=outputs,
+                )
+                cancel.click(
+                    fn=lambda: gr.Info(I.form.canceling_tip),
+                    inputs=None,
+                    outputs=None,
+                    cancels=[submit_event],
                 )
 
                 # 后处理

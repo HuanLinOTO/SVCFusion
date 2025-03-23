@@ -309,6 +309,7 @@ class SoVITSModel:
             filepath in ["model_0.pt", "diffusion/model_0.pt"]
             or filepath.startswith("D_")
             or filepath.startswith("G_0")
+            or filepath.endswith("model_0.pt")
         ):
             return
         if filepath.endswith(".pth"):
@@ -460,9 +461,12 @@ class SoVITSModel:
         exec(
             f"{executable} -m SoVITS.preprocess_flist_config --source_dir ./data/44k --speech_encoder {params['encoder'].replace('contentvec','vec')} {'--vol_aug' if params['vol_aug'] else ''}"
         )
-        exec(
-            f"{executable} -m SoVITS.preprocess_new --f0_predictor {params['f0']} --num_processes {params['num_workers']} --subprocess_num_workers {params['subprocess_num_workers']} {'--use_diff' if params['use_diff'] else ''}"
-        )
+        cmd = f"{executable} -m SoVITS.preprocess_new --f0_predictor {params['f0']} --num_processes {params['num_workers']} --subprocess_num_workers {params['subprocess_num_workers']}"
+        if params["use_diff"]:
+            cmd += " --use_diff"
+        if bool(os.environ.get("H0_DEV", False)):
+            cmd += " --debug"
+        exec(cmd)
         return I.sovits.finished
 
     def infer(self, params, progress=gr.Progress()):

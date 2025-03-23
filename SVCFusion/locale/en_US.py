@@ -1,10 +1,10 @@
-
 from SVCFusion.locale.base import Locale
 
 locale_name = "en-us"
 locale_display_name = "English (US)"
 
-class _Locale(Locale): 
+
+class _Locale(Locale):
     unknown_model_type_tip = "Unknown model type, please go to Tools-Model Management to confirm the model type."
     preprocess_failed_tip = "Preprocessing failed! Please take a screenshot of the console information and join the group for feedback."
 
@@ -42,6 +42,9 @@ class _Locale(Locale):
         dorpdown_liked_checkbox_yes = "Yes"
         dorpdown_liked_checkbox_no = "No"
 
+        cancel_btn_value = "Cancel"
+        canceling_tip = "Canceling, please wait"
+
     class model_manager(Locale.model_manager):
         choose_model_title = "Choose Model"
         action_title = "Action"
@@ -69,6 +72,8 @@ class _Locale(Locale):
         moving_tip = "Moving in progress, do not click repeatedly."
         moved_tip = "Moved to {1}, refresh available."
 
+        move_folder_name_error = "Invalid model name"
+
     class main_ui(Locale.main_ui):
         release_memory_btn_value = "Try to Free GPU/Memory"
         released_tip = "Tried to free GPU/Memory"
@@ -83,7 +88,8 @@ class _Locale(Locale):
         realtime_tools_tab = "Realtime"
         dlc_install_tools_tab = "DLC Install"
 
-        start_ddsp_realtime_gui_btn = "Start DDSP Real-time GUI"
+        start_ddsp_realtime_gui_btn = "Start DDSP-SVC 6.0 Real-time GUI"
+        start_ddsp6_1_realtime_gui_btn = "Start DDSP-SVC 6.1 Real-time GUI"
 
         starting_tip = "Starting, please wait. Do not click repeatedly."
 
@@ -171,9 +177,7 @@ class _Locale(Locale):
 
         choose_sub_model_label = "Select Sub-Model"
         choose_pretrain_model_label = "Select Pretrained Model"
-        choose_pretrain_model_info = (
-            "Choose a suitable base model according to your device. You can obtain more base models from the official website."
-        )
+        choose_pretrain_model_info = "Choose a suitable base model according to your device. You can obtain more base models from the official website."
 
         pretrain_model_vec = "Encoder"
         pretrain_model_vocoder = "Vocoder"
@@ -181,9 +185,8 @@ class _Locale(Locale):
         pretrain_model_attn = "Attention Mechanism"
         official_pretrain_model = "Official Pretrained Model"
 
-        load_pretrained_failed_tip = (
-            "Failed to load pretrained model, possible reasons are incompatible parameters or lack of a pretrained model."
-        )
+        load_pretrained_failed_tip = "Failed to load pretrained model, possible reasons are incompatible parameters or lack of a pretrained model."
+        pretrain_model_not_found_tip = "No suitable pretrained model found."
 
         start_train_btn_value = "Start/Continue Training"
 
@@ -281,7 +284,9 @@ class _Locale(Locale):
         input_output_same_tip = "Input and output folders are the same."
 
         finished = "Completed"
-        error_when_processing = "Error during processing, please screenshot console for help"
+        error_when_processing = (
+            "Error during processing, please screenshot console for help"
+        )
 
         unusable_file_tip = "{1} skipped, unsupported file format"
 
@@ -328,10 +333,12 @@ class _Locale(Locale):
         t_start_info = "Not specified"
 
         num_formant_shift_key_label = "Formant Shift Key"
-        num_formant_shift_key_info = "Higher values make the voice thinner, lower values make it thicker"
+        num_formant_shift_key_info = (
+            "Higher values make the voice thinner, lower values make it thicker"
+        )
 
     class ddsp_based_preprocess(Locale.ddsp_based_preprocess):
-        method_label = "F0 Extractor"
+        method_label = "Sample Method"
         method_info = "Method for reflow sampling"
 
     class common_preprocess(Locale.common_preprocess):
@@ -353,9 +360,7 @@ class _Locale(Locale):
             eval_interval_info = "Save and evaluate every N steps."
 
             all_in_mem_label = "Cache Full Dataset"
-            all_in_mem_info = (
-                "Load the entire dataset into memory for faster training, requires sufficient memory."
-            )
+            all_in_mem_info = "Load the entire dataset into memory for faster training, requires sufficient memory."
 
             keep_ckpts_label = "Keep Checkpoints"
             keep_ckpts_info = "Keep recent N checkpoints."
@@ -367,10 +372,14 @@ class _Locale(Locale):
             learning_rate_info = "Learning rate."
 
             num_workers_label = "Data Loader Workers"
-            num_workers_info = "Enable if CPU cores > 4. More workers generally improve performance."
+            num_workers_info = (
+                "Enable if CPU cores > 4. More workers generally improve performance."
+            )
 
             half_type_label = "Precision"
-            half_type_info = "Select fp16 for faster speed, but increases the risk of 'burnout'"
+            half_type_info = (
+                "Select fp16 for faster speed, but increases the risk of 'burnout'"
+            )
 
         class train_diff(Locale.sovits.train_diff):
             batchsize_label = "Training Batch Size"
@@ -380,7 +389,9 @@ class _Locale(Locale):
             num_workers_info = "Set to 0 if your GPU is powerful enough"
 
             amp_dtype_label = "Training Precision"
-            amp_dtype_info = "Select fp16 or bf16 for faster speed, but increases risk of 'burnout'"
+            amp_dtype_info = (
+                "Select fp16 or bf16 for faster speed, but increases risk of 'burnout'"
+            )
 
             lr_label = "Learning Rate"
             lr_info = "Not recommended to change."
@@ -407,55 +418,47 @@ class _Locale(Locale):
             epochs_info = "Training stops when reaching this value."
 
             use_pretrain_label = "Use Pretrained Model"
-            use_pretrain_info = (
-                "Enabling can significantly reduce training time, leave unchanged if unsure."
-            )
+            use_pretrain_info = "Enabling can significantly reduce training time, leave unchanged if unsure."
 
         class train_cluster(Locale.sovits.train_cluster):
             cluster_or_index_label = "Clustering or Retrieval"
             cluster_or_index_info = "Training clustering or retrieval models. Retrieval tends to be slightly better than clustering."
 
             use_gpu_label = "Use GPU"
-            use_gpu_info = "Using a GPU accelerates training, only applicable for clustering"
+            use_gpu_info = (
+                "Using a GPU accelerates training, only applicable for clustering"
+            )
 
         class infer(Locale.sovits.infer):
             cluster_infer_ratio_label = "Clustering/Feature Ratio"
-            cluster_infer_ratio_info = (
-                "Proportion of clustering or features, range 0-1. Set to 0 if no clustering model is trained."
-            )
+            cluster_infer_ratio_info = "Proportion of clustering or features, range 0-1. Set to 0 if no clustering model is trained."
 
             linear_gradient_info = "Length of crossfade for two audio slices"
             linear_gradient_label = "Gradient Length"
 
             k_step_label = "Diffusion Steps"
-            k_step_info = "Higher values result in more diffuse results, default is 100."
+            k_step_info = (
+                "Higher values result in more diffuse results, default is 100."
+            )
 
             enhancer_adaptive_key_label = "Enhancer Adaptation Key"
             enhancer_adaptive_key_info = "Makes the enhancer adapt to a wider pitch range (in half-steps). Default is 0."
 
             f0_filter_threshold_label = "F0 Filter Threshold"
-            f0_filter_threshold_info = (
-                "Effective when using crepe, lower values reduce tuning errors but increase silence."
-            )
+            f0_filter_threshold_info = "Effective when using crepe, lower values reduce tuning errors but increase silence."
 
             audio_predict_f0_label = "Auto F0 Prediction"
-            audio_predict_f0_info = (
-                "Automatic pitch prediction for speech conversion. Disable this for singing voices to avoid severe pitch misalignment."
-            )
+            audio_predict_f0_info = "Automatic pitch prediction for speech conversion. Disable this for singing voices to avoid severe pitch misalignment."
 
             second_encoding_label = "Second Encoding"
-            second_encoding_info = (
-                "Performs a secondary encoding on the original audio before shallow diffusion, often has mixed results."
-            )
+            second_encoding_info = "Performs a secondary encoding on the original audio before shallow diffusion, often has mixed results."
 
             clip_label = "Force Slice Length"
             clip_info = "Force audio slice length, 0 for no forced slicing."
 
         class preprocess(Locale.sovits.preprocess):
             use_diff_label = "Train Shallow Diffusion"
-            use_diff_info = (
-                "Generate files required for training shallow diffusion when selected, slower than not selecting."
-            )
+            use_diff_info = "Generate files required for training shallow diffusion when selected, slower than not selecting."
 
             vol_aug_label = "Volume Embedding"
             vol_aug_info = "Enables volume embedding."
@@ -476,12 +479,12 @@ class _Locale(Locale):
 
         class model_chooser_extra(Locale.sovits.model_chooser_extra):
             enhance_label = "NSFHifigan Audio Enhancement"
-            enhance_info = (
-                "Improves audio quality for models with limited training data, may have negative effects on well-trained models."
-            )
+            enhance_info = "Improves audio quality for models with limited training data, may have negative effects on well-trained models."
 
             feature_retrieval_label = "Enable Feature Retrieval"
-            feature_retrieval_info = "Whether to use feature retrieval. Disabled if using clustering model."
+            feature_retrieval_info = (
+                "Whether to use feature retrieval. Disabled if using clustering model."
+            )
 
             only_diffusion_label = "Shallow Diffusion Only"
             only_diffusion_info = "Only infer shallow diffusion, not recommended."
@@ -500,7 +503,9 @@ class _Locale(Locale):
             num_workers_info = "Set to 0 if your GPU is powerful enough"
 
             amp_dtype_label = "Training Precision"
-            amp_dtype_info = "Select fp16 or bf16 for faster speed, but increases risk of 'burnout'"
+            amp_dtype_info = (
+                "Select fp16 or bf16 for faster speed, but increases risk of 'burnout'"
+            )
 
             lr_label = "Learning Rate"
             lr_info = "Not recommended to change."
@@ -527,9 +532,7 @@ class _Locale(Locale):
             epochs_info = "Training stops when reaching this value."
 
             use_pretrain_label = "Use Pretrained Model"
-            use_pretrain_info = (
-                "Enabling can significantly reduce training time, leave unchanged if unsure."
-            )
+            use_pretrain_info = "Enabling can significantly reduce training time, leave unchanged if unsure."
 
     class reflow(Locale.reflow):
         infer_tip = "Infer ReflowVAESVC Model"
@@ -542,7 +545,9 @@ class _Locale(Locale):
             num_workers_info = "Set to 0 if your GPU is powerful enough"
 
             amp_dtype_label = "Training Precision"
-            amp_dtype_info = "Select fp16 or bf16 for faster speed, but increases risk of 'burnout'"
+            amp_dtype_info = (
+                "Select fp16 or bf16 for faster speed, but increases risk of 'burnout'"
+            )
 
             lr_label = "Learning Rate"
             lr_info = "Not recommended to change."
@@ -569,9 +574,7 @@ class _Locale(Locale):
             epochs_info = "Training stops when reaching this value."
 
             use_pretrain_label = "Use Pretrained Model"
-            use_pretrain_info = (
-                "Enabling can significantly reduce training time, leave unchanged if unsure."
-            )
+            use_pretrain_info = "Enabling can significantly reduce training time, leave unchanged if unsure."
 
         class model_types(Locale.reflow.model_types):
             cascade = "Cascade Model"
@@ -581,4 +584,3 @@ class _Locale(Locale):
     preprocess_draw_desc = "Split Validation Set"
     preprocess_desc = "Preprocessing (check terminal for progress)"
     preprocess_finished = "Preprocessing Complete"
-    

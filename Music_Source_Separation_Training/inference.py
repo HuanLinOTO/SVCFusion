@@ -33,7 +33,6 @@ def run_folder(
     progress_desc="",
 ):
     start_time = time.time()
-    model = torch.compile(model)
     model.eval()
     # all_mixtures_path = [args.input_folder]
     path = args.input_folder

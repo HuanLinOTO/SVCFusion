@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生成激活码</title>
+    <script>
+        function generateFixedLengthString(inputStr) {
+            // 将输入字符串转为小写，确保大小写不敏感
+            inputStr = inputStr.toLowerCase();
+
+            // 使用SHA-256对字符串进行哈希
+            const hashBuffer = new TextEncoder().encode(inputStr);
+            return crypto.subtle.digest("SHA-256", hashBuffer).then(hash => {
+                const hexArray = Array.from(new Uint8Array(hash))
+                    .map(b => b.toString(16).padStart(2, "0"))
+                    .join("");
+
+                // 将十六进制表示中的字符映射到A-Z和0-9范围
+                const allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                let result = '';
+                for (let i = 0; i < hexArray.length; i += 2) {
+                    const hexPair = hexArray.substring(i, i + 2);
+                    const charIndex = parseInt(hexPair, 16) % allowedChars.length;
+                    result += allowedChars[charIndex];
+                }
+
+                // 截取或填充到16位长度
+                document.getElementById("output").innerText = result.substring(0, 16);
+            });
+        }
+
+        function handleGenerate() {
+            const inputStr = document.getElementById("inputString").value;
+            generateFixedLengthString(inputStr);
+        }
+    </script>
+</head>
+
+<body>
+    <h1>生成激活码</h1>
+    <label for="inputString">注册码</label>
+    <input type="text" id="inputString" placeholder="Type here...">
+    <button onclick="handleGenerate()">生成</button>
+    <h3>激活码</h3>
+    <p id="output"></p>
+</body>
+
+</html>

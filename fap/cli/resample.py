@@ -105,8 +105,10 @@ def resample(
             )
 
         for i in tqdm(as_completed(tasks), total=len(tasks), desc="Processing"):
-            assert i.exception() is None, i.exception()
-
+            try:
+                assert i.exception() is None, i.exception()
+            except Exception as e:
+                logger.error(f"Error when processing file `{e}`, skipping")
     logger.info("Done!")
     logger.info(f"Total: {len(files)}, Skipped: {skipped}")
     logger.info(f"Output directory: {output_dir}")

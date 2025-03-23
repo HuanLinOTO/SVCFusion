@@ -175,20 +175,24 @@ def load_pretrained(
                 os.path.join(finded_pretrained_path, "config.yaml")
             ) as config:
                 return config, True
+
+        if os.path.exists(os.path.join(finded_pretrained_path, "config.json")):
+            with JSONReader(
+                os.path.join(finded_pretrained_path, "config.json")
+            ) as config:
+                return config, True
         return {}, True
     return {}, False
 
 
 def tensorboard():
-    # cmd = ".conda\\Scripts\\tensorboard --logdir=exp/"
-    # subprocess.Popen(["cmd", "/c", "start", "cmd", "/k", cmd])
     from tensorboard import program
 
     log_dir = "./exp"
 
     # 启动TensorBoard服务器
     tb = program.TensorBoard()
-    tb.configure(argv=[None, "--logdir", log_dir])
+    tb.configure(argv=[None, "--logdir", log_dir, "--bind_all"])
     url = tb.launch()
     return url
 

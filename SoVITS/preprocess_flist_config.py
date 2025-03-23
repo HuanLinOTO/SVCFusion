@@ -5,6 +5,8 @@ import re
 import wave
 from random import shuffle
 
+import concurrent
+
 from SoVITS.diffusion.logger import utils as du
 
 from . import logger
@@ -66,7 +68,10 @@ if __name__ == "__main__":
     idx = 0
     spk_dict = {}
     spk_id = 0
-    with logger.Progress() as progress:
+    with (
+        logger.Progress() as progress,
+        concurrent.futures.ThreadPoolExecutor() as executor,
+    ):
         for speaker in progress.track(
             os.listdir(args.source_dir), description="Processing Speakers"
         ):
@@ -74,6 +79,7 @@ if __name__ == "__main__":
             spk_id += 1
             wavs = []
 
+            futures = []
             for file_name in os.listdir(os.path.join(args.source_dir, speaker)):
                 if not file_name.endswith("wav"):
                     continue
@@ -83,13 +89,20 @@ if __name__ == "__main__":
                 file_path = "/".join([args.source_dir, speaker, file_name])
 
                 if not pattern.match(file_name):
-                    logger.warning("Detected non-ASCII file name: " + file_path)
+                    # logger.warning("Detected non-ASCII file name: " + file_path)
+                    pass
 
-                if get_wav_duration(file_path) < 0.3:
-                    logger.info("Skip too short audio: " + file_path)
-                    continue
+            #     futures.append(executor.submit(get_wav_duration, file_path))
 
-                wavs.append(file_path)
+            # for future in concurrent.futures.as_completed(futures):
+            #     try:
+            #         duration = future.result()
+            #         if duration < 0.3:
+            #             logger.info("Skip too short audio")
+            #             continue
+            #         wavs.append(file_path)
+            #     except Exception as e:
+            #         logger.error(f"Error processing file: {e}")
 
             shuffle(wavs)
             train += wavs[2:]

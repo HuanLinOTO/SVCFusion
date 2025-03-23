@@ -4,9 +4,11 @@ import json
 import os
 import shutil
 from traceback import print_exception
+from turtle import update
 
 import torch
 import torchaudio
+from SVCFusion.automix import automix
 from SVCFusion.const_vars import EMPTY_WAV_PATH
 from SVCFusion.i18n import I
 from SVCFusion.uvr import getVocalAndInstrument
@@ -22,6 +24,18 @@ common_infer_form = {
         "type": "file",
         "label": I.common_infer.audio_label,
         "visible": False,
+        "individual": True,
+    },
+    "vocoder": {
+        "type": "dropdown",
+        "info": I.common_infer.vocoder_info,
+        "choices": [
+            "Kouon NSF HifiGAN 1031",
+            "Kouon PC NSF HifiGAN 1029",
+            "OpenVPI NSF HifiGAN 20221211",
+        ],
+        "default": "waveglow",
+        "label": I.common_infer.vocoder_label,
         "individual": True,
     },
     "use_batch": {
@@ -51,6 +65,13 @@ common_infer_form = {
         "info": I.common_infer.use_harmonic_remove_info,
         "default": False,
         "label": I.common_infer.use_harmonic_remove_label,
+        "individual": True,
+    },
+    "use_automix": {
+        "type": "checkbox",
+        "info": I.common_infer.use_automix_info,
+        "default": False,
+        "label": I.common_infer.use_automix_label,
         "individual": True,
     },
     "f0": {
@@ -176,8 +197,13 @@ def infer_fn_proxy(fn):
             params["audio"] = [params["audio"]]
         else:
             params["audio"] = params["audio_batch"]
+
+        if params["use_automix"] and not params["use_vocal_separation"]:
+            raise gr.Error(I.common_infer.automix_but_not_vocal_separation_tip)
+
         result = []
         inst_list = []
+        mix_list = []
         for audio in params["audio"]:
             processed_vocal = False
             processed_inst = False
@@ -218,6 +244,9 @@ def infer_fn_proxy(fn):
 
                 result.append(res)
                 processed_vocal = True
+
+                if params["use_automix"]:
+                    mix_list.append(automix(res, inst))
 
             except Exception as e:
                 gr.Info(
@@ -282,6 +311,10 @@ def infer_fn_proxy(fn):
                 ),
             ),
             gr.update(
+                visible=params["use_vocal_separation"] and not params["use_batch"],
+                value=(mix_list[0] if params["use_automix"] else EMPTY_WAV_PATH),
+            ),
+            gr.update(
                 value=(moved_vocal if params["use_batch"] else EMPTY_WAV_PATH),
                 visible=params["use_batch"],
             ),
@@ -292,6 +325,10 @@ def infer_fn_proxy(fn):
                     else EMPTY_WAV_PATH
                 ),
                 visible=params["use_vocal_separation"] and params["use_batch"],
+            ),
+            gr.update(
+                visible=params["use_vocal_separation"] and params["use_batch"],
+                value=(mix_list if params["use_automix"] else EMPTY_WAV_PATH),
             ),
         )
 
@@ -314,6 +351,13 @@ def preprocess_fn_proxy(fn):
         # 删掉 exp/workdir/
         if os.path.exists("exp/workdir"):
             shutil.rmtree("exp/workdir")
+
+        if os.path.exists("data/train/skip"):
+            shutil.rmtree("data/train/skip")
+
+        if os.path.exists("data/val/skip"):
+            shutil.rmtree("data/val/skip")
+
         # 补回去一个文件夹
         os.makedirs("exp/workdir")
 

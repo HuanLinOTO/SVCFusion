@@ -37,10 +37,14 @@ class _Locale(Locale):
         submit_btn_value = "提交"
         audio_output_1 = "输出结果"
         audio_output_2 = "输出结果/伴奏"
+        audio_output_3 = "输出结果/混音"
         textbox_output = "输出结果"
 
         dorpdown_liked_checkbox_yes = "是"
         dorpdown_liked_checkbox_no = "否"
+
+        cancel_btn_value = "取消"
+        canceling_tip = "正在取消，请稍后"
 
     class model_manager(Locale.model_manager):
         choose_model_title = "选择模型"
@@ -83,7 +87,8 @@ class _Locale(Locale):
         realtime_tools_tab = "实时"
         dlc_install_tools_tab = "DLC"
 
-        start_ddsp_realtime_gui_btn = "启动 DDSP 实时 GUI"
+        start_ddsp_realtime_gui_btn = "启动 DDSP-SVC 6.0 实时 GUI"
+        start_ddsp6_1_realtime_gui_btn = "启动 DDSP-SVC 6.1 实时 GUI"
 
         starting_tip = "正在启动，请稍后，不要重复点击，后果很严重"
 
@@ -95,6 +100,8 @@ class _Locale(Locale):
         fish_audio_preprocess_tab = "简单音频处理"
         vocal_separation_tab = "人声分离"
         compatible_tab = "模型兼容"
+
+        move_folder_name_error = "模型名称不合法"
 
         detect_spk_tip = "已检测到的角色："
         spk_not_found_tip = "未检测到任何角色"
@@ -174,6 +181,7 @@ class _Locale(Locale):
         choose_pretrain_model_info = (
             "根据你的设备选择合适的底模，你可以在官方网站上获取更多底模"
         )
+        pretrain_model_not_found_tip = "未找到预训练模型"
 
         pretrain_model_vec = "编码器"
         pretrain_model_vocoder = "声码器"
@@ -299,6 +307,9 @@ class _Locale(Locale):
 
         use_batch_label = "启用批量处理"
 
+        vocoder_label = "声码器"
+        vocoder_info = "用于 Mel -> 波形的模型"
+
         use_vocal_separation_label = "去除伴奏"
         use_vocal_separation_info = "是否去除伴奏"
 
@@ -307,6 +318,11 @@ class _Locale(Locale):
 
         use_harmonic_remove_label = "去除和声"
         use_harmonic_remove_info = "是否去除和声"
+
+        use_automix_label = "自动混音"
+        use_automix_info = "是否使用自动混音（开启去伴奏时生效）"
+
+        automix_but_not_vocal_separation_tip = "自动混音需要开启去除伴奏功能"
 
         f0_label = "f0 提取器"
         f0_info = "用于音高提取/预测的模型"
@@ -331,7 +347,7 @@ class _Locale(Locale):
         num_formant_shift_key_info = "值越大声音越细，值越小声音越粗"
 
     class ddsp_based_preprocess(Locale.ddsp_based_preprocess):
-        method_label = "f0 提取器"
+        method_label = "采样器"
         method_info = "用于 reflow 的采样器"
 
     class common_preprocess(Locale.common_preprocess):

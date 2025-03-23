@@ -13,10 +13,14 @@ class MetaV1_Pretrain_Attrs(TypedDict, MetaV1_Common_Attrs):
     model: str  # ddsp6 sovits sovits_diff,etc..
 
 
+class MetaV1_Vocoder(TypedDict, MetaV1_Common_Attrs):
+    name: str
+
+
 class MetaV1(TypedDict):
     version: Literal["v1"]
-    type: Literal["pretrain"]
-    attrs: MetaV1_Pretrain_Attrs
+    type: Literal["pretrain", "vocoder"]
+    attrs: MetaV1_Pretrain_Attrs | MetaV1_Vocoder
 
 
 Meta: TypeAlias = MetaV1
@@ -98,9 +102,26 @@ def v1_pretrain(dlc: DLCFile):
         return False
 
 
+def v1_vocoder(dlc: DLCFile):
+    try:
+        unpack_to_directory(
+            dlc["files"],
+            os.path.join(
+                "pretrain",
+                "vocoder",
+                dlc["meta"]["attrs"]["name"],
+            ),
+        )
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
+
 fn_map: dict[str, dict[str, Callable]] = {
     "v1": {
         "pretrain": v1_pretrain,
+        "vocoder": v1_vocoder,
     }
 }
 

@@ -57,16 +57,15 @@ def auto_normalize_dataset(
     output_dir: str, rename_by_index: bool, progress: gr.Progress
 ):
     make_dirs(output_dir, True)
-    resample(
-        "dataset_raw/",
-        "tmp/resampled/",
-    )
+    # resample(
+    #     "dataset_raw/",
+    #     "tmp/resampled/",
+    # )
     slice_audio(
-        "tmp/resampled/",
+        "dataset_raw/",
         output_dir,
         max_duration=15.0,
     )
-    rmtree("tmp/resampled")
     if rename_by_index:
         for i, spk in enumerate(
             [i for i in os.listdir(output_dir) if i != ".ipynb_checkpoints"]
