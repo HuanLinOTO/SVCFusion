@@ -34,7 +34,7 @@ common_infer_form = {
             "Kouon PC NSF HifiGAN 1029",
             "OpenVPI NSF HifiGAN 20221211",
         ],
-        "default": "waveglow",
+        "default": "Kouon NSF HifiGAN 1031",
         "label": I.common_infer.vocoder_label,
         "individual": True,
     },

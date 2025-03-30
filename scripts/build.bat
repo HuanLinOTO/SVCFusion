@@ -1,4 +1,4 @@
-del New-SVCFusion-Preview-0.7z
+@REM del New-SVCFusion-Preview-0.7z
 python -m scripts.buildtools
 python -m nuitka .\dist.py --module
 @REM del dist.py
