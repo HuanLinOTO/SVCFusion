@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import gc
 import hashlib
 import json
@@ -6,12 +7,14 @@ import shutil
 from traceback import print_exception
 from turtle import update
 
+from loguru import logger
 import torch
 import torchaudio
 from SVCFusion.automix import automix
 from SVCFusion.const_vars import EMPTY_WAV_PATH
 from SVCFusion.i18n import I
 from SVCFusion.uvr import getVocalAndInstrument
+from SVCFusion.inference.vocoders import Vocoder, set_shared_vocoder
 import gradio as gr
 
 common_infer_form = {
@@ -26,18 +29,25 @@ common_infer_form = {
         "visible": False,
         "individual": True,
     },
-    "vocoder": {
-        "type": "dropdown",
-        "info": I.common_infer.vocoder_info,
-        "choices": [
-            "Kouon NSF HifiGAN 1031",
-            "Kouon PC NSF HifiGAN 1029",
-            "OpenVPI NSF HifiGAN 20221211",
-        ],
-        "default": "Kouon NSF HifiGAN 1031",
-        "label": I.common_infer.vocoder_label,
-        "individual": True,
-    },
+    # "precision": {
+    #     "type": "dropdown",
+    #     "info": I.common_infer.precision_info,
+    #     "label": I.common_infer.precision_label,
+    #     "choices": ["fp32", "fp16", "int8"],
+    #     "default": "fp32",
+    # },
+    # "vocoder": {
+    #     "type": "dropdown",
+    #     "info": I.common_infer.vocoder_info,
+    #     "choices": [
+    #         "Kouon NSF HifiGAN 1031",
+    #         "Kouon PC NSF HifiGAN 1029",
+    #         "OpenVPI NSF HifiGAN 20221211",
+    #     ],
+    #     "default": "OpenVPI NSF HifiGAN 20221211",
+    #     "label": I.common_infer.vocoder_label,
+    #     "individual": True,
+    # },
     "use_batch": {
         "type": "show_switch",
         "label": I.common_infer.use_batch_label,
@@ -193,6 +203,12 @@ ddsp_based_preprocess_form = {
 
 def infer_fn_proxy(fn):
     def infer_fn(params, progress):
+        _autocast = torch.amp.autocast(
+            device_type=torch.device(params["device"]).type,
+            enabled=params["precision"] != "fp32",
+            dtype=torch.float16 if params["precision"] == "fp16" else torch.int8,
+        )
+        _autocast.__enter__()
         if not params["use_batch"]:
             params["audio"] = [params["audio"]]
         else:
@@ -296,7 +312,7 @@ def infer_fn_proxy(fn):
 
         gc.collect()
         torch.cuda.empty_cache()
-
+        _autocast.__exit__(None, None, None)
         return (
             gr.update(
                 value=EMPTY_WAV_PATH if params["use_batch"] else moved_vocal[0],
@@ -365,6 +381,40 @@ def preprocess_fn_proxy(fn):
         return gr.update(value=res)
 
     return preprocess_fn
+
+
+def load_model_fn_proxy(fn):
+    def load_model_fn(params):
+        # Store last used params to detect changes
+        if not hasattr(load_model_fn, "last_params"):
+            load_model_fn.last_params = {}
+
+        # Check if only vocoder changed
+        only_vocoder_changed = False
+        if load_model_fn.last_params:
+            only_vocoder_changed = True
+            for key, value in params.items():
+                if key != "vocoder" and value != load_model_fn.last_params.get(key):
+                    only_vocoder_changed = False
+                    break
+
+        # Update vocoder
+        set_shared_vocoder(
+            params["vocoder"],
+            params["device"],
+        )
+
+        # Only call fn if more than just vocoder changed
+        result = None
+        if not only_vocoder_changed:
+            result = fn(params)
+
+        # Store current params
+        load_model_fn.last_params = params.copy()
+
+        return result
+
+    return load_model_fn
 
 
 __all__ = [

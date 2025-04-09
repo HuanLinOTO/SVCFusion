@@ -84,6 +84,12 @@ class ModelChooser:
                         result[model_type] = []
                     result[model_type].append("diffusion/" + p)
 
+        result["vocoder"] = [
+            "Kouon NSF HifiGAN 1031",
+            "Kouon PC NSF HifiGAN 1029",
+            "OpenVPI NSF HifiGAN 20221211",
+        ]
+
         return result
 
     selected_search_path = ""
@@ -118,7 +124,10 @@ class ModelChooser:
         for i in range(len(model_dropdown_values)):
             model_dropdown = model_dropdown_values[i]
             model_info = self.dropdown_index2model_info[i]
-            if model_info["model_type_index"] == model_type_index:
+
+            if model_info["model_type_name"] == "vocoder":
+                result["vocoder"] = model_dropdown
+            elif model_info["model_type_index"] == model_type_index:
                 # print(model_info["model_type_name"], model_dropdown)
                 result[model_info["model_type_name"]] = os.path.join(
                     search_path, model_dropdown
@@ -251,6 +260,7 @@ class ModelChooser:
                     interactive=False,
                 )
                 self.device_chooser = DeviceChooser(show=show_options)
+
             self.spk_dropdown = gr.Dropdown(
                 label=I.model_chooser.spk_dropdown_label,
                 choices=[I.model_chooser.no_spk_option],

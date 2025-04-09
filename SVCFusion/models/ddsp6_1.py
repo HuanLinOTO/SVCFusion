@@ -14,14 +14,17 @@ import yaml
 from SVCFusion.config import YAMLReader, applyChanges, system_config
 from SVCFusion.dataset_utils import DrawArgs, auto_normalize_dataset
 from SVCFusion.i18n import I
+from SVCFusion.inference.dotdict import DotDict
+from SVCFusion.inference.vocoders import Vocoder
 from SVCFusion.model_utils import get_pretrain_models_form_item, load_pretrained
+from SVCFusion.models.base import BaseSVCModel
 from .common import (
     common_infer_form,
     ddsp_based_infer_form,
     common_preprocess_form,
     ddsp_based_preprocess_form,
 )
-from ddspsvc_6_1.reflow.vocoder import load_model_vocoder
+from ddspsvc_6_1.reflow.vocoder import Unit2Wav, load_model_vocoder
 from ddspsvc_6_1.ddsp.vocoder import F0_Extractor, Volume_Extractor, Units_Encoder
 from ddspsvc_6_1.ddsp.core import upsample
 from ddspsvc_6_1.main_reflow import cross_fade, split
@@ -31,7 +34,7 @@ from ddspsvc_6_1.draw import main as draw_main
 from SVCFusion.exec import exec, start_with_cmd
 
 
-class DDSP_6_1Model:
+class DDSP_6_1Model(BaseSVCModel):
     def get_config(*args):
         with YAMLReader("configs/ddsp6.1.yaml") as config:
             return config
@@ -46,6 +49,7 @@ class DDSP_6_1Model:
 
     model_types = {
         "cascade": I.ddsp6.model_types.cascade,
+        "vocoder": I.common_infer.vocoder_label,
     }
 
     def model_filter(self, filepath: str):
@@ -81,9 +85,6 @@ class DDSP_6_1Model:
         if self.model is not None:
             del self.model
             self.model = None
-        if self.vocoder is not None:
-            del self.vocoder
-            self.vocoder = None
         if self.units_encoder is not None:
             del self.units_encoder
             self.units_encoder = None
@@ -94,7 +95,6 @@ class DDSP_6_1Model:
         gc.collect()
 
         self.model = None
-        self.vocoder = None
         self.args = None
         self.units_encoder = None
         self.model_device = None
@@ -109,7 +109,31 @@ class DDSP_6_1Model:
             device = "cuda" if torch.cuda.is_available() else "cpu"
 
         # load diffusion model
-        self.model, self.vocoder, self.args = load_model_vocoder(path, device=device)
+        with YAMLReader(os.path.join(os.path.dirname(path), "config.yaml")) as args:
+            self.args = DotDict(args)
+
+        self.model: Unit2Wav = Unit2Wav(
+            self.args.data.sampling_rate,
+            self.args.data.block_size,
+            self.args.model.win_length,
+            self.args.data.encoder_out_channels,
+            self.args.model.n_spk,
+            self.args.model.use_norm,
+            self.args.model.use_attention,
+            self.args.model.use_pitch_aug,
+            self.vocoder.dimension,
+            self.args.model.n_aux_layers,
+            self.args.model.n_aux_chans,
+            self.args.model.n_layers,
+            self.args.model.n_chans,
+        )
+
+        print(" [Loading] " + model_path_dict["cascade"])
+        ckpt = torch.load(model_path_dict["cascade"], map_location=torch.device(device))
+        self.model.to(device)
+        self.model.load_state_dict(ckpt["model"])
+        self.model.eval()
+
         self.model_device = device
 
         # load units encoder
@@ -541,7 +565,6 @@ class DDSP_6_1Model:
         self.preprocess_form.update(ddsp_based_preprocess_form)
 
         self.model = None
-        self.vocoder = None
         self.args = None
         self.units_encoder = None
         self.model_device = None

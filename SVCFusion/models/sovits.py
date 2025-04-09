@@ -5,6 +5,7 @@ import pickle
 import sys
 
 import yaml
+from SVCFusion.inference.vocoders import Vocoder
 from SoVITS.compress_model import copyStateDict
 from SoVITS.models import SynthesizerTrn
 from fap.utils.file import make_dirs

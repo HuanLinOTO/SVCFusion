@@ -307,8 +307,13 @@ class _Locale(Locale):
 
         use_batch_label = "启用批量处理"
 
+        precision_info = "推理精度"
+        precision_label = "精度"
+
         vocoder_label = "声码器"
-        vocoder_info = "用于 Mel -> 波形的模型"
+
+        unknown_vocoder_tip = "未知声码器，请检查选项"
+        vocoder_not_loaded_tip = "声码器未加载，请检查选项"
 
         use_vocal_separation_label = "去除伴奏"
         use_vocal_separation_info = "是否去除伴奏"

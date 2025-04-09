@@ -45,7 +45,11 @@ class Form:
                 i += 1
 
             for key in self.extra_inputs_keys:
-                result[key] = args[i]
+                if key in self.extra_input_preprocess:
+                    result[key] = self.extra_input_preprocess[key](args[i])
+                else:
+                    result[key] = args[i]
+                i += 1
             result["_model_name"] = model_name
             return cb(result, progress=gr.Progress())
 
@@ -142,6 +146,7 @@ class Form:
         triger_comp: gr.component,
         models: FormDict | Callable[..., FormDict],
         extra_inputs: Dict[str, gr.component] = {},
+        extra_input_preprocess: Dict[str, Callable] = {},
         vertical=False,
         use_audio_opt=False,
         use_textbox_opt=False,
@@ -237,7 +242,9 @@ class Form:
                     I.form.cancel_btn_value, visible=allow_cancel, variant="stop"
                 )
                 inputs = [*items]
+
                 self.extra_inputs_keys = []
+                self.extra_input_preprocess = extra_input_preprocess
                 for key in extra_inputs:
                     self.extra_inputs_keys.append(key)
                     inputs.append(extra_inputs[key])

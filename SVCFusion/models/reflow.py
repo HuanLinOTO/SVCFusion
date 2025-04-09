@@ -11,10 +11,12 @@ import yaml
 from SVCFusion.config import YAMLReader, applyChanges
 from SVCFusion.dataset_utils import DrawArgs, auto_normalize_dataset
 from SVCFusion.i18n import I
+from SVCFusion.inference.dotdict import DotDict
+from SVCFusion.inference.vocoders import Vocoder
 from SVCFusion.model_utils import get_pretrain_models_form_item, load_pretrained
 from .common import common_infer_form, ddsp_based_infer_form, common_preprocess_form
 from ReFlowVaeSVC.main import cross_fade, upsample, split
-from ReFlowVaeSVC.reflow.vocoder import load_model_vocoder
+from ReFlowVaeSVC.reflow.vocoder import Unit2Wav_VAE, load_model_vocoder
 from ReFlowVaeSVC.reflow.extractors import F0_Extractor, Volume_Extractor, Units_Encoder
 from ddspsvc.draw import main as draw_main
 from SVCFusion.exec import exec, start_with_cmd
@@ -73,9 +75,6 @@ class ReflowVAESVCModel:
         if self.model is not None:
             del self.model
             self.model = None
-        if self.vocoder is not None:
-            del self.vocoder
-            self.vocoder = None
         if self.units_encoder is not None:
             del self.units_encoder
             self.units_encoder = None
@@ -86,7 +85,6 @@ class ReflowVAESVCModel:
         gc.collect()
 
         self.model = None
-        self.vocoder = None
         self.args = None
         self.units_encoder = None
         self.model_device = None
@@ -98,9 +96,6 @@ class ReflowVAESVCModel:
         if self.model is not None:
             del self.model
             self.model = None
-        if self.vocoder is not None:
-            del self.vocoder
-            self.vocoder = None
         if self.units_encoder is not None:
             del self.units_encoder
             self.units_encoder = None
@@ -111,7 +106,6 @@ class ReflowVAESVCModel:
         gc.collect()
 
         self.model = None
-        self.vocoder = None
         self.args = None
         self.units_encoder = None
         self.model_device = None
@@ -119,9 +113,30 @@ class ReflowVAESVCModel:
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        self.model, self.vocoder, self.args = load_model_vocoder(
-            params["cascade"], device=device
+        with YAMLReader(
+            os.path.join(os.path.dirname(params["cascade"]), "config.yaml")
+        ) as args:
+            self.args = DotDict(args)
+
+        print(" [Loading] " + params["cascade"])
+        ckpt = torch.load(params["cascade"], map_location=torch.device(device))
+        self.model = Unit2Wav_VAE(
+            self.args.data.sampling_rate,
+            self.args.data.block_size,
+            self.args.model.win_length,
+            self.args.data.encoder_out_channels,
+            self.args.model.n_spk,
+            self.args.model.use_pitch_aug,
+            self.vocoder.dimension,
+            self.args.model.n_layers,
+            self.args.model.n_chans,
+            self.args.model.n_hidden,
+            self.args.model.back_bone,
+            self.args.model.use_attention,
         )
+        self.model.to(device)
+        self.model.load_state_dict(ckpt["model"])
+        self.model.eval()
 
         self.model_device = device
         config_path = os.path.join(os.path.dirname(params["cascade"]), "config.yaml")
@@ -547,7 +562,6 @@ class ReflowVAESVCModel:
         )
 
         self.model = None
-        self.vocoder = None
         self.args = None
         self.units_encoder = None
         self.model_device = None

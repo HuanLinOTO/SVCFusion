@@ -1,7 +1,9 @@
 import gradio as gr
 
+from SVCFusion.inference.vocoders import NsfHifiGAN, get_shared_vocoder
 
-class BaseModel:
+
+class BaseSVCModel:
     model_name = ...
 
     def infer(self, params, progress=gr.Progress()): ...
@@ -23,6 +25,10 @@ class BaseModel:
     preprocess_form = {}
 
     model_types: dict[str, str] = {}
+
+    @property
+    def vocoder(self) -> NsfHifiGAN:
+        return get_shared_vocoder()
 
     def __init__(self) -> None:
         pass
