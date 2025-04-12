@@ -12,4 +12,5 @@ if __name__ == "__main__":
     os.chdir(workdir)
     import dist
 
+    # TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD
     dist.launch_dialog()
