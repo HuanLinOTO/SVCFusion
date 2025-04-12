@@ -243,6 +243,7 @@ class DDSP_6_1Model(BaseSVCModel):
         threhold = params["threshold"]
         infer_step = params["infer_step"]
         t_start = params["t_start"]
+        vocal_register_factor = params["vocal_register_factor"]
 
         spk = self.spks.index(params["spk"]) + 1
 
@@ -274,7 +275,7 @@ class DDSP_6_1Model(BaseSVCModel):
             # f0 cache load
             print("Loading pitch curves for input audio from cache directory...")
             f0 = np.load(cache_file_path, allow_pickle=False)
-        if type(f0) == type(None):
+        if f0 is None:
             # extract f0
             print("Pitch extractor type: " + f0_extractor)
 
@@ -406,20 +407,22 @@ class DDSP_6_1Model(BaseSVCModel):
                 seg_f0 = f0[:, start_frame : start_frame + seg_units.size(1), :]
                 seg_volume = volume[:, start_frame : start_frame + seg_units.size(1), :]
 
-                seg_output = self.model(
+                seg_mel = self.model(
                     seg_units,
-                    seg_f0,
+                    seg_f0 / vocal_register_factor,
                     seg_volume,
                     spk_id=spk_id,
                     spk_mix_dict=None,
                     aug_shift=formant_shift_key,
                     vocoder=self.vocoder,
                     infer=True,
-                    return_wav=True,
+                    return_wav=False,
                     infer_step=infer_step,
                     method=method,
                     t_start=t_start,
                 )
+                seg_output = self.vocoder.infer(seg_mel, f0)
+
                 seg_output *= mask[
                     :,
                     start_frame * self.args.data.block_size : (

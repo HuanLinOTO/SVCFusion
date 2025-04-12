@@ -107,6 +107,15 @@ common_infer_form = {
         "info": I.common_infer.keychange_info,
         "label": I.common_infer.keychange_label,
     },
+    "vocal_register_shift_key": {
+        "type": "slider",
+        "max": 16,
+        "min": -16,
+        "default": 0,
+        "step": 1,
+        "info": I.common_infer.vocal_register_shift_info,
+        "label": I.common_infer.vocal_register_shift_label,
+    },
     "threshold": {
         "type": "slider",
         "max": 0,
@@ -203,12 +212,21 @@ ddsp_based_preprocess_form = {
 
 def infer_fn_proxy(fn):
     def infer_fn(params, progress):
-        _autocast = torch.amp.autocast(
-            device_type=torch.device(params["device"]).type,
-            enabled=params["precision"] != "fp32",
-            dtype=torch.float16 if params["precision"] == "fp16" else torch.int8,
+        # _autocast = torch.amp.autocast(
+        #     device_type=torch.device(params["device"]).type,
+        #     enabled=params["precision"] != "fp32",
+        #     dtype=torch.float16 if params["precision"] == "fp16" else torch.int8,
+        # )
+        # _autocast.__enter__()
+
+        vocal_register_shift_key = params["vocal_register_shift_key"]
+        vocal_register_factor = (
+            1
+            if vocal_register_shift_key == 0
+            else 2 ** (float(vocal_register_shift_key) / 12)
         )
-        _autocast.__enter__()
+        params["vocal_register_factor"] = vocal_register_factor
+
         if not params["use_batch"]:
             params["audio"] = [params["audio"]]
         else:
@@ -312,7 +330,7 @@ def infer_fn_proxy(fn):
 
         gc.collect()
         torch.cuda.empty_cache()
-        _autocast.__exit__(None, None, None)
+        # _autocast.__exit__(None, None, None)
         return (
             gr.update(
                 value=EMPTY_WAV_PATH if params["use_batch"] else moved_vocal[0],

@@ -245,11 +245,11 @@ def load_checkpoint(checkpoint_path, model, optimizer=None, skip_optimizer=False
             )
         except Exception:
             if "enc_q" not in k or "emb_g" not in k:
-                logger.error(
-                    "%s is not in the checkpoint,please check your checkpoint.If you're using pretrain model,just ignore this warning."
-                    % k
-                )
-                logger.info("%s is not in the checkpoint" % k)
+                # logger.error(
+                #     "%s is not in the checkpoint,please check your checkpoint.If you're using pretrain model,just ignore this warning."
+                #     % k
+                # )
+                # logger.info("%s is not in the checkpoint" % k)
                 new_state_dict[k] = v
     if hasattr(model, "module"):
         model.module.load_state_dict(new_state_dict)

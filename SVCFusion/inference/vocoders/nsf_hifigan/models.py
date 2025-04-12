@@ -297,62 +297,86 @@ class Generator(torch.nn.Module):
         self.h = h
         self.num_kernels = len(h.resblock_kernel_sizes)
         self.num_upsamples = len(h.upsample_rates)
-        self.m_source = SourceModuleHnNSF(sampling_rate=h.sampling_rate, harmonic_num=8)
-        self.noise_convs = nn.ModuleList()
+        self.mini_nsf = h.mini_nsf
+
+        if h.mini_nsf:
+            self.source_sr = h.sampling_rate / int(np.prod(h.upsample_rates[2:]))
+            self.upp = int(np.prod(h.upsample_rates[:2]))
+        else:
+            self.source_sr = h.sampling_rate
+            self.upp = int(np.prod(h.upsample_rates))
+            self.m_source = SourceModuleHnNSF(
+                sampling_rate=h.sampling_rate, harmonic_num=8
+            )
+            self.noise_convs = nn.ModuleList()
+
         self.conv_pre = weight_norm(
             Conv1d(h.num_mels, h.upsample_initial_channel, 7, 1, padding=3)
         )
-        resblock = ResBlock1 if h.resblock == "1" else ResBlock2
 
         self.ups = nn.ModuleList()
-        for i, (u, k) in enumerate(zip(h.upsample_rates, h.upsample_kernel_sizes)):
-            c_cur = h.upsample_initial_channel // (2 ** (i + 1))
-            self.ups.append(
-                weight_norm(
-                    ConvTranspose1d(
-                        h.upsample_initial_channel // (2**i),
-                        h.upsample_initial_channel // (2 ** (i + 1)),
-                        k,
-                        u,
-                        padding=(k - u) // 2,
-                    )
-                )
-            )
-            if i + 1 < len(h.upsample_rates):  #
-                stride_f0 = int(np.prod(h.upsample_rates[i + 1 :]))
-                self.noise_convs.append(
-                    Conv1d(
-                        1,
-                        c_cur,
-                        kernel_size=stride_f0 * 2,
-                        stride=stride_f0,
-                        padding=stride_f0 // 2,
-                    )
-                )
-            else:
-                self.noise_convs.append(Conv1d(1, c_cur, kernel_size=1))
         self.resblocks = nn.ModuleList()
+        resblock = ResBlock1 if h.resblock == "1" else ResBlock2
         ch = h.upsample_initial_channel
-        for i in range(len(self.ups)):
+        for i, (u, k) in enumerate(zip(h.upsample_rates, h.upsample_kernel_sizes)):
             ch //= 2
+            self.ups.append(
+                weight_norm(ConvTranspose1d(2 * ch, ch, k, u, padding=(k - u) // 2))
+            )
             for j, (k, d) in enumerate(
                 zip(h.resblock_kernel_sizes, h.resblock_dilation_sizes)
             ):
                 self.resblocks.append(resblock(h, ch, k, d))
+            if not h.mini_nsf:
+                if i + 1 < len(h.upsample_rates):  #
+                    stride_f0 = int(np.prod(h.upsample_rates[i + 1 :]))
+                    self.noise_convs.append(
+                        Conv1d(
+                            1,
+                            ch,
+                            kernel_size=stride_f0 * 2,
+                            stride=stride_f0,
+                            padding=stride_f0 // 2,
+                        )
+                    )
+                else:
+                    self.noise_convs.append(Conv1d(1, ch, kernel_size=1))
+            elif i == 1:
+                self.source_conv = Conv1d(1, ch, 1)
+                self.source_conv.apply(init_weights)
 
         self.conv_post = weight_norm(Conv1d(ch, 1, 7, 1, padding=3))
+
         self.ups.apply(init_weights)
         self.conv_post.apply(init_weights)
-        self.upp = int(np.prod(h.upsample_rates))
+
+    def fastsinegen(self, f0):
+        n = torch.arange(1, self.upp + 1, device=f0.device)
+        s0 = f0.unsqueeze(-1) / self.source_sr
+        ds0 = F.pad(s0[:, 1:, :] - s0[:, :-1, :], (0, 0, 0, 1))
+        rad = s0 * n + 0.5 * ds0 * n * (n - 1) / self.upp
+        rad2 = torch.fmod(rad[..., -1:].float() + 0.5, 1.0) - 0.5
+        rad_acc = rad2.cumsum(dim=1).fmod(1.0).to(f0)
+        rad += F.pad(rad_acc[:, :-1, :], (0, 0, 1, 0))
+        rad = rad.reshape(f0.shape[0], 1, -1)
+        sines = torch.sin(2 * np.pi * rad)
+        return sines
 
     def forward(self, x, f0):
-        har_source = self.m_source(f0, self.upp).transpose(1, 2)
+        if self.mini_nsf:
+            har_source = self.fastsinegen(f0)
+        else:
+            har_source = self.m_source(f0, self.upp).transpose(1, 2)
         x = self.conv_pre(x)
         for i in range(self.num_upsamples):
             x = F.leaky_relu(x, LRELU_SLOPE)
             x = self.ups[i](x)
-            x_source = self.noise_convs[i](har_source)
-            x = x + x_source
+            if not self.mini_nsf:
+                x_source = self.noise_convs[i](har_source)
+                x = x + x_source
+            elif i == 1:
+                x_source = self.source_conv(har_source)
+                x = x + x_source
             xs = None
             for j in range(self.num_kernels):
                 if xs is None:
@@ -363,7 +387,6 @@ class Generator(torch.nn.Module):
         x = F.leaky_relu(x)
         x = self.conv_post(x)
         x = torch.tanh(x)
-
         return x
 
     def remove_weight_norm(self):
@@ -374,194 +397,3 @@ class Generator(torch.nn.Module):
             l.remove_weight_norm()
         remove_weight_norm(self.conv_pre)
         remove_weight_norm(self.conv_post)
-
-
-class DiscriminatorP(torch.nn.Module):
-    def __init__(self, period, kernel_size=5, stride=3, use_spectral_norm=False):
-        super(DiscriminatorP, self).__init__()
-        self.period = period
-        norm_f = weight_norm if use_spectral_norm is False else spectral_norm
-        self.convs = nn.ModuleList(
-            [
-                norm_f(
-                    Conv2d(
-                        1,
-                        32,
-                        (kernel_size, 1),
-                        (stride, 1),
-                        padding=(get_padding(5, 1), 0),
-                    )
-                ),
-                norm_f(
-                    Conv2d(
-                        32,
-                        128,
-                        (kernel_size, 1),
-                        (stride, 1),
-                        padding=(get_padding(5, 1), 0),
-                    )
-                ),
-                norm_f(
-                    Conv2d(
-                        128,
-                        512,
-                        (kernel_size, 1),
-                        (stride, 1),
-                        padding=(get_padding(5, 1), 0),
-                    )
-                ),
-                norm_f(
-                    Conv2d(
-                        512,
-                        1024,
-                        (kernel_size, 1),
-                        (stride, 1),
-                        padding=(get_padding(5, 1), 0),
-                    )
-                ),
-                norm_f(Conv2d(1024, 1024, (kernel_size, 1), 1, padding=(2, 0))),
-            ]
-        )
-        self.conv_post = norm_f(Conv2d(1024, 1, (3, 1), 1, padding=(1, 0)))
-
-    def forward(self, x):
-        fmap = []
-
-        # 1d to 2d
-        b, c, t = x.shape
-        if t % self.period != 0:  # pad first
-            n_pad = self.period - (t % self.period)
-            x = F.pad(x, (0, n_pad), "reflect")
-            t = t + n_pad
-        x = x.view(b, c, t // self.period, self.period)
-
-        for l in self.convs:
-            x = l(x)
-            x = F.leaky_relu(x, LRELU_SLOPE)
-            fmap.append(x)
-        x = self.conv_post(x)
-        fmap.append(x)
-        x = torch.flatten(x, 1, -1)
-
-        return x, fmap
-
-
-class MultiPeriodDiscriminator(torch.nn.Module):
-    def __init__(self, periods=None):
-        super(MultiPeriodDiscriminator, self).__init__()
-        self.periods = periods if periods is not None else [2, 3, 5, 7, 11]
-        self.discriminators = nn.ModuleList()
-        for period in self.periods:
-            self.discriminators.append(DiscriminatorP(period))
-
-    def forward(self, y, y_hat):
-        y_d_rs = []
-        y_d_gs = []
-        fmap_rs = []
-        fmap_gs = []
-        for i, d in enumerate(self.discriminators):
-            y_d_r, fmap_r = d(y)
-            y_d_g, fmap_g = d(y_hat)
-            y_d_rs.append(y_d_r)
-            fmap_rs.append(fmap_r)
-            y_d_gs.append(y_d_g)
-            fmap_gs.append(fmap_g)
-
-        return y_d_rs, y_d_gs, fmap_rs, fmap_gs
-
-
-class DiscriminatorS(torch.nn.Module):
-    def __init__(self, use_spectral_norm=False):
-        super(DiscriminatorS, self).__init__()
-        norm_f = weight_norm if use_spectral_norm == False else spectral_norm
-        self.convs = nn.ModuleList(
-            [
-                norm_f(Conv1d(1, 128, 15, 1, padding=7)),
-                norm_f(Conv1d(128, 128, 41, 2, groups=4, padding=20)),
-                norm_f(Conv1d(128, 256, 41, 2, groups=16, padding=20)),
-                norm_f(Conv1d(256, 512, 41, 4, groups=16, padding=20)),
-                norm_f(Conv1d(512, 1024, 41, 4, groups=16, padding=20)),
-                norm_f(Conv1d(1024, 1024, 41, 1, groups=16, padding=20)),
-                norm_f(Conv1d(1024, 1024, 5, 1, padding=2)),
-            ]
-        )
-        self.conv_post = norm_f(Conv1d(1024, 1, 3, 1, padding=1))
-
-    def forward(self, x):
-        fmap = []
-        for l in self.convs:
-            x = l(x)
-            x = F.leaky_relu(x, LRELU_SLOPE)
-            fmap.append(x)
-        x = self.conv_post(x)
-        fmap.append(x)
-        x = torch.flatten(x, 1, -1)
-
-        return x, fmap
-
-
-class MultiScaleDiscriminator(torch.nn.Module):
-    def __init__(self):
-        super(MultiScaleDiscriminator, self).__init__()
-        self.discriminators = nn.ModuleList(
-            [
-                DiscriminatorS(use_spectral_norm=True),
-                DiscriminatorS(),
-                DiscriminatorS(),
-            ]
-        )
-        self.meanpools = nn.ModuleList(
-            [AvgPool1d(4, 2, padding=2), AvgPool1d(4, 2, padding=2)]
-        )
-
-    def forward(self, y, y_hat):
-        y_d_rs = []
-        y_d_gs = []
-        fmap_rs = []
-        fmap_gs = []
-        for i, d in enumerate(self.discriminators):
-            if i != 0:
-                y = self.meanpools[i - 1](y)
-                y_hat = self.meanpools[i - 1](y_hat)
-            y_d_r, fmap_r = d(y)
-            y_d_g, fmap_g = d(y_hat)
-            y_d_rs.append(y_d_r)
-            fmap_rs.append(fmap_r)
-            y_d_gs.append(y_d_g)
-            fmap_gs.append(fmap_g)
-
-        return y_d_rs, y_d_gs, fmap_rs, fmap_gs
-
-
-def feature_loss(fmap_r, fmap_g):
-    loss = 0
-    for dr, dg in zip(fmap_r, fmap_g):
-        for rl, gl in zip(dr, dg):
-            loss += torch.mean(torch.abs(rl - gl))
-
-    return loss * 2
-
-
-def discriminator_loss(disc_real_outputs, disc_generated_outputs):
-    loss = 0
-    r_losses = []
-    g_losses = []
-    for dr, dg in zip(disc_real_outputs, disc_generated_outputs):
-        r_loss = torch.mean((1 - dr) ** 2)
-        g_loss = torch.mean(dg**2)
-        loss += r_loss + g_loss
-        r_losses.append(r_loss.item())
-        g_losses.append(g_loss.item())
-
-    return loss, r_losses, g_losses
-
-
-def generator_loss(disc_outputs):
-    loss = 0
-    gen_losses = []
-    for dg in disc_outputs:
-        l = torch.mean((1 - dg) ** 2)
-        gen_losses.append(l)
-        loss += l
-
-    return loss, gen_losses

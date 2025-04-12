@@ -5,6 +5,7 @@ from SVCFusion.const_vars import WORK_DIR_PATH
 from SVCFusion.i18n import I
 from SVCFusion.model_utils import detect_current_model_by_path
 from SVCFusion.models.inited import model_name_list, model_list
+from SVCFusion.inference.vocoders import vocoders
 from SVCFusion.ui.DeviceChooser import DeviceChooser
 from SVCFusion.ui.Form import Form
 from SVCFusion.ui.FormTypes import FormDict
@@ -84,11 +85,7 @@ class ModelChooser:
                         result[model_type] = []
                     result[model_type].append("diffusion/" + p)
 
-        result["vocoder"] = [
-            "Kouon NSF HifiGAN 1031",
-            "Kouon PC NSF HifiGAN 1029",
-            "OpenVPI NSF HifiGAN 20221211",
-        ]
+        result["vocoder"] = list(vocoders.keys())
 
         return result
 
@@ -124,14 +121,14 @@ class ModelChooser:
         for i in range(len(model_dropdown_values)):
             model_dropdown = model_dropdown_values[i]
             model_info = self.dropdown_index2model_info[i]
-
-            if model_info["model_type_name"] == "vocoder":
-                result["vocoder"] = model_dropdown
-            elif model_info["model_type_index"] == model_type_index:
+            if model_info["model_type_index"] == model_type_index:
                 # print(model_info["model_type_name"], model_dropdown)
-                result[model_info["model_type_name"]] = os.path.join(
-                    search_path, model_dropdown
-                )
+                if model_info["model_type_name"] == "vocoder":
+                    result["vocoder"] = model_dropdown
+                else:
+                    result[model_info["model_type_name"]] = os.path.join(
+                        search_path, model_dropdown
+                    )
             i += 1
         result["device"] = device
         result.update(on_topic_extra_form_values)

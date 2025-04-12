@@ -16,8 +16,11 @@ import soundfile
 import torch
 import torchaudio
 
+from SVCFusion.config import YAMLReader
+from SVCFusion.inference.dotdict import DotDict
+from SVCFusion.inference.vocoders import get_shared_vocoder
 from SoVITS import cluster, logger, utils
-from SoVITS.diffusion.unit2mel import load_model_vocoder
+from SoVITS.diffusion.unit2mel import Unit2Mel, load_model_vocoder
 from SoVITS.inference import slicer
 from SoVITS.models import SynthesizerTrn
 
@@ -124,6 +127,10 @@ class F0FilterException(Exception):
 
 
 class Svc(object):
+    @property
+    def vocoder(self):
+        return get_shared_vocoder()
+
     def __init__(
         self,
         net_g_path,
@@ -173,13 +180,34 @@ class Svc(object):
             if os.path.exists(diffusion_model_path) and os.path.exists(
                 diffusion_model_path
             ):
-                self.diffusion_model, self.vocoder, self.diffusion_args = (
-                    load_model_vocoder(
-                        diffusion_model_path,
-                        self.dev,
-                        config_path=diffusion_config_path,
+                if diffusion_config_path is None:
+                    diffusion_config_path = os.path.join(
+                        os.path.split(diffusion_model_path)[0], "config.yaml"
                     )
+                with YAMLReader(diffusion_config_path) as config:
+                    self.diffusion_args = DotDict(config)
+                self.diffusion_model = Unit2Mel(
+                    self.diffusion_args.data.encoder_out_channels,
+                    self.diffusion_args.model.n_spk,
+                    self.diffusion_args.model.use_pitch_aug,
+                    self.vocoder.dimension,
+                    self.diffusion_args.model.n_layers,
+                    self.diffusion_args.model.n_chans,
+                    self.diffusion_args.model.n_hidden,
+                    self.diffusion_args.model.timesteps,
+                    self.diffusion_args.model.k_step_max,
                 )
+                print(" [Loading] " + diffusion_model_path)
+                ckpt = torch.load(
+                    diffusion_model_path, map_location=torch.device(device)
+                )
+                self.diffusion_model.to(device)
+                self.diffusion_model.load_state_dict(ckpt["model"])
+                self.diffusion_model.eval()
+                print(
+                    f"Loaded diffusion model, sampler is {self.diffusion_args.infer.method}, speedup: {self.diffusion_args.infer.speedup} "
+                )
+
                 if self.only_diffusion:
                     self.target_sample = self.diffusion_args.data.sampling_rate
                     self.hop_size = self.diffusion_args.data.block_size
@@ -345,6 +373,7 @@ class Svc(object):
         spk_mix=False,
         second_encoding=False,
         loudness_envelope_adjustment=1,
+        vocal_register_factor=1,
     ):
         torchaudio.set_audio_backend("soundfile")
         wav, sr = torchaudio.load(raw_path)
@@ -382,6 +411,7 @@ class Svc(object):
             n_frames = f0.size(1)
         c = c.to(self.dtype)
         f0 = f0.to(self.dtype)
+        raw_f0 = f0
         uv = uv.to(self.dtype)
         with torch.no_grad():
             start = time.time()
@@ -397,17 +427,23 @@ class Svc(object):
 
                 audio, f0 = self.net_g_ms.infer(
                     c,
-                    f0=f0,
+                    f0=f0 / vocal_register_factor,
                     g=sid,
                     uv=uv,
                     predict_f0=auto_predict_f0,
                     noice_scale=noice_scale,
                     vol=vol.to(self.dtype) if isinstance(vol, torch.Tensor) else None,
                 )
+                if self.shallow_diffusion:
+                    f0 = raw_f0 if auto_predict_f0 else f0 * vocal_register_factor
+
                 audio = audio[0, 0].data.float()
                 audio_mel = (
-                    self.vocoder.extract(audio[None, :], self.target_sample)
-                    if self.shallow_diffusion
+                    self.vocoder.extract(
+                        audio[None, :],
+                        self.target_sample,
+                    )
+                    if self.shallow_diffusion or vocal_register_factor != 1
                     else None
                 )
             else:
@@ -442,7 +478,7 @@ class Svc(object):
                 c = c.transpose(-1, -2)
                 audio_mel = self.diffusion_model(
                     c,
-                    f0,
+                    f0 / vocal_register_factor,
                     vol,
                     spk_id=sid,
                     spk_mix_dict=None,
@@ -452,7 +488,12 @@ class Svc(object):
                     method=self.diffusion_args.infer.method,
                     k_step=k_step,
                 )
-                audio = self.vocoder.infer(audio_mel, f0).squeeze()
+            if self.shallow_diffusion or vocal_register_factor != 1:
+                audio = self.vocoder.infer(
+                    audio_mel,
+                    raw_f0 if raw_f0.dim() == 3 else raw_f0.unsqueeze(-1),
+                ).squeeze()
+
             if self.nsf_hifigan_enhance:
                 audio, _ = self.enhancer.enhance(
                     audio[None, :],
@@ -507,6 +548,7 @@ class Svc(object):
         use_spk_mix=False,
         second_encoding=False,
         loudness_envelope_adjustment=1,
+        vocal_register_factor=1,
     ):
         if use_spk_mix:
             if len(self.spk2id) == 1:
@@ -628,6 +670,7 @@ class Svc(object):
                         spk_mix=use_spk_mix,
                         second_encoding=second_encoding,
                         loudness_envelope_adjustment=loudness_envelope_adjustment,
+                        vocal_register_factor=vocal_register_factor,
                     )
                     global_frame += out_frame
                     _audio = out_audio.cpu().numpy()

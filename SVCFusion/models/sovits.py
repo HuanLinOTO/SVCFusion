@@ -181,6 +181,7 @@ class SoVITSModel:
         "main": I.sovits.model_types.main,
         "diff": I.sovits.model_types.diff,
         "cluster": I.sovits.model_types.cluster,
+        "vocoder": I.common_infer.vocoder_label,
     }
 
     model_chooser_extra_form = {
@@ -460,7 +461,7 @@ class SoVITSModel:
             f.write("2")
         auto_normalize_dataset("data/44k", False, progress)
         exec(
-            f"{executable} -m SoVITS.preprocess_flist_config --source_dir ./data/44k --speech_encoder {params['encoder'].replace('contentvec','vec')} {'--vol_aug' if params['vol_aug'] else ''}"
+            f"{executable} -m SoVITS.preprocess_flist_config --source_dir ./data/44k --speech_encoder {params['encoder'].replace('contentvec', 'vec')} {'--vol_aug' if params['vol_aug'] else ''}"
         )
         cmd = f"{executable} -m SoVITS.preprocess_new --f0_predictor {params['f0']} --num_processes {params['num_workers']} --subprocess_num_workers {params['subprocess_num_workers']}"
         if params["use_diff"]:
@@ -472,6 +473,8 @@ class SoVITSModel:
 
     def infer(self, params, progress=gr.Progress()):
         wf, sr = torchaudio.load(params["audio"])
+        vocal_register_factor = params["vocal_register_factor"]
+
         # 重采样到单声道44100hz 保存到 tmp/时间戳_md5前3位.wav
         resampled_filename = f"tmp/{int(time.time())}.wav"
         torchaudio.save(
@@ -503,6 +506,7 @@ class SoVITSModel:
             "use_spk_mix": False,
             "second_encoding": params["second_encoding"],
             "loudness_envelope_adjustment": 1,
+            "vocal_register_factor": vocal_register_factor,
         }
         infer_tool.format_wav(params["audio"])
         self.svc_model.audio16k_resample_transform = torchaudio.transforms.Resample(

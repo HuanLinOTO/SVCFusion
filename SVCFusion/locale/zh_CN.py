@@ -338,6 +338,9 @@ class _Locale(Locale):
         threshold_label = "切片阈值"
         threshold_info = "人声切片的阈值，如果有底噪可以调为 -40 或更高"
 
+        vocal_register_shift_label = "音区偏移"
+        vocal_register_shift_info = "音区偏移，可以通过声码器变调让模型唱出更广的音域"
+
     class ddsp_based_infer(Locale.ddsp_based_infer):
         method_label = "采样器"
         method_info = "用于 reflow 的采样器"
