@@ -7,7 +7,7 @@ import gradio as gr
 from fap.utils.file import AUDIO_EXTENSIONS
 from SVCFusion.i18n import I
 from SVCFusion.ui.Form import Form
-from SVCFusion.uvr import getVocalAndInstrument
+from SVCFusion.vr import getVocalAndInstrument
 
 
 class VocalSeparation:

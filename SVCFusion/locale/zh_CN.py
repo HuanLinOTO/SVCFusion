@@ -340,6 +340,9 @@ class _Locale(Locale):
 
         vocal_register_shift_label = "音区偏移"
         vocal_register_shift_info = "音区偏移，可以通过声码器变调让模型唱出更广的音域"
+        vocal_register_shift_no_support_tip = (
+            "当前声码器不支持音区偏移，音区偏移参数将被忽略"
+        )
 
     class ddsp_based_infer(Locale.ddsp_based_infer):
         method_label = "采样器"

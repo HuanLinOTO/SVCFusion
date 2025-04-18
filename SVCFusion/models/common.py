@@ -13,8 +13,12 @@ import torchaudio
 from SVCFusion.automix import automix
 from SVCFusion.const_vars import EMPTY_WAV_PATH
 from SVCFusion.i18n import I
-from SVCFusion.uvr import getVocalAndInstrument
-from SVCFusion.inference.vocoders import Vocoder, set_shared_vocoder
+from SVCFusion.vr import getVocalAndInstrument
+from SVCFusion.inference.vocoders import (
+    Vocoder,
+    get_shared_vocoder_info,
+    set_shared_vocoder,
+)
 import gradio as gr
 
 common_infer_form = {
@@ -220,6 +224,10 @@ def infer_fn_proxy(fn):
         # _autocast.__enter__()
 
         vocal_register_shift_key = params["vocal_register_shift_key"]
+
+        if vocal_register_shift_key != 0 and "PC" not in get_shared_vocoder_info().name:
+            gr.Info(I.common_infer.vocal_register_shift_no_support_tip)
+
         vocal_register_factor = (
             1
             if vocal_register_shift_key == 0

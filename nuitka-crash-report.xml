@@ -1,65 +1,27 @@
 <?xml version='1.0' encoding='utf8'?>
-<nuitka-compilation-report nuitka_version="2.3" nuitka_commercial_version="not installed" completion="error exit message (1)" exit_message="Failed unexpectedly in Scons C backend compilation.">
-  <module name="dist" kind="CompiledPythonModule" usage="root_module" reason="Root module" source_path="${cwd}\dist.py">
-    <optimization-time pass="1" time="0.87" />
-    <optimization-time pass="2" time="0.10" />
-    <module_usages>
-      <module_usage name="gc" finding="absolute" line="3" />
-      <module_usage name="logging" finding="excluded" line="4" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
-      <module_usage name="os" finding="excluded" line="5" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
-      <module_usage name="sys" finding="absolute" line="6" />
-      <module_usage name="gradio" finding="absolute" line="7" />
-      <module_usage name="torch" finding="absolute" line="8" />
-      <module_usage name="SVCFusion.config" finding="absolute" line="10" />
-      <module_usage name="SVCFusion.const_vars" finding="absolute" line="11" />
-      <module_usage name="SVCFusion.dataset_utils" finding="absolute" line="12" />
-      <module_usage name="SVCFusion.i18n" finding="absolute" line="13" />
-      <module_usage name="SVCFusion.model_utils" finding="absolute" line="14" />
-      <module_usage name="SVCFusion.ui.ModelChooser" finding="absolute" line="17" />
-      <module_usage name="SVCFusion.ui.Form" finding="absolute" line="18" />
-      <module_usage name="SVCFusion.models.inited" finding="absolute" line="19" />
-      <module_usage name="SVCFusion.ui.Settings" finding="absolute" line="26" />
-      <module_usage name="SVCFusion.ui.Train" finding="absolute" line="27" />
-      <module_usage name="SVCFusion.ui.tools.Compatible" finding="absolute" line="28" />
-      <module_usage name="SVCFusion.ui.tools.FishAudioPreprocess" finding="absolute" line="29" />
-      <module_usage name="SVCFusion.ui.tools.InstallModel" finding="absolute" line="30" />
-      <module_usage name="SVCFusion.ui.tools.ModelManager" finding="absolute" line="31" />
-      <module_usage name="SVCFusion.ui.tools.VocalSeparation" finding="absolute" line="32" />
-      <module_usage name="SVCFusion.exec" finding="absolute" line="34" />
-      <module_usage name="rich.traceback" finding="absolute" line="35" />
-      <module_usage name="json" finding="excluded" line="303" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
-      <module_usage name="os" finding="excluded" line="304" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
-      <module_usage name="math" finding="absolute" line="305" />
-      <module_usage name="base64" finding="excluded" line="306" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
-      <module_usage name="platform" finding="excluded" line="307" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
-      <module_usage name="ctypes" finding="excluded" line="308" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
-      <module_usage name="binascii" finding="absolute" line="309" />
-      <module_usage name="random" finding="excluded" line="310" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
-      <module_usage name="shutil" finding="excluded" line="311" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
-      <module_usage name="string" finding="excluded" line="312" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
-      <module_usage name="subprocess" finding="excluded" line="313" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
-      <module_usage name="ctypes" finding="excluded" line="314" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
-      <module_usage name="ctypes.wintypes" finding="absolute" line="314" />
-      <module_usage name="time" finding="absolute" line="315" />
-      <module_usage name="win32com.client" finding="absolute" line="316" />
-      <module_usage name="win32com.client.GetObject" finding="not-found" line="316" />
-      <module_usage name="tkinter" finding="excluded" line="318" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
-      <module_usage name="tkinter" finding="excluded" line="319" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
-      <module_usage name="tkinter.font" finding="relative" line="319" />
-      <module_usage name="tkinter" finding="excluded" line="320" exclusion_reason="Not following into stdlib unless standalone or requested to follow into stdlib." />
-      <module_usage name="tkinter.messagebox" finding="relative" line="320" />
-    </module_usages>
-  </module>
+<nuitka-compilation-report nuitka_version="2.6.9" nuitka_commercial_version="not installed" mode="module" completion="exception">
+  <exception exception_type="ValueError" exception_value="source code string cannot contain null bytes">
+Traceback (most recent call last):
+  File "D:\Projects\DDSP6.0-Package\.conda\lib\site-packages\nuitka\MainControl.py", line 1159, in main
+    _main()
+  File "D:\Projects\DDSP6.0-Package\.conda\lib\site-packages\nuitka\MainControl.py", line 998, in _main
+    main_module = _createMainModule()
+  File "D:\Projects\DDSP6.0-Package\.conda\lib\site-packages\nuitka\MainControl.py", line 155, in _createMainModule
+    main_module = buildMainModuleTree(
+  File "D:\Projects\DDSP6.0-Package\.conda\lib\site-packages\nuitka\tree\Building.py", line 1171, in buildMainModuleTree
+    module = buildModule(
+  File "D:\Projects\DDSP6.0-Package\.conda\lib\site-packages\nuitka\tree\Building.py", line 1344, in buildModule
+    ast_tree = parseSourceCodeToAst(
+  File "D:\Projects\DDSP6.0-Package\.conda\lib\site-packages\nuitka\tree\TreeHelpers.py", line 78, in parseSourceCodeToAst
+    body = ast.parse(source_code, filename)
+  File "D:\Projects\DDSP6.0-Package\.conda\lib\ast.py", line 50, in parse
+    return compile(source, filename, mode, flags,
+ValueError: source code string cannot contain null bytes
+</exception>
   <performance>
-    <memory_usage name="after_launch" value="38424576" />
-    <memory_usage name="before_c_code_generation" value="43552768" />
-    <memory_usage name="before_running_scons" value="47140864" />
+    <memory_usage name="after_launch" value="40976384" />
   </performance>
-  <data_composer blob_size="9685" total="438">
-    <module_data filename="__bytecode.const" input_size="0" blob_name=".bytecode" blob_size="3" />
-    <module_data filename="__constants.const" input_size="1890" blob_name="" blob_size="770" />
-    <module_data filename="module.dist.const" input_size="11841" blob_name="dist" blob_size="8876" />
-  </data_composer>
+  <data_composer blob_size="None" />
   <command_line>
     <option value=".\dist.py" />
     <option value="--module" />
@@ -74,17 +36,17 @@
     <plugin name="transformers" user_enabled="no" />
   </plugins>
   <distributions />
-  <python python_exe="..\SVCFusion\.conda\python.exe" python_flavor="Anaconda Python" python_version="3.10.13" os_name="Windows" os_release="11" arch_name="x86_64">
+  <python python_exe="${sys.prefix}\python.exe" python_flavor="Anaconda Python" python_version="3.10.13" os_name="Windows" os_release="11" arch_name="x86_64" filesystem_encoding="utf-8">
     <search_path>
       <path value="${cwd}" />
-      <path value="..\SVCFusion\.conda\DLLs" />
-      <path value="..\SVCFusion\.conda\lib" />
-      <path value="..\SVCFusion\.conda" />
-      <path value="..\SVCFusion\.conda\lib\site-packages" />
-      <path value="..\SVCFusion\.conda\lib\site-packages\win32" />
-      <path value="..\SVCFusion\.conda\lib\site-packages\win32\lib" />
-      <path value="..\SVCFusion\.conda\lib\site-packages\Pythonwin" />
+      <path value="${sys.prefix}\DLLs" />
+      <path value="${sys.prefix}\lib" />
+      <path value="${sys.prefix}" />
+      <path value="${sys.prefix}\lib\site-packages" />
+      <path value="${sys.prefix}\lib\site-packages\win32" />
+      <path value="${sys.prefix}\lib\site-packages\win32\lib" />
+      <path value="${sys.prefix}\lib\site-packages\Pythonwin" />
     </search_path>
   </python>
-  <output run_filename="${cwd}\dist.cp310-win_amd64.pyd" />
+  <output run_filename="failed too early" />
 </nuitka-compilation-report>

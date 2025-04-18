@@ -63,3 +63,5 @@ dev/
 nuitka-crash-report.xml
 
 _*
+
+gradio
